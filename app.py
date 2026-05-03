@@ -1,10 +1,16 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-from streamlit_gsheets import GSheetsConnection
 import json
 import os
 from datetime import datetime
+
+# Tenta carregar a conexão, se não conseguir, ele não trava o app de cara
+try:
+    from streamlit_gsheets import GSheetsConnection
+    LIB_PRONTA = True
+except ImportError:
+    LIB_PRONTA = False
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(layout="wide", page_title="Gabriel Sabino - Hub Operacional")
@@ -15,19 +21,16 @@ senha = st.sidebar.text_input("Acesso", type="password")
 if senha == "gsr17":
     st.sidebar.success("Painel Liberado")
     
-    # --- CONFIGURAÇÕES E BANCO DE DADOS (AGORA VIA GOOGLE SHEETS) ---
-    STATUS_OPCOES = ["Reunião", "A Iniciar", "Em Andamento", "Projetos Futuros", "Concluído"]
-    CORES_MAP = {
-        "Reunião": "#1B2631", 
-        "A Iniciar": "#2E86C1", 
-        "Em Andamento": "#3498DB", 
-        "Projetos Futuros": "#5DADE2", 
-        "Concluído": "#28B463"
-    }
-    
-    # Conexão com a Nuvem para persistência eterna
-    conn = st.connection("gsheets", type=GSheetsConnection)
+    if not LIB_PRONTA:
+        st.error("O servidor ainda está instalando os componentes de nuvem. Aguarde 30 segundos e dê F5.")
+        st.stop()
 
+    # --- CONFIGURAÇÕES E BANCO DE DADOS ---
+    STATUS_OPCOES = ["Reunião", "A Iniciar", "Em Andamento", "Projetos Futuros", "Concluído"]
+    CORES_MAP = {"Reunião": "#1B2631", "A Iniciar": "#2E86C1", "Em Andamento": "#3498DB", "Projetos Futuros": "#5DADE2", "Concluído": "#28B463"}
+    
+    # Conexão com a Nuvem
+    conn = st.connection("gsheets", type=GSheetsConnection)
     def carregar_dados():
         colunas = ["Projeto", "Data Inicial", "Prazo", "Status", "Foco", "Escopo", "Detalhamento", "Resultado Esperado"]
         try:
