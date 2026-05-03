@@ -569,20 +569,30 @@ STATUS_COLORS = {
 
 URL_DB = "https://docs.google.com/spreadsheets/d/1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg/edit#gid=0"
 
+import re as _re
+
+def _sheet_csv_url(url: str) -> str:
+    match = _re.search(r"/d/([a-zA-Z0-9-_]+)", url)
+    gid_match = _re.search(r"gid=(\d+)", url)
+    if not match:
+        return url
+    sheet_id = match.group(1)
+    gid = gid_match.group(1) if gid_match else "0"
+    return f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+
 @st.cache_data(ttl=300)
 def carregar_dados():
     colunas = ["Projeto", "Data Inicial", "Prazo", "Status", "Foco", "Escopo", "Detalhamento", "Resultado Esperado"]
-    if not LIB_PRONTA:
-        return pd.DataFrame(columns=colunas)
     try:
-        conn = st.connection("gsheets", type=GSheetsConnection)
-        df = conn.read(spreadsheet=URL_DB, ttl=0)
+        csv_url = _sheet_csv_url(URL_DB)
+        df = pd.read_csv(csv_url)
         if df is not None and not df.empty:
             df["Data Inicial"] = pd.to_datetime(df["Data Inicial"], errors="coerce").fillna(pd.Timestamp.now())
             df["Prazo"] = pd.to_datetime(df["Prazo"], errors="coerce").fillna(pd.Timestamp.now())
-            return df[colunas].dropna(subset=["Projeto"])
+            colunas_presentes = [c for c in colunas if c in df.columns]
+            return df[colunas_presentes].dropna(subset=["Projeto"])
     except Exception as e:
-        st.sidebar.error(f"Erro GSheets: {e}")
+        st.sidebar.error(f"Erro ao carregar planilha: {e}")
     return pd.DataFrame(columns=colunas)
 
 if st.session_state.df_projetos is None:
@@ -906,11 +916,40 @@ with tab3:
     if df.empty:
         st.warning("Sem dados para análise.")
     else:
-        total = len(df)
-        concluidos = len(df[df["Status"] == "Concluído"])
-        em_exec = len(df[df["Status"] == "Em Andamento"])
-        backlog = len(df[df["Status"] == "A Iniciar"])
-        futuros = len(df[df["Status"] == "Projetos Futuros"])
+        # ── Filtros ──
+        with st.container():
+            fi1, fi2 = st.columns([2, 2])
+            with fi1:
+                busca_intel = st.text_input(
+                    "Buscar projeto",
+                    placeholder="Nome do projeto...",
+                    label_visibility="collapsed",
+                    key="intel_busca"
+                )
+            with fi2:
+                col_id1, col_id2 = st.columns(2)
+                with col_id1:
+                    data_intel_ini = st.date_input("De", value=None, key="intel_d1", format="DD/MM/YYYY")
+                with col_id2:
+                    data_intel_fim = st.date_input("Até", value=None, key="intel_d2", format="DD/MM/YYYY")
+
+        df_intel = df.copy()
+        if busca_intel:
+            df_intel = df_intel[df_intel["Projeto"].str.contains(busca_intel, case=False, na=False)]
+        if data_intel_ini:
+            df_intel = df_intel[df_intel["Prazo"].dt.date >= data_intel_ini]
+        if data_intel_fim:
+            df_intel = df_intel[df_intel["Prazo"].dt.date <= data_intel_fim]
+
+        if busca_intel or data_intel_ini or data_intel_fim:
+            n = len(df_intel)
+            st.markdown(f'<div style="font-size:11px;color:#9CA3AF;font-family:\'JetBrains Mono\',monospace;margin-bottom:12px;">{n} projeto{"s" if n!=1 else ""} filtrado{"s" if n!=1 else ""}</div>', unsafe_allow_html=True)
+
+        total = len(df_intel) if not df_intel.empty else 1
+        concluidos = len(df_intel[df_intel["Status"] == "Concluído"])
+        em_exec = len(df_intel[df_intel["Status"] == "Em Andamento"])
+        backlog = len(df_intel[df_intel["Status"] == "A Iniciar"])
+        futuros = len(df_intel[df_intel["Status"] == "Projetos Futuros"])
         taxa = round(concluidos / total * 100, 1) if total > 0 else 0
         carga_total = em_exec + backlog
 
@@ -947,7 +986,7 @@ with tab3:
             </div>
             """, unsafe_allow_html=True)
 
-            dist = df["Status"].value_counts().reindex(STATUS_OPCOES, fill_value=0)
+            dist = df_intel["Status"].value_counts().reindex(STATUS_OPCOES, fill_value=0)
             max_val = max(dist.values) if max(dist.values) > 0 else 1
 
             for status in STATUS_OPCOES:
@@ -978,7 +1017,7 @@ with tab3:
                 ("Em Execução", em_exec, "#D4880A"),
                 ("Backlog", backlog, "#3B5BDB"),
                 ("Futuros", futuros, "#0C8599"),
-                ("Reuniões", len(df[df["Status"] == "Reunião"]), "#7048E8"),
+                ("Reuniões", len(df_intel[df_intel["Status"] == "Reunião"]), "#7048E8"),
                 ("Concluídos", concluidos, "#2F9E44"),
             ]
             for label, val, cor in metricas:
@@ -1006,7 +1045,7 @@ with tab3:
         </div>
         """, unsafe_allow_html=True)
 
-        ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento", "Reunião"])].sort_values("Prazo").head(8)
+        ativos = df_intel[df_intel["Status"].isin(["A Iniciar", "Em Andamento", "Reunião"])].sort_values("Prazo").head(8)
         if not ativos.empty:
             cols_radar = st.columns(2)
             for idx, (_, row) in enumerate(ativos.iterrows()):
@@ -1033,9 +1072,11 @@ with tab3:
                       </div>
                     </div>
                     """, unsafe_allow_html=True)
+        else:
+            st.info("Nenhum projeto ativo no filtro atual.")
 
 # ─────────────────────────────────────────────
-# TAB 4 — DADOS BRUTOS
+# TAB 4 — DADOS COMPLETOS
 # ─────────────────────────────────────────────
 with tab4:
     st.markdown("""
@@ -1047,7 +1088,130 @@ with tab4:
     if df.empty:
         st.warning("Sem dados carregados.")
     else:
-        st.dataframe(df, use_container_width=True, height=500)
+        # ── Filtros ──
+        fd1, fd2 = st.columns([2, 2])
+        with fd1:
+            busca_dados = st.text_input(
+                "Buscar projeto",
+                placeholder="Nome do projeto...",
+                label_visibility="collapsed",
+                key="dados_busca"
+            )
+        with fd2:
+            col_dd1, col_dd2 = st.columns(2)
+            with col_dd1:
+                data_dados_ini = st.date_input("De", value=None, key="dados_d1", format="DD/MM/YYYY")
+            with col_dd2:
+                data_dados_fim = st.date_input("Até", value=None, key="dados_d2", format="DD/MM/YYYY")
+
+        df_dados = df.copy()
+        if busca_dados:
+            df_dados = df_dados[df_dados["Projeto"].str.contains(busca_dados, case=False, na=False)]
+        if data_dados_ini:
+            df_dados = df_dados[df_dados["Prazo"].dt.date >= data_dados_ini]
+        if data_dados_fim:
+            df_dados = df_dados[df_dados["Prazo"].dt.date <= data_dados_fim]
+
+        n_dados = len(df_dados)
+        if busca_dados or data_dados_ini or data_dados_fim:
+            st.markdown(f'<div style="font-size:11px;color:#9CA3AF;font-family:\'JetBrains Mono\',monospace;margin:8px 0 16px;">{n_dados} projeto{"s" if n_dados!=1 else ""} encontrado{"s" if n_dados!=1 else ""}</div>', unsafe_allow_html=True)
+
+        # ── Modo de visualização ──
+        modo = st.radio(
+            "Visualização",
+            ["📋 Cards detalhados", "🗂️ Tabela"],
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        if modo == "🗂️ Tabela":
+            st.dataframe(df_dados, use_container_width=True, height=500)
+
+        else:
+            # ── Cards expandidos com todos os campos ──
+            if df_dados.empty:
+                st.info("Nenhum projeto encontrado com esse filtro.")
+            else:
+                for _, row in df_dados.iterrows():
+                    status = row.get("Status", "")
+                    cor = STATUS_COLORS.get(status, "#3B5BDB")
+                    dias = (row["Prazo"] - pd.Timestamp.now()).days if pd.notna(row.get("Prazo")) else 999
+                    badge_cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
+                    badge_txt = "ATRASADO" if dias < 0 else f"{dias}d"
+
+                    data_ini_str = row["Data Inicial"].strftime("%d/%m/%Y") if pd.notna(row.get("Data Inicial")) else "—"
+                    prazo_str = row["Prazo"].strftime("%d/%m/%Y") if pd.notna(row.get("Prazo")) else "—"
+
+                    foco = str(row.get("Foco", "")) if pd.notna(row.get("Foco")) else "—"
+                    escopo = str(row.get("Escopo", "")) if pd.notna(row.get("Escopo")) else "—"
+                    detalhamento = str(row.get("Detalhamento", "")) if pd.notna(row.get("Detalhamento")) else "—"
+                    resultado = str(row.get("Resultado Esperado", "")) if pd.notna(row.get("Resultado Esperado")) else "—"
+
+                    st.markdown(f"""
+                    <div style="background:#FFFFFF;border:1px solid #E2E4EA;border-left:4px solid {cor};
+                        border-radius:14px;padding:20px 24px;margin-bottom:16px;
+                        box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+
+                      <!-- Cabeçalho -->
+                      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                        <div style="flex:1;padding-right:16px;">
+                          <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;
+                              color:#1A1D2E;line-height:1.3;margin-bottom:6px;">{row['Projeto']}</div>
+                          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <span style="background:{cor}18;color:{cor};border:1px solid {cor}33;
+                                padding:3px 10px;border-radius:20px;font-size:10px;
+                                font-family:'JetBrains Mono',monospace;white-space:nowrap;">{status}</span>
+                            <span style="background:{badge_cor}18;color:{badge_cor};border:1px solid {badge_cor}33;
+                                padding:3px 10px;border-radius:20px;font-size:10px;
+                                font-family:'JetBrains Mono',monospace;white-space:nowrap;">{badge_txt}</span>
+                          </div>
+                        </div>
+                        <div style="text-align:right;flex-shrink:0;">
+                          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9CA3AF;margin-bottom:2px;">INÍCIO</div>
+                          <div style="font-size:13px;color:#6B7280;font-weight:500;">{data_ini_str}</div>
+                          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#9CA3AF;margin-top:6px;margin-bottom:2px;">PRAZO</div>
+                          <div style="font-size:13px;color:#1A1D2E;font-weight:600;">{prazo_str}</div>
+                        </div>
+                      </div>
+
+                      <!-- Linha divisória -->
+                      <div style="border-top:1px solid #F0F1F4;margin-bottom:14px;"></div>
+
+                      <!-- Campos detalhados -->
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+                        <div>
+                          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;
+                              color:#9CA3AF;margin-bottom:4px;">🎯 FOCO</div>
+                          <div style="font-size:13px;color:#1A1D2E;line-height:1.5;">{foco}</div>
+                        </div>
+
+                        <div>
+                          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;
+                              color:#9CA3AF;margin-bottom:4px;">📐 ESCOPO</div>
+                          <div style="font-size:13px;color:#1A1D2E;line-height:1.5;">{escopo}</div>
+                        </div>
+
+                        <div style="grid-column:1/-1;">
+                          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;
+                              color:#9CA3AF;margin-bottom:4px;">📝 DETALHAMENTO</div>
+                          <div style="font-size:13px;color:#6B7280;line-height:1.6;
+                              background:#F8F9FC;border-radius:8px;padding:10px 14px;">{detalhamento}</div>
+                        </div>
+
+                        <div style="grid-column:1/-1;">
+                          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;
+                              color:#9CA3AF;margin-bottom:4px;">🏆 RESULTADO ESPERADO</div>
+                          <div style="font-size:13px;color:#3B5BDB;line-height:1.6;font-weight:500;
+                              background:#3B5BDB08;border-radius:8px;padding:10px 14px;
+                              border-left:3px solid #3B5BDB44;">{resultado}</div>
+                        </div>
+
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # TAB 5 — CHAT IA (SEM API — PERGUNTAS ORIENTADAS)
