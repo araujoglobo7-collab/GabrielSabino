@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 import json
 import os
 from datetime import datetime
@@ -14,7 +15,7 @@ senha = st.sidebar.text_input("Acesso", type="password")
 if senha == "gsr17":
     st.sidebar.success("Painel Liberado")
     
-    # --- CONFIGURAÇÕES E BANCO DE DADOS ---
+    # --- CONFIGURAÇÕES E BANCO DE DADOS (AGORA VIA GOOGLE SHEETS) ---
     STATUS_OPCOES = ["Reunião", "A Iniciar", "Em Andamento", "Projetos Futuros", "Concluído"]
     CORES_MAP = {
         "Reunião": "#1B2631", 
@@ -23,20 +24,21 @@ if senha == "gsr17":
         "Projetos Futuros": "#5DADE2", 
         "Concluído": "#28B463"
     }
-    DB_FILE = "consultoria_gabriel_data.json"
+    
+    # Conexão com a Nuvem para persistência eterna
+    conn = st.connection("gsheets", type=GSheetsConnection)
 
     def carregar_dados():
         colunas = ["Projeto", "Data Inicial", "Prazo", "Status", "Foco", "Escopo", "Detalhamento", "Resultado Esperado"]
-        if os.path.exists(DB_FILE):
-            with open(DB_FILE, "r", encoding="utf-8") as f:
-                try:
-                    dados = json.load(f)
-                    if dados:
-                        df = pd.DataFrame(dados)
-                        df["Data Inicial"] = pd.to_datetime(df["Data Inicial"], errors='coerce').fillna(pd.Timestamp.now())
-                        df["Prazo"] = pd.to_datetime(df["Prazo"], errors='coerce').fillna(pd.Timestamp.now())
-                        return df[colunas]
-                except: pass
+        try:
+            # Tenta ler da planilha do Google
+            df = conn.read(ttl="0")
+            if df is not None and not df.empty:
+                df["Data Inicial"] = pd.to_datetime(df["Data Inicial"], errors='coerce').fillna(pd.Timestamp.now())
+                df["Prazo"] = pd.to_datetime(df["Prazo"], errors='coerce').fillna(pd.Timestamp.now())
+                return df[colunas]
+        except:
+            pass
         return pd.DataFrame(columns=colunas)
 
     if 'df_projetos' not in st.session_state:
@@ -64,13 +66,10 @@ if senha == "gsr17":
     with st.sidebar:
         st.header("👔 Gabriel Sabino")
         st.markdown("---")
-        st.subheader("💾 Persistência")
-        if st.button("SALVAR TUDO (JSON)"):
-            df_save = st.session_state.df_projetos.copy()
-            df_save["Data Inicial"] = df_save["Data Inicial"].dt.strftime('%Y-%m-%d')
-            df_save["Prazo"] = df_save["Prazo"].dt.strftime('%Y-%m-%d')
-            df_save.to_json(DB_FILE, orient="records", force_ascii=False, indent=4)
-            st.success("Dados salvos fisicamente!")
+        st.subheader("💾 Persistência Cloud")
+        if st.button("SINCRONIZAR COM GOOGLE SHEETS"):
+            conn.update(data=st.session_state.df_projetos)
+            st.success("Dados salvos na Nuvem!")
 
     # --- NAVEGAÇÃO POR ABAS ---
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -164,13 +163,14 @@ if senha == "gsr17":
             })
         if st.button("🚀 ATUALIZAR ALTERAÇÕES"):
             st.session_state.df_projetos = df_editado
+            conn.update(data=df_editado) # Salva direto no Sheets
             st.rerun()
 
     # ABA 4: NOTAS
     with tab4:
         st.text_area("✍️ Notas Estratégicas", height=600)
 
-    # ABA 5: RESUMO IA (MANTIDA INTEGRALMENTE)
+    # ABA 5: RESUMO IA
     with tab5:
         st.header("📊 Inteligência e Diagnóstico da Operação")
         df = st.session_state.df_projetos
