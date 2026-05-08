@@ -1061,7 +1061,8 @@ with tab3:
         ativos = df_i[df_i["Status"].isin(["A Iniciar", "Em Andamento", "Reuniao"])].sort_values("Prazo")
         if not ativos.empty:
             cols_radar = st.columns(2)
-            for idx, (_, row) in enumerate(ativos.iterrows()):                dias = (row["Prazo"] - pd.Timestamp.now()).days
+            for idx, (_, row) in enumerate(ativos.iterrows()):
+                dias = (row["Prazo"] - pd.Timestamp.now()).days
                 cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
                 status_cor = STATUS_COLORS.get(row["Status"], "#3B5BDB")
                 escopo = str(row.get("Escopo", ""))[:60] if pd.notna(row.get("Escopo")) else ""
