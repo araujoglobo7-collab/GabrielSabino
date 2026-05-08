@@ -538,20 +538,21 @@ if not st.session_state.logado:
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }
-  #stage { width: 100%; height: 100%; position: relative; background: transparent; }
+  #stage { width: 100%; height: 100%; position: relative; background: transparent; display: flex; align-items: center; justify-content: center; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
   /* Humanoid Robot */
   #humanoid {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -54%);
-    width: min(220px, 80vw);
+    position: relative;
+    z-index: 2;
+    width: min(260px, 75vw);
+    margin-top: 20px;
     animation: float 4s ease-in-out infinite;
     filter: drop-shadow(0 8px 32px rgba(107,33,168,0.25));
   }
   @keyframes float {
-    0%,100% { transform: translate(-50%,-54%); }
-    50%      { transform: translate(-50%,-60%); }
+    0%,100% { transform: translateY(0px); }
+    50%      { transform: translateY(-12px); }
   }
 
   /* Head animations */
@@ -591,6 +592,7 @@ if not st.session_state.logado:
     font-size: 9px; letter-spacing: 3px; color: rgba(107,33,168,0.6);
     font-family: monospace; white-space: nowrap;
     animation: pulse 2s ease-in-out infinite;
+    z-index: 3;
   }
   @keyframes pulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
 </style>
@@ -777,7 +779,7 @@ tick();
     col_bot, col_gap, col_form = st.columns([1.1, 0.05, 0.85])
 
     with col_bot:
-        components.html(LOGIN_HTML, height=580, scrolling=False)
+        components.html(LOGIN_HTML, height=620, scrolling=False)
 
     with col_form:
         st.markdown("""
