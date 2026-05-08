@@ -50,6 +50,8 @@ html, body, .stApp {
 }
 
 [data-testid="stHeader"], #MainMenu, footer, .stDeployButton { display: none !important; }
+[data-testid="collapsedControl"] { display: none !important; }
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
 [data-testid="stAppViewContainer"] { background: var(--bg) !important; }
 .block-container { padding: 1.5rem 1.5rem 2rem !important; max-width: 100% !important; }
 
