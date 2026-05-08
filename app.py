@@ -728,19 +728,240 @@ st.markdown(f"""
 # ============================================================
 # TABS
 # ============================================================
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "VISAO GERAL",
-    "KANBAN",
-    "INTELIGENCIA",
-    "DADOS",
-    "CHAT IA",
-    "NOTAS"
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "🤖 CHAT IA",
+    "⚡ VISAO GERAL",
+    "📋 KANBAN",
+    "🗂️ DADOS",
+    "✍️ NOTAS"
 ])
 
 # ─────────────────────────────────────────────
-# TAB 1 — VISAO GERAL
+# TAB 1 — CHAT IA
 # ─────────────────────────────────────────────
 with tab1:
+    sugestoes = [
+        ("🔴", "Qual projeto tem maior risco de atraso"),
+        ("🎯", "Onde focar energia essa semana"),
+        ("📊", "Diagnostico geral do portfolio"),
+        ("⚡", "Quais projetos posso acelerar"),
+        ("🔍", "Identifique gargalos"),
+        ("📅", "O que vence nos proximos 30 dias"),
+    ]
+
+    pergunta_sugerida = None
+
+    col_chat, col_sugest = st.columns([2.5, 1])
+
+    with col_sugest:
+        st.markdown("""
+        <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0D9C8;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#E8720C,#D4880A);
+                border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
+                box-shadow:0 4px 12px rgba(232,114,12,0.3);">🤖</div>
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#1A1208;">J.A.R.V.I.S</div>
+              <div style="font-size:11px;color:#E8720C;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
+            </div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:12px;">
+            PERGUNTAS RAPIDAS
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        for emoji, s in sugestoes:
+            if st.button(f"{emoji}  {s}", key=f"sug_{s[:10]}", use_container_width=True):
+                pergunta_sugerida = s
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🗑️  Limpar conversa", use_container_width=True, key="limpar_chat"):
+            st.session_state.chat_history = []
+            st.rerun()
+
+    with col_chat:
+        st.markdown("""
+        <div style="background:linear-gradient(135deg,#E8720C,#D4880A);border-radius:16px;
+            padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
+          <div style="font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🤖</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">J.A.R.V.I.S</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);">Consultor estrategico do seu portfolio</div>
+          </div>
+          <div style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;">
+            <span style="font-size:11px;color:#fff;font-family:'JetBrains Mono',monospace;">● ATIVO</span>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if not st.session_state.chat_history:
+            st.markdown("""
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+              <div style="width:44px;height:44px;background:linear-gradient(135deg,#E8720C,#D4880A);
+                  border-radius:50%;display:flex;align-items:center;justify-content:center;
+                  font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
+              <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
+                  padding:16px 20px;max-width:90%;box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+                <div style="font-weight:700;color:#E8720C;margin-bottom:8px;font-size:15px;">✨ Salve, Bruxo! 🧙‍♂️</div>
+                <div style="font-size:14px;color:#1A1208;line-height:1.7;">
+                  Sistema ativo e pronto. Tenho acesso completo ao seu portfolio —
+                  prazos, clientes, escopo, tudo.<br><br>
+                  Me diz o que precisa, Bruxo. Use os botoes ao lado ou
+                  manda sua pergunta aqui embaixo. 🔥
+                </div>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        for msg in st.session_state.chat_history:
+            if msg["role"] == "user":
+                st.markdown(f"""
+                <div style="display:flex;justify-content:flex-end;margin:12px 0;gap:8px;">
+                  <div style="background:linear-gradient(135deg,#E8720C,#D4880A);color:#fff;
+                      border-radius:16px 16px 4px 16px;padding:12px 18px;max-width:75%;
+                      font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(232,114,12,0.25);">
+                    {msg['content']}
+                  </div>
+                  <div style="width:36px;height:36px;background:#F0D9C8;border-radius:50%;
+                      display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🧙‍♂️</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                content = msg['content'].replace(chr(10), '<br>')
+                st.markdown(f"""
+                <div style="display:flex;align-items:flex-start;gap:12px;margin:12px 0;">
+                  <div style="width:44px;height:44px;background:linear-gradient(135deg,#E8720C,#D4880A);
+                      border-radius:50%;display:flex;align-items:center;justify-content:center;
+                      font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
+                  <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
+                      padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1208;
+                      box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+                    {content}
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+        col_input, col_btn = st.columns([5, 1])
+        with col_input:
+            user_input = st.text_input(
+                "msg",
+                value=pergunta_sugerida or "",
+                placeholder="Fala, Bruxo! O que precisa saber?",
+                label_visibility="collapsed",
+                key="chat_input"
+            )
+        with col_btn:
+            enviar = st.button("Enviar", use_container_width=True)
+
+    if (enviar or pergunta_sugerida) and (user_input or pergunta_sugerida):
+        query = user_input or pergunta_sugerida
+        st.session_state.chat_history.append({"role": "user", "content": query})
+
+        now = pd.Timestamp.now()
+        q = query.lower()
+
+        try:
+            if df.empty:
+                answer = "⚠️ Nenhum projeto carregado. Sincronize a planilha primeiro, Bruxo!"
+            else:
+                ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento"])]
+                concluidos_df = df[df["Status"] == "Concluido"]
+                em_exec = df[df["Status"] == "Em Andamento"]
+                backlog = df[df["Status"] == "A Iniciar"]
+                futuros = df[df["Status"] == "Projetos Futuros"]
+                total = len(df)
+                taxa = round(len(concluidos_df)/total*100, 1) if total > 0 else 0
+
+                urgentes = ativos.copy()
+                urgentes["dias"] = (urgentes["Prazo"] - now).dt.days
+                urgentes = urgentes.sort_values("dias")
+
+                if any(w in q for w in ["risco", "atraso", "urgente", "critico"]):
+                    top = urgentes.head(5)
+                    linhas = ""
+                    for _, r in top.iterrows():
+                        d = int((r["Prazo"] - now).days)
+                        emoji = "🔴" if d < 7 else "🟡" if d < 30 else "🟢"
+                        linhas += f"\n{emoji} **{r['Projeto']}** — {d} dias ({r['Prazo'].strftime('%d/%m/%Y')})"
+                    answer = f"**⚠️ Bruxo, esses sao os projetos em maior risco:**\n{linhas}\n\n💡 Os marcados em 🔴 precisam de atencao AGORA."
+
+                elif any(w in q for w in ["focar", "energia", "semana", "prioridade", "foco"]):
+                    top = urgentes.head(3)
+                    linhas = ""
+                    for _, r in top.iterrows():
+                        d = int((r["Prazo"] - now).days)
+                        foco = str(r.get("Foco",""))[:50] if pd.notna(r.get("Foco")) else ""
+                        linhas += f"\n🎯 **{r['Projeto']}** ({d}d) — {foco}"
+                    answer = f"**🎯 Bruxo, o foco desta semana e:**\n{linhas}\n\n⚡ Concentre a magia nestes para evitar atrasos!"
+
+                elif any(w in q for w in ["diagnostico", "geral", "portfolio", "situacao", "status"]):
+                    answer = f"""**📊 Diagnostico do Portfolio, Bruxo:**
+
+🔢 **Total de projetos:** {total}
+✅ **Concluidos:** {len(concluidos_df)} ({taxa}%)
+⚙️ **Em Andamento:** {len(em_exec)}
+📋 **Backlog:** {len(backlog)}
+🔮 **Futuros:** {len(futuros)}
+
+{"🟢 **Performance Excepcional!** Pipeline acima da media!" if taxa >= 70 else "🟡 **Performance Estavel.** Ha espaco para acelerar o backlog." if taxa >= 40 else "🔴 **Atencao, Bruxo!** Revisao estrategica recomendada."}
+
+💡 Proximo prazo critico: **{urgentes.iloc[0]['Projeto'] if not urgentes.empty else 'N/A'}** — vence em {int(urgentes.iloc[0]['dias']) if not urgentes.empty else 0} dias."""
+
+                elif any(w in q for w in ["acelerar", "rapido", "adiantar"]):
+                    top = urgentes[urgentes["dias"] > 30].head(4)
+                    if top.empty:
+                        answer = "⚡ Bruxo, todos os projetos ativos estao com prazo proximo. Conclua os urgentes primeiro!"
+                    else:
+                        linhas = "\n".join([f"⚡ **{r['Projeto']}** — {int(r['dias'])} dias" for _, r in top.iterrows()])
+                        answer = f"**Projetos com prazo folgado para acelerar:**\n{linhas}\n\n✅ Aproveite o momento para adiantar, Bruxo!"
+
+                elif any(w in q for w in ["gargalo", "problema", "bloqueio"]):
+                    muitos_urgentes = urgentes[urgentes["dias"] < 14]
+                    answer = f"""**🔍 Gargalos Identificados, Bruxo:**
+
+{"🔴 **"+str(len(muitos_urgentes))+" projetos vencem em menos de 14 dias** — risco de sobrecarga!" if not muitos_urgentes.empty else "✅ Nenhum gargalo critico no momento."}
+
+📋 **Backlog represado:** {len(backlog)} projetos aguardando inicio.
+{"⚠️ Alto volume — considere priorizar ou redistribuir." if len(backlog) > 5 else "✅ Backlog em nivel saudavel."}"""
+
+                elif any(w in q for w in ["30 dias", "vence", "prazo", "mes"]):
+                    proximos = urgentes[urgentes["dias"] <= 30]
+                    if proximos.empty:
+                        answer = "✅ Bruxo, nenhum projeto vence nos proximos 30 dias. Tudo tranquilo!"
+                    else:
+                        linhas = ""
+                        for _, r in proximos.iterrows():
+                            d = int(r["dias"])
+                            emoji = "🔴" if d < 7 else "🟡"
+                            linhas += f"\n{emoji} **{r['Projeto']}** — {r['Prazo'].strftime('%d/%m/%Y')} ({d}d)"
+                        answer = f"**📅 Vence nos proximos 30 dias ({len(proximos)} projetos):**\n{linhas}"
+
+                else:
+                    top3 = urgentes.head(3)
+                    linhas = "\n".join([f"• **{r['Projeto']}** — {int(r['dias'])}d" for _, r in top3.iterrows()])
+                    answer = f"""**🤖 Resumo Executivo, Bruxo:**
+
+📊 Portfolio: **{total} projetos** | Conclusao: **{taxa}%**
+⚙️ Em andamento: **{len(em_exec)}** | Backlog: **{len(backlog)}**
+
+**Top prioridades agora:**
+{linhas}
+
+💬 Use os botoes ao lado para analises especificas!"""
+
+        except Exception as e:
+            answer = f"Erro interno: {str(e)}"
+
+        st.session_state.chat_history.append({"role": "assistant", "content": answer})
+        st.rerun()
+
+# ─────────────────────────────────────────────
+# TAB 2 — VISAO GERAL
+# ─────────────────────────────────────────────
+with tab2:
     if df.empty:
         st.warning("Nenhum dado carregado. Sincronize ou verifique a planilha.")
     else:
@@ -753,25 +974,24 @@ with tab1:
 
         cols = st.columns(5)
         kpis = [
-            ("TOTAL", total, "#3B5BDB"),
+            ("TOTAL", total, "#E8720C"),
             ("EM EXECUCAO", em_exec, "#D4880A"),
             ("CONCLUIDOS", concluidos, "#2F9E44"),
-            ("BACKLOG", backlog, "#3B5BDB"),
-            ("TAXA", f"{taxa}%", "#D4880A" if taxa < 70 else "#2F9E44"),
+            ("BACKLOG", backlog, "#7048E8"),
+            ("TAXA", f"{taxa}%", "#C92A2A" if taxa < 40 else "#D4880A" if taxa < 70 else "#2F9E44"),
         ]
         for i, (label, val, cor) in enumerate(kpis):
             cols[i].markdown(f"""
-            <div style="background:#F5F6F8;border:1px solid #E2E4EA;
-                border-radius:14px;padding:20px 18px;transition:all 0.2s;
-                border-top:2px solid {cor};box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9CA3AF;margin-bottom:8px;">{label}</div>
+            <div style="background:#FFFFFF;border:1px solid #F0D9C8;
+                border-radius:14px;padding:20px 18px;
+                border-top:3px solid {cor};box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:8px;">{label}</div>
               <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:{cor};">{val}</div>
             </div>
             """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # FILTROS VISAO GERAL
         fc1, fc2, fc3 = st.columns(3)
         with fc1:
             busca_vg = st.text_input("🔍 Buscar projeto/cliente", placeholder="Digite para filtrar...", key="filtro_vg")
@@ -795,7 +1015,7 @@ with tab1:
         with col_a:
             st.markdown("""
             <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
-            &#9670; PRAZOS CRITICOS
+            &#9670; PROJETOS ATIVOS — CARDS COMPLETOS
             </div>
             """, unsafe_allow_html=True)
 
@@ -807,41 +1027,50 @@ with tab1:
                     dias = (r["Prazo"] - pd.Timestamp.now()).days
                     cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
                     label = "URGENTE" if dias < 7 else "ATENCAO" if dias < 30 else "OK"
-                    foco = str(r.get("Foco", "")) if pd.notna(r.get("Foco")) else ""
-                    escopo = str(r.get("Escopo", "")) if pd.notna(r.get("Escopo")) else ""
+                    foco = str(r.get("Foco", "")) if pd.notna(r.get("Foco")) else "—"
+                    escopo = str(r.get("Escopo", "")) if pd.notna(r.get("Escopo")) else "—"
                     detalhamento = str(r.get("Detalhamento", "")) if pd.notna(r.get("Detalhamento")) else ""
                     resultado = str(r.get("Resultado Esperado", "")) if pd.notna(r.get("Resultado Esperado")) else ""
                     status_cor = STATUS_COLORS.get(r.get("Status",""), "#E8720C")
+                    data_ini = r["Data Inicial"].strftime("%d/%m/%Y") if pd.notna(r.get("Data Inicial")) else "—"
+
                     st.markdown(f"""
                     <div style="background:#FFFFFF;border:1px solid #F0D9C8;
-                        border-left:4px solid {cor};border-radius:12px;padding:16px;margin-bottom:10px;
+                        border-left:4px solid {cor};border-radius:12px;padding:16px;margin-bottom:12px;
                         box-shadow:0 2px 8px rgba(232,114,12,0.08);">
-                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                        <div style="font-weight:700;font-size:15px;color:#1A1208;">{r['Projeto']}</div>
-                        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:8px;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <div style="font-weight:700;font-size:15px;color:#1A1208;flex:1;">{r['Projeto']}</div>
+                        <div style="display:flex;gap:6px;flex-shrink:0;margin-left:8px;">
                           <span style="background:{status_cor}22;color:{status_cor};border:1px solid {status_cor}44;
                               padding:2px 8px;border-radius:20px;font-size:10px;font-family:'JetBrains Mono',monospace;">{r.get('Status','')}</span>
                           <span style="background:{cor};color:#fff;padding:3px 10px;border-radius:20px;
-                              font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;">{dias}d &middot; {label}</span>
+                              font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;">{dias}d · {label}</span>
                         </div>
                       </div>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
                         <div style="background:#FDF6F0;border-radius:8px;padding:8px 10px;">
-                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;">FOCO</div>
+                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">FOCO</div>
                           <div style="font-size:12px;color:#1A1208;font-weight:500;">{foco}</div>
                         </div>
                         <div style="background:#FDF6F0;border-radius:8px;padding:8px 10px;">
-                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;">PRAZO</div>
+                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">INICIO</div>
+                          <div style="font-size:12px;color:#1A1208;font-weight:500;">{data_ini}</div>
+                        </div>
+                        <div style="background:{cor}11;border-radius:8px;padding:8px 10px;border:1px solid {cor}33;">
+                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">PRAZO</div>
                           <div style="font-size:12px;color:{cor};font-weight:700;">{r['Prazo'].strftime('%d/%m/%Y')}</div>
                         </div>
                       </div>
-                      {"<div style='background:#FDF6F0;border-radius:8px;padding:8px 10px;margin-bottom:6px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;'>ESCOPO</div><div style='font-size:12px;color:#1A1208;'>"+escopo+"</div></div>" if escopo else ""}
-                      {"<div style='background:#FDF6F0;border-radius:8px;padding:8px 10px;margin-bottom:6px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;'>DETALHAMENTO</div><div style='font-size:12px;color:#1A1208;'>"+detalhamento+"</div></div>" if detalhamento else ""}
-                      {"<div style='background:#FDF6F0;border-radius:8px;padding:8px 10px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;'>RESULTADO ESPERADO</div><div style='font-size:12px;color:#1A1208;'>"+resultado+"</div></div>" if resultado else ""}
+                      <div style="background:#FDF6F0;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+                        <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:4px;">ESCOPO</div>
+                        <div style="font-size:13px;color:#1A1208;line-height:1.5;">{escopo}</div>
+                      </div>
+                      {"<div style='background:#FDF6F0;border-radius:8px;padding:10px 12px;margin-bottom:6px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:4px;'>DETALHAMENTO</div><div style='font-size:13px;color:#1A1208;line-height:1.5;'>"+detalhamento+"</div></div>" if detalhamento and detalhamento != "—" else ""}
+                      {"<div style='background:#E8720C11;border:1px solid #E8720C33;border-radius:8px;padding:10px 12px;'><div style='font-size:9px;color:#E8720C;letter-spacing:1px;margin-bottom:4px;'>RESULTADO ESPERADO</div><div style='font-size:13px;color:#1A1208;line-height:1.5;'>"+resultado+"</div></div>" if resultado and resultado != "—" else ""}
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                st.info("Nenhum projeto ativo encontrado.")
+                st.info("Nenhum projeto ativo encontrado com os filtros atuais.")
 
         with col_b:
             st.markdown("""
@@ -857,23 +1086,23 @@ with tab1:
                 pct = count / total * 100
                 cor = STATUS_COLORS.get(status, "#E8720C")
                 st.markdown(f"""
-                <div style="margin-bottom:10px;">
+                <div style="margin-bottom:12px;">
                   <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-size:12px;color:#6B5A4E;">{status}</span>
-                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{cor};">{count}</span>
+                    <span style="font-size:12px;color:#6B5A4E;font-weight:500;">{status}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{cor};font-weight:700;">{count}</span>
                   </div>
-                  <div style="background:#F0D9C8;border-radius:4px;height:4px;overflow:hidden;">
-                    <div style="background:{cor};width:{pct:.0f}%;height:100%;border-radius:4px;box-shadow:0 0 8px {cor};"></div>
+                  <div style="background:#F0D9C8;border-radius:4px;height:6px;overflow:hidden;">
+                    <div style="background:{cor};width:{pct:.0f}%;height:100%;border-radius:4px;box-shadow:0 0 8px {cor}88;"></div>
                   </div>
                 </div>
                 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# TAB 2 — KANBAN
+# TAB 3 — KANBAN
 # ─────────────────────────────────────────────
-with tab2:
+with tab3:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#3B5BDB;margin-bottom:20px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:20px;">
     &#9670; FLUXO OPERACIONAL
     </div>
     """, unsafe_allow_html=True)
@@ -881,7 +1110,6 @@ with tab2:
     if df.empty:
         st.warning("Sem dados.")
     else:
-        # Filtros Kanban
         fk1, fk2, fk3 = st.columns(3)
         with fk1:
             busca_kb = st.text_input("🔍 Buscar", placeholder="Projeto ou cliente...", key="filtro_kb")
@@ -938,159 +1166,11 @@ with tab2:
                     """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# TAB 3 — INTELIGENCIA
-# ─────────────────────────────────────────────
-with tab3:
-    if df.empty:
-        st.warning("Sem dados para analise.")
-    else:
-        total = len(df)
-        concluidos = len(df[df["Status"] == "Concluido"])
-        em_exec = len(df[df["Status"] == "Em Andamento"])
-        backlog = len(df[df["Status"] == "A Iniciar"])
-        futuros = len(df[df["Status"] == "Projetos Futuros"])
-        taxa = round(concluidos/total*100, 1) if total > 0 else 0
-
-        if taxa >= 70:
-            diag_cor = "#2F9E44"; diag_txt = "Performance Excepcional"
-            diag_desc = "Pipeline acima da media. Momentum positivo."
-        elif taxa >= 40:
-            diag_cor = "#D4880A"; diag_txt = "Performance Estavel"
-            diag_desc = "Ha espaco para acelerar o backlog."
-        else:
-            diag_cor = "#C92A2A"; diag_txt = "Atencao Requerida"
-            diag_desc = "Revisao estrategica recomendada."
-
-        st.markdown(f"""
-        <div style="background:#F8F9FC;border:1px solid {diag_cor}33;border-left:4px solid {diag_cor};
-            border-radius:14px;padding:20px 24px;margin-bottom:24px;
-            display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:#9CA3AF;margin-bottom:4px;">DIAGNOSTICO JARVIS</div>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:{diag_cor};">{diag_txt}</div>
-            <div style="font-size:13px;color:#6B7280;margin-top:4px;">{diag_desc}</div>
-          </div>
-          <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:{diag_cor};opacity:0.3;">{taxa}%</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        col_graf1, col_graf2 = st.columns(2)
-
-        with col_graf1:
-            st.markdown("""
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#3B5BDB;margin-bottom:16px;">
-            &#9670; VOLUME POR STATUS
-            </div>
-            """, unsafe_allow_html=True)
-
-            dist = df["Status"].value_counts().reindex(STATUS_OPCOES, fill_value=0)
-            max_val = max(dist.values) if max(dist.values) > 0 else 1
-
-            for status in STATUS_OPCOES:
-                count = dist.get(status, 0)
-                pct = count / max_val * 100
-                cor = STATUS_COLORS.get(status, "#3B5BDB")
-                st.markdown(f"""
-                <div style="margin-bottom:14px;">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <span style="font-size:13px;color:#6B7280;font-weight:500;">{status}</span>
-                    <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:{cor};">{count}</span>
-                  </div>
-                  <div style="background:#F5F6F8;border-radius:6px;height:8px;overflow:hidden;">
-                    <div style="background:linear-gradient(90deg,{cor},{cor}88);width:{pct:.0f}%;height:100%;
-                        border-radius:6px;box-shadow:0 0 10px {cor}55;transition:width 0.8s ease;"></div>
-                  </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-        with col_graf2:
-            st.markdown("""
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#3B5BDB;margin-bottom:16px;">
-            &#9670; PAINEL DE CARGA
-            </div>
-            """, unsafe_allow_html=True)
-
-            metricas = [
-                ("Em Execucao", em_exec, "#D4880A"),
-                ("Backlog", backlog, "#3B5BDB"),
-                ("Futuros", futuros, "#0C8599"),
-                ("Reunioes", len(df[df["Status"] == "Reuniao"]), "#7048E8"),
-                ("Concluidos", concluidos, "#2F9E44"),
-            ]
-            for label, val, cor in metricas:
-                pct_circle = val / total * 100 if total > 0 else 0
-                st.markdown(f"""
-                <div style="display:flex;align-items:center;background:#F8F9FC;
-                    border:1px solid #E8EAEF;border-radius:10px;padding:12px 14px;margin-bottom:8px;">
-                  <div style="width:8px;height:8px;border-radius:50%;background:{cor};
-                      box-shadow:0 0 8px {cor};margin-right:12px;flex-shrink:0;"></div>
-                  <div style="flex:1;">
-                    <div style="font-size:12px;color:#6B7280;">{label}</div>
-                    <div style="background:#F5F6F8;border-radius:3px;height:3px;margin-top:4px;">
-                      <div style="background:{cor};width:{pct_circle:.0f}%;height:100%;border-radius:3px;"></div>
-                    </div>
-                  </div>
-                  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:{cor};margin-left:12px;">{val}</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        fi1, fi2, fi3 = st.columns(3)
-        with fi1:
-            busca_i = st.text_input("🔍 Buscar projeto", placeholder="Filtrar por nome...", key="filtro_i")
-        with fi2:
-            status_i = st.multiselect("Status", STATUS_OPCOES, default=[], key="status_i", placeholder="Todos")
-        with fi3:
-            data_i = st.date_input("Data inicial a partir de", value=None, key="data_i")
-
-        df_i = df.copy()
-        if busca_i:
-            df_i = df_i[df_i["Projeto"].str.contains(busca_i, case=False, na=False)]
-        if status_i:
-            df_i = df_i[df_i["Status"].isin(status_i)]
-        if data_i:
-            df_i = df_i[df_i["Data Inicial"].dt.date >= data_i]
-
-        st.markdown("""
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
-        &#9670; RADAR DE PROJETOS ATIVOS
-        </div>
-        """, unsafe_allow_html=True)
-
-        ativos = df_i[df_i["Status"].isin(["A Iniciar", "Em Andamento", "Reuniao"])].sort_values("Prazo")
-        if not ativos.empty:
-            cols_radar = st.columns(2)
-            for idx, (_, row) in enumerate(ativos.iterrows()):
-                dias = (row["Prazo"] - pd.Timestamp.now()).days
-                cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
-                status_cor = STATUS_COLORS.get(row["Status"], "#3B5BDB")
-                escopo = str(row.get("Escopo", ""))[:60] if pd.notna(row.get("Escopo")) else ""
-
-                with cols_radar[idx % 2]:
-                    st.markdown(f"""
-                    <div style="background:#F8F9FC;border:1px solid #E8EAEF;border-radius:12px;padding:16px;margin-bottom:10px;">
-                      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                        <div style="font-weight:600;font-size:14px;color:#1A1D2E;flex:1;padding-right:8px;">{row['Projeto']}</div>
-                        <span style="background:{status_cor}22;color:{status_cor};border:1px solid {status_cor}44;
-                            padding:3px 8px;border-radius:20px;font-size:10px;white-space:nowrap;
-                            font-family:'JetBrains Mono',monospace;">{row['Status']}</span>
-                      </div>
-                      <div style="font-size:12px;color:#9CA3AF;margin-bottom:10px;line-height:1.5;">{escopo}</div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:11px;color:#9CA3AF;">{row['Prazo'].strftime('%d/%m/%Y')}</span>
-                        <span style="background:{cor}22;color:{cor};padding:2px 8px;border-radius:10px;
-                            font-family:'JetBrains Mono',monospace;font-size:10px;">{dias}d</span>
-                      </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────
-# TAB 4 — DADOS BRUTOS
+# TAB 4 — DADOS
 # ─────────────────────────────────────────────
 with tab4:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#3B5BDB;margin-bottom:16px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
     &#9670; BANCO DE DADOS OPERACIONAL
     </div>
     """, unsafe_allow_html=True)
@@ -1118,246 +1198,11 @@ with tab4:
         st.dataframe(df_d, use_container_width=True, height=500)
 
 # ─────────────────────────────────────────────
-# TAB 5 — CHAT IA
+# TAB 5 — NOTAS
 # ─────────────────────────────────────────────
 with tab5:
-    sugestoes = [
-        ("🔴", "Qual projeto tem maior risco de atraso"),
-        ("🎯", "Onde focar energia essa semana"),
-        ("📊", "Diagnostico geral do portfolio"),
-        ("⚡", "Quais projetos posso acelerar"),
-        ("🔍", "Identifique gargalos"),
-        ("📅", "O que vence nos proximos 30 dias"),
-    ]
-
-    pergunta_sugerida = None
-
-    # Layout: chat à esquerda, sugestões à direita
-    col_chat, col_sugest = st.columns([2.5, 1])
-
-    with col_sugest:
-        st.markdown("""
-        <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:16px;padding:20px;
-            position:sticky;top:0;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0D9C8;">
-            <div style="width:48px;height:48px;background:linear-gradient(135deg,#E8720C,#D4880A);
-                border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
-                box-shadow:0 4px 12px rgba(232,114,12,0.3);">🤖</div>
-            <div>
-              <div style="font-weight:700;font-size:14px;color:#1A1208;">J.A.R.V.I.S</div>
-              <div style="font-size:11px;color:#E8720C;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
-            </div>
-          </div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:12px;">
-            PERGUNTAS RAPIDAS
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        for emoji, s in sugestoes:
-            if st.button(f"{emoji}  {s}", key=f"sug_{s[:10]}", use_container_width=True):
-                pergunta_sugerida = s
-
-        if st.session_state.chat_history:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🗑️  Limpar conversa", use_container_width=True):
-                st.session_state.chat_history = []
-                st.rerun()
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_chat:
-        # Header do chat
-        st.markdown("""
-        <div style="background:linear-gradient(135deg,#E8720C,#D4880A);border-radius:16px;
-            padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
-          <div style="font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🤖</div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">J.A.R.V.I.S</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.8);">Consultor estrategico do seu portfolio</div>
-          </div>
-          <div style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;">
-            <span style="font-size:11px;color:#fff;font-family:'JetBrains Mono',monospace;">● ATIVO</span>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Mensagem de boas-vindas se chat vazio
-        if not st.session_state.chat_history:
-            st.markdown("""
-            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#E8720C,#D4880A);
-                  border-radius:50%;display:flex;align-items:center;justify-content:center;
-                  font-size:20px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
-              <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
-                  padding:16px 20px;max-width:85%;box-shadow:0 2px 8px rgba(232,114,12,0.08);">
-                <div style="font-weight:600;color:#1A1208;margin-bottom:6px;">Ola, senhor Sabino! 👋</div>
-                <div style="font-size:14px;color:#6B5A4E;line-height:1.6;">
-                  Sou seu assistente estrategico. Tenho acesso completo ao seu portfolio e posso ajudar com analises, prioridades e insights.<br><br>
-                  Use os botoes ao lado para perguntas rapidas, ou digite o que precisar!
-                </div>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        # Historico do chat
-        chat_container = st.container()
-        with chat_container:
-            for msg in st.session_state.chat_history:
-                if msg["role"] == "user":
-                    st.markdown(f"""
-                    <div style="display:flex;justify-content:flex-end;margin:12px 0;gap:8px;">
-                      <div style="background:linear-gradient(135deg,#E8720C,#D4880A);color:#fff;
-                          border-radius:16px 16px 4px 16px;padding:12px 18px;max-width:75%;
-                          font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(232,114,12,0.25);">
-                        {msg['content']}
-                      </div>
-                      <div style="width:36px;height:36px;background:#F0D9C8;border-radius:50%;
-                          display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
-                        👤
-                      </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    content = msg['content'].replace(chr(10), '<br>')
-                    st.markdown(f"""
-                    <div style="display:flex;align-items:flex-start;gap:12px;margin:12px 0;">
-                      <div style="width:40px;height:40px;background:linear-gradient(135deg,#E8720C,#D4880A);
-                          border-radius:50%;display:flex;align-items:center;justify-content:center;
-                          font-size:20px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
-                      <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
-                          padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1208;
-                          box-shadow:0 2px 8px rgba(232,114,12,0.08);">
-                        {content}
-                      </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-
-        # Input
-        col_input, col_btn = st.columns([5, 1])
-        with col_input:
-            user_input = st.text_input(
-                "msg",
-                value=pergunta_sugerida or "",
-                placeholder="Digite sua pergunta para o J.A.R.V.I.S...",
-                label_visibility="collapsed",
-                key="chat_input"
-            )
-        with col_btn:
-            enviar = st.button("Enviar", use_container_width=True)
-
-    if (enviar or pergunta_sugerida) and (user_input or pergunta_sugerida):
-        query = user_input or pergunta_sugerida
-
-        st.session_state.chat_history.append({"role": "user", "content": query})
-
-        now = pd.Timestamp.now()
-        q = query.lower()
-
-        try:
-            if df.empty:
-                answer = "⚠️ Nenhum projeto carregado. Sincronize a planilha primeiro."
-            else:
-                ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento"])]
-                concluidos_df = df[df["Status"] == "Concluido"]
-                em_exec = df[df["Status"] == "Em Andamento"]
-                backlog = df[df["Status"] == "A Iniciar"]
-                futuros = df[df["Status"] == "Projetos Futuros"]
-                total = len(df)
-                taxa = round(len(concluidos_df)/total*100, 1) if total > 0 else 0
-
-                urgentes = ativos.copy()
-                urgentes["dias"] = (urgentes["Prazo"] - now).dt.days
-                urgentes = urgentes.sort_values("dias")
-
-                if any(w in q for w in ["risco", "atraso", "urgente", "critico"]):
-                    top = urgentes.head(5)
-                    linhas = ""
-                    for _, r in top.iterrows():
-                        d = int((r["Prazo"] - now).days)
-                        emoji = "🔴" if d < 7 else "🟡" if d < 30 else "🟢"
-                        linhas += f"\n{emoji} **{r['Projeto']}** — {d} dias ({r['Prazo'].strftime('%d/%m/%Y')})"
-                    answer = f"**⚠️ Projetos com maior risco de atraso:**\n{linhas}\n\n💡 **Recomendacao:** Priorize os marcados em 🔴 imediatamente."
-
-                elif any(w in q for w in ["focar", "energia", "semana", "prioridade", "foco"]):
-                    top = urgentes.head(3)
-                    linhas = ""
-                    for _, r in top.iterrows():
-                        d = int((r["Prazo"] - now).days)
-                        foco = str(r.get("Foco",""))[:50] if pd.notna(r.get("Foco")) else ""
-                        linhas += f"\n🎯 **{r['Projeto']}** ({d}d) — {foco}"
-                    answer = f"**🎯 Foco desta semana:**\n{linhas}\n\n⚡ Concentre energia nestes projetos para evitar atrasos criticos."
-
-                elif any(w in q for w in ["diagnostico", "geral", "portfolio", "situacao", "status"]):
-                    answer = f"""**📊 Diagnostico do Portfolio:**
-
-🔢 **Total de projetos:** {total}
-✅ **Concluidos:** {len(concluidos_df)} ({taxa}%)
-⚙️ **Em Andamento:** {len(em_exec)}
-📋 **Backlog:** {len(backlog)}
-🔮 **Futuros:** {len(futuros)}
-
-{"🟢 **Performance Excepcional** — Pipeline acima da media!" if taxa >= 70 else "🟡 **Performance Estavel** — Ha espaco para acelerar o backlog." if taxa >= 40 else "🔴 **Atencao Requerida** — Revisao estrategica recomendada."}
-
-💡 Proximo prazo critico: **{urgentes.iloc[0]['Projeto'] if not urgentes.empty else 'N/A'}** — vence em {int(urgentes.iloc[0]['dias']) if not urgentes.empty else 0} dias."""
-
-                elif any(w in q for w in ["acelerar", "rapido", "adiantar"]):
-                    top = urgentes[urgentes["dias"] > 30].head(4)
-                    if top.empty:
-                        answer = "⚡ Todos os projetos ativos estao com prazo proximo. Foque em concluir os urgentes primeiro."
-                    else:
-                        linhas = "\n".join([f"⚡ **{r['Projeto']}** — {int(r['dias'])} dias" for _, r in top.iterrows()])
-                        answer = f"**Projetos que podem ser acelerados (prazo folgado):**\n{linhas}\n\n✅ Aproveite para adiantar enquanto os urgentes nao chegam."
-
-                elif any(w in q for w in ["gargalo", "problema", "bloqueio"]):
-                    muitos_urgentes = urgentes[urgentes["dias"] < 14]
-                    answer = f"""**🔍 Gargalos Identificados:**
-
-{"🔴 **"+str(len(muitos_urgentes))+" projetos vencem em menos de 14 dias** — risco de sobrecarga." if not muitos_urgentes.empty else "✅ Nenhum gargalo critico identificado."}
-
-📋 **Backlog represado:** {len(backlog)} projetos aguardando inicio.
-{"⚠️ Alto volume no backlog — considere priorizar ou redistribuir." if len(backlog) > 5 else "✅ Backlog em nivel saudavel."}"""
-
-                elif any(w in q for w in ["30 dias", "vence", "prazo", "mes"]):
-                    proximos = urgentes[urgentes["dias"] <= 30]
-                    if proximos.empty:
-                        answer = "✅ Nenhum projeto vence nos proximos 30 dias."
-                    else:
-                        linhas = ""
-                        for _, r in proximos.iterrows():
-                            d = int(r["dias"])
-                            emoji = "🔴" if d < 7 else "🟡"
-                            linhas += f"\n{emoji} **{r['Projeto']}** — {r['Prazo'].strftime('%d/%m/%Y')} ({d}d)"
-                        answer = f"**📅 Vence nos proximos 30 dias ({len(proximos)} projetos):**\n{linhas}"
-
-                else:
-                    top3 = urgentes.head(3)
-                    linhas = "\n".join([f"• **{r['Projeto']}** — {int(r['dias'])}d" for _, r in top3.iterrows()])
-                    answer = f"""**🤖 J.A.R.V.I.S — Resumo Executivo:**
-
-📊 Portfolio: **{total} projetos** | Conclusao: **{taxa}%**
-⚙️ Em andamento: **{len(em_exec)}** | Backlog: **{len(backlog)}**
-
-**Top prioridades agora:**
-{linhas}
-
-💬 Use os botoes ao lado para analises especificas!"""
-
-        except Exception as e:
-            answer = f"Erro interno: {str(e)}"
-
-        st.session_state.chat_history.append({"role": "assistant", "content": answer})
-        st.rerun()
-
-
-# ─────────────────────────────────────────────
-# TAB 6 — NOTAS
-# ─────────────────────────────────────────────
-with tab6:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#3B5BDB;margin-bottom:16px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
     &#9670; NOTAS ESTRATEGICAS
     </div>
     """, unsafe_allow_html=True)
@@ -1365,12 +1210,12 @@ with tab6:
     st.text_area(
         "Espaco livre para anotacoes, ideias e contexto",
         height=500,
-        placeholder="Escreva suas anotacoes aqui...\n\nDicas, estrategias, insights, proximos passos, contexto de reunioes...",
+        placeholder="Escreva suas anotacoes aqui...\n\nDicas, estrategias, insights, proximos passos...",
         label_visibility="visible"
     )
 
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:#9CA3AF;margin-top:8px;text-align:right;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:#9C8B82;margin-top:8px;text-align:right;">
     Notas sao locais e nao sao salvas entre sessoes
     </div>
     """, unsafe_allow_html=True)
