@@ -4,22 +4,16 @@ import pandas as pd
 import json
 from datetime import datetime, timedelta
 
-LIB_PRONTA = True
-
 st.set_page_config(
     layout="wide",
     page_title="Sabino OS",
-    page_icon=":zap:",
+    page_icon=":crystal_ball:",
     initial_sidebar_state="expanded"
 )
 
-# ============================================================
-# GLOBAL STYLES
-# ============================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-
 :root {
     --bg: #F6F5FA;
     --bg2: #FFFFFF;
@@ -30,44 +24,32 @@ st.markdown("""
     --accent: #6B21A8;
     --accent2: #10B981;
     --accent-light: rgba(107,33,168,0.07);
-    --accent-muted: rgba(107,33,168,0.14);
-    --gold: #10B981;
     --green: #10B981;
     --red: #C92A2A;
-    --orange: #7C3AED;
     --purple: #6B21A8;
-    --teal: #0C8599;
     --text: #1A1225;
     --text-muted: #5B4E72;
     --text-dim: #9588AA;
 }
-
 *, *::before, *::after { box-sizing: border-box; }
-
 html, body, .stApp {
     font-family: 'Inter', sans-serif !important;
     background: var(--bg) !important;
     color: var(--text) !important;
 }
-
 [data-testid="stHeader"], #MainMenu, footer, .stDeployButton { display: none !important; }
 [data-testid="collapsedControl"] { display: none !important; }
 [data-testid="stSidebarCollapsedControl"] { display: none !important; }
 section[data-testid="stSidebar"] { transform: none !important; width: 240px !important; min-width: 240px !important; }
 [data-testid="stAppViewContainer"] { background: var(--bg) !important; }
 .block-container { padding: 1.5rem 1.5rem 2rem !important; max-width: 100% !important; }
-
-/* Sidebar */
 [data-testid="stSidebar"] {
     background: var(--bg2) !important;
     border-right: 1px solid var(--border) !important;
-    min-width: 220px !important;
-    box-shadow: 2px 0 12px rgba(0,0,0,0.04) !important;
+    box-shadow: 2px 0 12px rgba(107,33,168,0.06) !important;
 }
 [data-testid="stSidebar"] .block-container { padding: 1.5rem 1rem !important; }
 [data-testid="stSidebar"] * { color: var(--text) !important; }
-
-/* Tabs */
 .stTabs [data-baseweb="tab-list"] {
     background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
@@ -75,7 +57,7 @@ section[data-testid="stSidebar"] { transform: none !important; width: 240px !imp
     padding: 4px !important;
     gap: 2px !important;
     overflow-x: auto !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+    box-shadow: 0 1px 4px rgba(107,33,168,0.06) !important;
 }
 .stTabs [data-baseweb="tab"] {
     background: transparent !important;
@@ -84,7 +66,6 @@ section[data-testid="stSidebar"] { transform: none !important; width: 240px !imp
     padding: 8px 16px !important;
     font-size: 13px !important;
     font-weight: 500 !important;
-    font-family: 'Inter', sans-serif !important;
     white-space: nowrap !important;
     transition: all 0.2s !important;
     border: none !important;
@@ -92,428 +73,52 @@ section[data-testid="stSidebar"] { transform: none !important; width: 240px !imp
 .stTabs [aria-selected="true"] {
     background: var(--accent) !important;
     color: #fff !important;
-    box-shadow: 0 2px 8px rgba(59,91,219,0.3) !important;
+    box-shadow: 0 2px 8px rgba(107,33,168,0.3) !important;
 }
 .stTabs [data-baseweb="tab-panel"] { padding-top: 1.5rem !important; }
-
-/* Metrics */
 [data-testid="stMetric"] {
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
     border-radius: 14px !important;
     padding: 20px !important;
-    transition: all 0.2s !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 1px 4px rgba(107,33,168,0.05) !important;
 }
-[data-testid="stMetric"]:hover {
-    border-color: var(--accent) !important;
-    box-shadow: 0 4px 16px rgba(59,91,219,0.1) !important;
-    transform: translateY(-2px) !important;
-}
-[data-testid="stMetricLabel"] {
-    color: var(--text-muted) !important;
-    font-size: 11px !important;
-    letter-spacing: 1px !important;
-    text-transform: uppercase !important;
-    font-family: 'JetBrains Mono', monospace !important;
-}
-[data-testid="stMetricValue"] {
-    color: var(--accent) !important;
-    font-family: 'Syne', sans-serif !important;
-    font-size: 2rem !important;
-}
-
-/* Buttons */
 .stButton > button {
     background: var(--accent) !important;
     color: #fff !important;
     border: none !important;
     border-radius: 10px !important;
-    font-family: 'Inter', sans-serif !important;
     font-weight: 600 !important;
     font-size: 13px !important;
     transition: all 0.2s !important;
-    box-shadow: 0 2px 8px rgba(59,91,219,0.25) !important;
+    box-shadow: 0 2px 8px rgba(107,33,168,0.25) !important;
 }
 .stButton > button:hover {
-    background: #2f4cba !important;
+    background: #4C1D95 !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 16px rgba(59,91,219,0.35) !important;
 }
-
-/* Inputs */
 .stTextInput input, .stTextArea textarea {
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
     border-radius: 10px !important;
     color: var(--text) !important;
-    font-family: 'Inter', sans-serif !important;
     font-size: 14px !important;
-    transition: border-color 0.2s, box-shadow 0.2s !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
 }
 .stTextInput input:focus, .stTextArea textarea:focus {
     border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(59,91,219,0.12) !important;
+    box-shadow: 0 0 0 3px rgba(107,33,168,0.12) !important;
 }
-.stTextInput label, .stTextArea label {
-    color: var(--text-muted) !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.5px !important;
-}
-
-/* Dataframe */
 [data-testid="stDataFrame"] {
     border: 1px solid var(--border) !important;
     border-radius: 12px !important;
     overflow: hidden !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
 }
-
-/* Divider */
 hr { border-color: var(--border) !important; }
-
-/* Link button */
-.stLinkButton a {
-    background: var(--surface) !important;
-    color: var(--text) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 10px !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-}
-
-/* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
-
-/* Chat bubbles */
-.chat-bubble-user {
-    background: var(--accent);
-    color: #fff;
-    border-radius: 14px 14px 4px 14px;
-    padding: 12px 16px;
-    max-width: 75%;
-    font-size: 14px;
-    line-height: 1.5;
-}
-.chat-bubble-ai {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px 14px 14px 4px;
-    padding: 12px 16px;
-    max-width: 80%;
-    font-size: 14px;
-    color: var(--text);
-    line-height: 1.6;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-.chat-msg-user { display: flex; justify-content: flex-end; margin: 8px 0; }
-.chat-msg-ai   { display: flex; justify-content: flex-start; margin: 8px 0; }
-
-@media (max-width: 768px) {
-    .block-container { padding: 1rem 0.75rem 2rem !important; }
-    [data-testid="stMetricValue"] { font-size: 1.5rem !important; }
-    .stTabs [data-baseweb="tab"] { padding: 7px 10px !important; font-size: 11px !important; }
-}
 </style>
 """, unsafe_allow_html=True)
-
-# ============================================================
-# JARVIS LOGIN COMPONENT
-# ============================================================
-JARVIS_HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: transparent; overflow: hidden; font-family: 'Space Grotesk', sans-serif; }
-
-  #stage {
-    width: 100%; height: 100%;
-    position: relative; overflow: hidden;
-    background: #F8F9FC;
-  }
-
-  canvas#particles { position: absolute; inset: 0; width: 100%; height: 100%; }
-
-  /* Orbit rings */
-  .rings { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(320px, 90vw); height: min(320px, 90vw); }
-  .ring {
-    position: absolute; border-radius: 50%;
-    border: 1px solid rgba(59,91,219,0.12);
-    top: 50%; left: 50%; transform: translate(-50%, -50%);
-  }
-  .ring-1 { width: 100%; height: 100%; animation: spin 20s linear infinite; border-style: dashed; border-color: rgba(59,91,219,0.15); }
-  .ring-2 { width: 72%; height: 72%; animation: spin 14s linear infinite reverse; border-color: rgba(212,136,10,0.2); }
-  .ring-3 { width: 48%; height: 48%; animation: spin 9s linear infinite; border-color: rgba(59,91,219,0.15); }
-
-  /* Orbit dot */
-  .orbit-dot {
-    position: absolute; width: 6px; height: 6px;
-    background: var(--c, #6B21A8); border-radius: 50%;
-    box-shadow: 0 0 8px var(--c, #6B21A8);
-    top: 0; left: 50%; transform: translateX(-50%) translateY(-3px);
-  }
-  .ring-1 .orbit-dot { --c: #6B21A8; }
-  .ring-2 .orbit-dot { --c: #7C3AED; }
-
-  @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
-
-  /* SVG robot */
-  #bot {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -52%);
-    width: min(260px, 75vw);
-    filter: drop-shadow(0 0 16px rgba(59,91,219,0.15)) drop-shadow(0 8px 24px rgba(0,0,0,0.12));
-    animation: float 4s ease-in-out infinite;
-  }
-  @keyframes float { 0%,100%{ transform: translate(-50%,-52%); } 50%{ transform: translate(-50%,-56%); } }
-
-  .jv-head { animation: headtilt 6s ease-in-out infinite; transform-origin: 200px 230px; }
-  @keyframes headtilt { 0%,100%{ transform: rotate(0); } 30%{ transform: rotate(-3deg); } 70%{ transform: rotate(3deg); } }
-
-  .eye { animation: blink 5s infinite; }
-  @keyframes blink { 0%,90%,100%{ transform: scaleY(1); } 93%{ transform: scaleY(0.05); } }
-  .eye-l { transform-origin: 163px 148px; }
-  .eye-r { transform-origin: 237px 148px; }
-
-  .bar { animation: talk 0.2s ease-in-out infinite alternate; transform-origin: center bottom; }
-  .b1{ animation-delay: 0s; } .b2{ animation-delay: .03s; } .b3{ animation-delay: .06s; }
-  .b4{ animation-delay: .09s; } .b5{ animation-delay: .06s; } .b6{ animation-delay: .03s; } .b7{ animation-delay: .01s; }
-  @keyframes talk { from{ transform: scaleY(0.15); } to{ transform: scaleY(1.3); } }
-
-  .rotor { animation: spin 3s linear infinite; transform-origin: 200px 340px; }
-  .arm-l { animation: armL 4s ease-in-out infinite; transform-origin: 88px 270px; }
-  .arm-r { animation: armR 4s ease-in-out infinite; transform-origin: 312px 270px; }
-  @keyframes armL { 0%,100%{ transform: rotate(0); } 50%{ transform: rotate(-9deg); } }
-  @keyframes armR { 0%,100%{ transform: rotate(0); } 50%{ transform: rotate(9deg); } }
-
-  /* HUD text */
-  .hud {
-    position: absolute; bottom: 12px; left: 50%;
-    transform: translateX(-50%);
-    font-size: 10px; letter-spacing: 3px; color: rgba(59,91,219,0.5);
-    font-family: 'JetBrains Mono', monospace;
-    white-space: nowrap;
-    animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100%{ opacity: 0.5; } 50%{ opacity: 1; } }
-</style>
-</head>
-<body>
-<div id="stage">
-  <canvas id="particles"></canvas>
-
-  <div class="rings">
-    <div class="ring ring-1"><div class="orbit-dot"></div></div>
-    <div class="ring ring-2"><div class="orbit-dot"></div></div>
-    <div class="ring ring-3"></div>
-  </div>
-
-  <svg id="bot" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="gGold" cx="50%" cy="35%">
-        <stop offset="0%" stop-color="#D4C090"/>
-        <stop offset="60%" stop-color="#7C3AED"/>
-        <stop offset="100%" stop-color="#6B5020"/>
-      </radialGradient>
-      <radialGradient id="gCyan" cx="50%" cy="50%">
-        <stop offset="0%" stop-color="#1A1D2E"/>
-        <stop offset="60%" stop-color="#6B21A8"/>
-        <stop offset="100%" stop-color="#2A2D3A"/>
-      </radialGradient>
-      <linearGradient id="gMetal" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#9CA3AF"/>
-        <stop offset="50%" stop-color="#ECEEF3"/>
-        <stop offset="100%" stop-color="#E8EAEF"/>
-      </linearGradient>
-      <linearGradient id="gChest" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#F0F2F7"/>
-        <stop offset="100%" stop-color="#E8EAEF"/>
-      </linearGradient>
-      <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="bigGlow"><feGaussianBlur stdDeviation="8"/></filter>
-    </defs>
-
-    <!-- Shadow -->
-    <ellipse cx="200" cy="490" rx="100" ry="7" fill="#6B21A8" opacity="0.2" filter="url(#bigGlow)"/>
-
-    <!-- Antenna -->
-    <line x1="200" y1="38" x2="200" y2="78" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="200" cy="32" r="6" fill="url(#gGold)" filter="url(#glow)">
-      <animate attributeName="r" values="4;8;4" dur="1.2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.7;1;0.7" dur="1.2s" repeatCount="indefinite"/>
-    </circle>
-
-    <!-- HEAD GROUP -->
-    <g class="jv-head">
-      <!-- Neck -->
-      <rect x="182" y="232" width="36" height="24" rx="4" fill="url(#gMetal)" stroke="rgba(99,179,237,0.3)" stroke-width="1"/>
-      <!-- Head -->
-      <path d="M118 100 Q118 68 148 68 L252 68 Q282 68 282 100 L282 215 Q282 238 252 238 L148 238 Q118 238 118 215 Z" fill="url(#gMetal)"/>
-      <path d="M118 100 Q118 68 148 68 L252 68 Q282 68 282 100 L282 215 Q282 238 252 238 L148 238 Q118 238 118 215 Z" fill="none" stroke="rgba(99,179,237,0.25)" stroke-width="1.5"/>
-      <!-- Top band -->
-      <path d="M128 78 Q128 72 138 72 L262 72 Q272 72 272 78 L272 100 L128 100 Z" fill="url(#gGold)" opacity="0.8"/>
-      <text x="200" y="94" text-anchor="middle" fill="#E8EAEF" font-size="9" font-weight="700" letter-spacing="3" font-family="monospace">JARVIS</text>
-      <!-- Visor bg -->
-      <rect x="135" y="112" width="130" height="72" rx="10" fill="#F0F1F4"/>
-      <rect x="135" y="112" width="130" height="72" rx="10" fill="url(#gCyan)" opacity="0.15"/>
-      <rect x="135" y="112" width="130" height="72" rx="10" fill="none" stroke="rgba(59,91,219,0.3)" stroke-width="1.5"/>
-      <line x1="135" y1="130" x2="265" y2="130" stroke="#6B21A8" stroke-width="0.3" opacity="0.4"/>
-      <line x1="135" y1="148" x2="265" y2="148" stroke="#6B21A8" stroke-width="0.3" opacity="0.4"/>
-      <line x1="135" y1="166" x2="265" y2="166" stroke="#6B21A8" stroke-width="0.3" opacity="0.4"/>
-      <!-- Left Eye -->
-      <g class="eye eye-l">
-        <circle cx="163" cy="148" r="16" fill="#F0F1F4" stroke="rgba(200,169,110,0.5)" stroke-width="1.5"/>
-        <circle cx="163" cy="148" r="10" fill="url(#gCyan)" filter="url(#glow)"/>
-        <circle cx="166" cy="145" r="3" fill="white" opacity="0.8"/>
-        <circle cx="163" cy="148" r="4" fill="#1A1E2A" opacity="0.6"/>
-      </g>
-      <!-- Right Eye -->
-      <g class="eye eye-r">
-        <circle cx="237" cy="148" r="16" fill="#F0F1F4" stroke="rgba(200,169,110,0.5)" stroke-width="1.5"/>
-        <circle cx="237" cy="148" r="10" fill="url(#gCyan)" filter="url(#glow)"/>
-        <circle cx="240" cy="145" r="3" fill="white" opacity="0.8"/>
-        <circle cx="237" cy="148" r="4" fill="#1A1E2A" opacity="0.6"/>
-      </g>
-      <!-- Corner accents on visor -->
-      <path d="M140 116 L152 116" stroke="#6B21A8" stroke-width="1.5" opacity="0.5"/>
-      <path d="M140 116 L140 124" stroke="#6B21A8" stroke-width="1.5" opacity="0.5"/>
-      <path d="M260 116 L248 116" stroke="#7C3AED" stroke-width="1.5" opacity="0.5"/>
-      <path d="M260 116 L260 124" stroke="#7C3AED" stroke-width="1.5" opacity="0.5"/>
-      <!-- Equalizer mouth -->
-      <g transform="translate(164,210)">
-        <rect class="bar b1" x="0"  y="-5"  width="6" height="10" rx="2" fill="#7C3AED" opacity="0.8"/>
-        <rect class="bar b2" x="9"  y="-8"  width="6" height="16" rx="2" fill="#6B21A8"/>
-        <rect class="bar b3" x="18" y="-11" width="6" height="22" rx="2" fill="#7C3AED" opacity="0.8"/>
-        <rect class="bar b4" x="27" y="-14" width="6" height="28" rx="2" fill="#6B21A8"/>
-        <rect class="bar b5" x="36" y="-11" width="6" height="22" rx="2" fill="#7C3AED" opacity="0.8"/>
-        <rect class="bar b6" x="45" y="-8"  width="6" height="16" rx="2" fill="#6B21A8"/>
-        <rect class="bar b7" x="54" y="-5"  width="6" height="10" rx="2" fill="#7C3AED" opacity="0.8"/>
-      </g>
-      <!-- Side vents -->
-      <rect x="118" y="140" width="8" height="3" rx="1" fill="rgba(99,179,237,0.4)"/>
-      <rect x="118" y="147" width="8" height="3" rx="1" fill="rgba(99,179,237,0.4)"/>
-      <rect x="118" y="154" width="8" height="3" rx="1" fill="rgba(99,179,237,0.4)"/>
-      <rect x="274" y="140" width="8" height="3" rx="1" fill="rgba(246,173,85,0.4)"/>
-      <rect x="274" y="147" width="8" height="3" rx="1" fill="rgba(246,173,85,0.4)"/>
-      <rect x="274" y="154" width="8" height="3" rx="1" fill="rgba(246,173,85,0.4)"/>
-    </g>
-
-    <!-- BODY -->
-    <g>
-      <path d="M100 264 Q100 255 118 255 L282 255 Q300 255 300 264 L300 420 Q300 440 282 440 L118 440 Q100 440 100 420 Z" fill="url(#gChest)"/>
-      <path d="M100 264 Q100 255 118 255 L282 255 Q300 255 300 264 L300 420 Q300 440 282 440 L118 440 Q100 440 100 420 Z" fill="none" stroke="rgba(99,179,237,0.2)" stroke-width="1.5"/>
-      <!-- Chest shoulders gold trim -->
-      <path d="M100 264 L130 255 L160 255 L160 285 L100 285 Z" fill="url(#gGold)" opacity="0.7"/>
-      <path d="M300 264 L270 255 L240 255 L240 285 L300 285 Z" fill="url(#gGold)" opacity="0.7"/>
-      <!-- Chest lines -->
-      <line x1="100" y1="290" x2="300" y2="290" stroke="rgba(99,179,237,0.15)" stroke-width="1"/>
-      <line x1="100" y1="380" x2="300" y2="380" stroke="rgba(99,179,237,0.15)" stroke-width="1"/>
-      <!-- ARC REACTOR -->
-      <circle cx="200" cy="340" r="52" fill="#F0F1F4" stroke="rgba(99,179,237,0.1)" stroke-width="1"/>
-      <circle cx="200" cy="340" r="46" fill="url(#gCyan)" filter="url(#bigGlow)" opacity="0.5"/>
-      <circle cx="200" cy="340" r="40" fill="#F0F1F4"/>
-      <circle cx="200" cy="340" r="36" fill="none" stroke="rgba(246,173,85,0.6)" stroke-width="2"/>
-      <circle cx="200" cy="340" r="28" fill="none" stroke="rgba(99,179,237,0.8)" stroke-width="1.5"/>
-      <circle cx="200" cy="340" r="18" fill="url(#gCyan)" filter="url(#glow)"/>
-      <circle cx="200" cy="340" r="10" fill="white" opacity="0.95"/>
-      <!-- Rotor ticks -->
-      <g class="rotor">
-        <line x1="200" y1="304" x2="200" y2="314" stroke="#7C3AED" stroke-width="2"/>
-        <line x1="200" y1="366" x2="200" y2="376" stroke="#7C3AED" stroke-width="2"/>
-        <line x1="164" y1="340" x2="174" y2="340" stroke="#7C3AED" stroke-width="2"/>
-        <line x1="226" y1="340" x2="236" y2="340" stroke="#7C3AED" stroke-width="2"/>
-        <line x1="177" y1="317" x2="183" y2="325" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
-        <line x1="223" y1="317" x2="217" y2="325" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
-        <line x1="177" y1="363" x2="183" y2="355" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
-        <line x1="223" y1="363" x2="217" y2="355" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
-      </g>
-      <!-- Side status LEDs -->
-      <circle cx="128" cy="316" r="4" fill="#2F9E44" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="272" cy="316" r="4" fill="#6B21A8" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1.5s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="128" cy="328" r="3" fill="#7C3AED">
-        <animate attributeName="opacity" values="0.9;0.2;0.9" dur="0.8s" repeatCount="indefinite"/>
-      </circle>
-    </g>
-
-    <!-- LEFT ARM -->
-    <g class="arm-l">
-      <rect x="73" y="265" width="24" height="130" rx="11" fill="url(#gMetal)" stroke="rgba(99,179,237,0.2)" stroke-width="1"/>
-      <rect x="78" y="265" width="14" height="30" rx="4" fill="url(#gGold)" opacity="0.6"/>
-      <circle cx="85" cy="400" r="14" fill="url(#gMetal)" stroke="rgba(246,173,85,0.4)" stroke-width="1.5"/>
-      <circle cx="85" cy="400" r="6" fill="url(#gGold)" opacity="0.8"/>
-    </g>
-
-    <!-- RIGHT ARM -->
-    <g class="arm-r">
-      <rect x="303" y="265" width="24" height="130" rx="11" fill="url(#gMetal)" stroke="rgba(99,179,237,0.2)" stroke-width="1"/>
-      <rect x="308" y="265" width="14" height="30" rx="4" fill="url(#gGold)" opacity="0.6"/>
-      <circle cx="315" cy="400" r="14" fill="url(#gMetal)" stroke="rgba(246,173,85,0.4)" stroke-width="1.5"/>
-      <circle cx="315" cy="400" r="6" fill="url(#gGold)" opacity="0.8"/>
-    </g>
-
-    <!-- LEGS -->
-    <rect x="138" y="440" width="48" height="48" rx="8" fill="url(#gMetal)" stroke="rgba(99,179,237,0.15)" stroke-width="1"/>
-    <rect x="214" y="440" width="48" height="48" rx="8" fill="url(#gMetal)" stroke="rgba(99,179,237,0.15)" stroke-width="1"/>
-    <rect x="134" y="485" width="58" height="14" rx="7" fill="url(#gGold)" opacity="0.7"/>
-    <rect x="208" y="485" width="58" height="14" rx="7" fill="url(#gGold)" opacity="0.7"/>
-  </svg>
-
-  <div class="hud">&#128302; J.A.R.V.I.S &middot; FEITICO ATIVO &#128302;</div>
-</div>
-
-<script>
-const cv = document.getElementById('particles');
-const ctx = cv.getContext('2d');
-function resize() { cv.width = cv.offsetWidth; cv.height = cv.offsetHeight; }
-resize();
-window.addEventListener('resize', resize);
-const P = Array.from({length: 35}, () => ({
-  x: Math.random()*cv.width, y: Math.random()*cv.height,
-  vx: (Math.random()-0.5)*0.35, vy: (Math.random()-0.5)*0.35,
-  r: Math.random()*1.6+0.4,
-  c: Math.random()>0.5 ? '#6B21A8' : '#7C3AED'
-}));
-function tick(){
-  ctx.clearRect(0,0,cv.width,cv.height);
-  P.forEach(p => {
-    p.x+=p.vx; p.y+=p.vy;
-    if(p.x<0||p.x>cv.width) p.vx*=-1;
-    if(p.y<0||p.y>cv.height) p.vy*=-1;
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=p.c; ctx.shadowBlur=6; ctx.shadowColor=p.c; ctx.fill();
-  });
-  for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){
-    const dx=P[i].x-P[j].x, dy=P[i].y-P[j].y, d=Math.sqrt(dx*dx+dy*dy);
-    if(d<90){ ctx.strokeStyle=`rgba(59,91,219,${0.15*(1-d/90)})`; ctx.lineWidth=0.5;
-      ctx.beginPath(); ctx.moveTo(P[i].x,P[i].y); ctx.lineTo(P[j].x,P[j].y); ctx.stroke(); }
-  }
-  requestAnimationFrame(tick);
-}
-tick();
-
-// Voice greeting
-setTimeout(() => {
-  try {
-    const u = new SpeechSynthesisUtterance('Bem-vindo, senhor Sabino. Sistema pronto para autenticacao.');
-    u.lang='pt-BR'; u.rate=0.85; u.pitch=0.5; u.volume=0.8;
-    speechSynthesis.speak(u);
-  } catch(e){}
-}, 1000);
-</script>
-</body>
-</html>
-"""
 
 # ============================================================
 # SESSION STATE
@@ -524,6 +129,12 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "df_projetos" not in st.session_state:
     st.session_state.df_projetos = None
+if "estado_selecionado" not in st.session_state:
+    st.session_state.estado_selecionado = None
+if "projeto_chat_mapa" not in st.session_state:
+    st.session_state.projeto_chat_mapa = None
+if "chat_mapa_history" not in st.session_state:
+    st.session_state.chat_mapa_history = []
 
 # ============================================================
 # LOGIN
@@ -537,211 +148,264 @@ if not st.session_state.logado:
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }
-  #stage { width: 100%; height: 100%; position: relative; background: transparent; display: flex; align-items: center; justify-content: center; }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-
-  /* Humanoid Robot */
-  #humanoid {
+  body { background: transparent; overflow: hidden; }
+  #stage {
+    width: 100%; height: 100%;
     position: relative;
-    z-index: 2;
-    width: min(260px, 75vw);
-    margin-top: 20px;
-    animation: float 4s ease-in-out infinite;
-    filter: drop-shadow(0 8px 32px rgba(107,33,168,0.25));
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
   }
-  @keyframes float {
-    0%,100% { transform: translateY(0px); }
-    50%      { transform: translateY(-12px); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  #wizard { position: relative; z-index: 2; width: min(280px, 78vw); margin-top: 10px;
+    animation: float 5s ease-in-out infinite;
+    filter: drop-shadow(0 12px 32px rgba(107,33,168,0.3));
   }
+  @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
 
-  /* Head animations */
-  .head-group { animation: headtilt 5s ease-in-out infinite; transform-origin: 110px 80px; }
-  @keyframes headtilt { 0%,100%{transform:rotate(0);} 35%{transform:rotate(-4deg);} 70%{transform:rotate(4deg);} }
+  .head-g { animation: nod 6s ease-in-out infinite; transform-origin: 130px 110px; }
+  @keyframes nod { 0%,100%{transform:rotate(0);} 30%{transform:rotate(-3deg);} 70%{transform:rotate(2deg);} }
 
-  .eye { animation: blink 4s infinite; }
-  .eye-l { transform-origin: 90px 70px; }
-  .eye-r { transform-origin: 130px 70px; }
-  @keyframes blink { 0%,88%,100%{transform:scaleY(1);} 92%{transform:scaleY(0.05);} }
+  .eye { animation: blink 5s infinite; }
+  .el { transform-origin: 108px 96px; }
+  .er { transform-origin: 152px 96px; }
+  @keyframes blink { 0%,85%,100%{transform:scaleY(1);} 89%{transform:scaleY(0.05);} }
 
-  /* Robe/cloak sway */
-  .robe { animation: robesway 6s ease-in-out infinite; transform-origin: 110px 200px; }
-  @keyframes robesway { 0%,100%{transform:rotate(0);} 50%{transform:rotate(2deg);} }
+  .orb { animation: orbpulse 2s ease-in-out infinite; transform-origin: 218px 108px; }
+  @keyframes orbpulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.18);} }
 
-  /* Magic orb pulse */
-  .orb { animation: orbpulse 2s ease-in-out infinite; transform-origin: 155px 185px; }
-  @keyframes orbpulse { 0%,100%{transform:scale(1);opacity:0.8;} 50%{transform:scale(1.2);opacity:1;} }
+  .robe { animation: sway 7s ease-in-out infinite; transform-origin: 130px 220px; }
+  @keyframes sway { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(1.5deg);} }
 
-  /* Stars */
-  .star { animation: twinkle 1.5s ease-in-out infinite; }
-  .s1{animation-delay:0s;} .s2{animation-delay:.3s;} .s3{animation-delay:.6s;} .s4{animation-delay:.9s;}
-  @keyframes twinkle { 0%,100%{opacity:0.3;transform:scale(0.8);} 50%{opacity:1;transform:scale(1.2);} }
+  .arm-r { animation: armwave 3.5s ease-in-out infinite; transform-origin: 185px 195px; }
+  @keyframes armwave { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-10deg);} }
 
-  /* Arm with staff */
-  .arm-staff { animation: staffwave 3s ease-in-out infinite; transform-origin: 155px 160px; }
-  @keyframes staffwave { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-8deg);} }
+  .mp { animation: mfloat 2.5s ease-in-out infinite; }
+  .mp1{animation-delay:0s;} .mp2{animation-delay:.6s;} .mp3{animation-delay:1.2s;} .mp4{animation-delay:1.8s;}
+  @keyframes mfloat { 0%{transform:translateY(0) scale(1);opacity:1;} 100%{transform:translateY(-28px) scale(0.1);opacity:0;} }
 
-  /* Particles */
-  .magic-particle { animation: magicfloat 3s ease-in-out infinite; }
-  .mp1{animation-delay:0s;} .mp2{animation-delay:.5s;} .mp3{animation-delay:1s;} .mp4{animation-delay:1.5s;}
-  @keyframes magicfloat { 0%{transform:translateY(0) scale(1);opacity:1;} 100%{transform:translateY(-30px) scale(0);opacity:0;} }
+  .star { animation: twinkle 2s ease-in-out infinite; }
+  .s1{animation-delay:0s;} .s2{animation-delay:.4s;} .s3{animation-delay:.8s;} .s4{animation-delay:1.2s;}
+  @keyframes twinkle { 0%,100%{opacity:0.4;transform:scale(0.8) rotate(0deg);} 50%{opacity:1;transform:scale(1.2) rotate(20deg);} }
 
   .hud {
-    position: absolute; bottom: 10px; left: 50%;
-    transform: translateX(-50%);
-    font-size: 9px; letter-spacing: 3px; color: rgba(107,33,168,0.6);
-    font-family: monospace; white-space: nowrap;
-    animation: pulse 2s ease-in-out infinite;
-    z-index: 3;
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; letter-spacing: 3px; color: rgba(107,33,168,0.55);
+    font-family: monospace; white-space: nowrap; z-index: 3;
+    animation: pulse 2.5s ease-in-out infinite;
   }
-  @keyframes pulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+  @keyframes pulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
 </style>
 </head>
 <body>
 <div id="stage">
   <canvas id="cv"></canvas>
 
-  <svg id="humanoid" viewBox="0 0 220 380" xmlns="http://www.w3.org/2000/svg">
+  <svg id="wizard" viewBox="0 0 260 420" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <radialGradient id="gPurple" cx="50%" cy="30%">
-        <stop offset="0%" stop-color="#A855F7"/>
-        <stop offset="100%" stop-color="#4C1D95"/>
-      </radialGradient>
-      <radialGradient id="gRobe" cx="50%" cy="20%">
+      <radialGradient id="gHat" cx="50%" cy="20%">
         <stop offset="0%" stop-color="#7C3AED"/>
-        <stop offset="100%" stop-color="#2E1065"/>
+        <stop offset="100%" stop-color="#1E0A36"/>
       </radialGradient>
-      <radialGradient id="gSkin" cx="50%" cy="40%">
-        <stop offset="0%" stop-color="#FDE68A"/>
-        <stop offset="100%" stop-color="#D97706"/>
+      <radialGradient id="gRobe" cx="50%" cy="15%">
+        <stop offset="0%" stop-color="#5B21B6"/>
+        <stop offset="100%" stop-color="#1E0A36"/>
       </radialGradient>
-      <radialGradient id="gOrb" cx="50%" cy="40%">
-        <stop offset="0%" stop-color="#10B981"/>
-        <stop offset="60%" stop-color="#059669"/>
-        <stop offset="100%" stop-color="#065F46"/>
+      <radialGradient id="gFace" cx="45%" cy="35%">
+        <stop offset="0%" stop-color="#F5DEB3"/>
+        <stop offset="100%" stop-color="#C8A96A"/>
       </radialGradient>
+      <radialGradient id="gOrb" cx="40%" cy="35%">
+        <stop offset="0%" stop-color="#6EE7B7"/>
+        <stop offset="60%" stop-color="#10B981"/>
+        <stop offset="100%" stop-color="#064E3B"/>
+      </radialGradient>
+      <linearGradient id="gBeard" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#E5E7EB"/>
+        <stop offset="100%" stop-color="#D1D5DB"/>
+      </linearGradient>
       <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="softglow"><feGaussianBlur stdDeviation="6"/></filter>
+      <filter id="bigglow"><feGaussianBlur stdDeviation="7"/></filter>
+      <filter id="shadow"><feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#1E0A36" flood-opacity="0.4"/></filter>
     </defs>
 
-    <!-- Shadow -->
-    <ellipse cx="110" cy="372" rx="55" ry="6" fill="#4C1D95" opacity="0.2" filter="url(#softglow)"/>
+    <!-- Shadow on ground -->
+    <ellipse cx="118" cy="413" rx="62" ry="7" fill="#4C1D95" opacity="0.18" filter="url(#bigglow)"/>
 
-    <!-- ROBE/CLOAK -->
+    <!-- ===== ROBE / BODY ===== -->
     <g class="robe">
-      <!-- Main robe body -->
-      <path d="M55 175 Q45 200 35 280 Q30 340 40 360 L180 360 Q190 340 185 280 Q175 200 165 175 Z"
-            fill="url(#gRobe)" opacity="0.95"/>
-      <!-- Robe highlight -->
-      <path d="M75 175 Q70 210 65 280 L155 280 Q150 210 145 175 Z"
-            fill="#7C3AED" opacity="0.3"/>
-      <!-- Robe bottom edge -->
-      <path d="M35 360 Q55 370 110 368 Q165 370 180 360 L185 355 Q165 365 110 363 Q55 365 35 355 Z"
-            fill="#A855F7" opacity="0.5"/>
-      <!-- Star on robe -->
-      <text x="88" y="270" font-size="22" text-anchor="middle" class="star s1">⭐</text>
-      <text x="130" y="240" font-size="14" text-anchor="middle" class="star s2">✨</text>
-      <text x="70" y="310" font-size="12" text-anchor="middle" class="star s3">⭐</text>
+      <!-- Main robe -->
+      <path d="M68 200 Q52 240 38 310 Q28 360 35 405 L205 405 Q212 360 202 310 Q188 240 172 200 Z"
+            fill="url(#gRobe)"/>
+      <!-- Robe center seam -->
+      <path d="M120 200 Q118 280 116 405" stroke="#7C3AED" stroke-width="1.5" fill="none" opacity="0.4"/>
+      <!-- Robe highlight left -->
+      <path d="M68 200 Q58 250 50 320 L90 320 Q88 250 82 200 Z" fill="#7C3AED" opacity="0.25"/>
+      <!-- Robe collar -->
+      <path d="M80 198 Q120 210 160 198 L158 185 Q120 196 82 185 Z" fill="#A855F7" opacity="0.7"/>
+      <!-- Belt -->
+      <rect x="70" y="238" width="120" height="10" rx="5" fill="#4C1D95"/>
+      <ellipse cx="120" cy="243" rx="10" ry="7" fill="#7C3AED"/>
+      <ellipse cx="120" cy="243" rx="5" ry="4" fill="#10B981" filter="url(#glow)"/>
+      <!-- Stars on robe -->
+      <text x="75" y="285" font-size="16" class="star s1">&#11088;</text>
+      <text x="148" y="310" font-size="12" class="star s2">&#10024;</text>
+      <text x="60" y="340" font-size="10" class="star s3">&#11088;</text>
+      <text x="155" y="260" font-size="10" class="star s4">&#10024;</text>
+      <!-- Moon on robe -->
+      <text x="95" y="360" font-size="18" opacity="0.7">&#9790;</text>
+      <!-- Feet / boots -->
+      <ellipse cx="88" cy="404" rx="26" ry="9" fill="#1E0A36"/>
+      <ellipse cx="150" cy="404" rx="26" ry="9" fill="#1E0A36"/>
+      <rect x="68" y="390" width="40" height="16" rx="8" fill="#2E1065"/>
+      <rect x="130" y="390" width="40" height="16" rx="8" fill="#2E1065"/>
     </g>
 
-    <!-- BODY under robe -->
-    <rect x="75" y="155" width="70" height="30" rx="6" fill="#5B21B6" opacity="0.8"/>
+    <!-- ===== LEFT ARM ===== -->
+    <path d="M68 200 Q48 220 40 255 Q36 272 44 280 Q54 286 62 272 Q66 256 72 232 L80 208 Z"
+          fill="#3B0764" filter="url(#shadow)"/>
+    <!-- Left hand (old, wrinkled) -->
+    <ellipse cx="44" cy="281" rx="13" ry="11" fill="url(#gFace)"/>
+    <!-- Fingers -->
+    <line x1="34" y1="276" x2="30" y2="268" stroke="#C8A96A" stroke-width="4" stroke-linecap="round"/>
+    <line x1="38" y1="272" x2="35" y2="263" stroke="#C8A96A" stroke-width="4" stroke-linecap="round"/>
+    <line x1="44" y1="270" x2="42" y2="261" stroke="#C8A96A" stroke-width="4" stroke-linecap="round"/>
+    <line x1="50" y1="272" x2="50" y2="263" stroke="#C8A96A" stroke-width="4" stroke-linecap="round"/>
 
-    <!-- NECK -->
-    <rect x="98" y="128" width="24" height="18" rx="4" fill="#D97706"/>
-
-    <!-- HEAD GROUP -->
-    <g class="head-group">
-      <!-- Hat brim -->
-      <ellipse cx="110" cy="30" rx="52" ry="9" fill="#4C1D95"/>
-      <!-- Hat cone -->
-      <path d="M110 0 L70 30 L150 30 Z" fill="url(#gPurple)"/>
-      <!-- Hat band -->
-      <rect x="70" y="26" width="80" height="7" rx="3" fill="#A855F7" opacity="0.8"/>
-      <!-- Hat star -->
-      <text x="110" y="18" font-size="10" text-anchor="middle" class="star s4" fill="#FDE68A">★</text>
-
-      <!-- Face -->
-      <ellipse cx="110" cy="85" rx="38" ry="42" fill="url(#gSkin)"/>
-      <!-- Face shading -->
-      <ellipse cx="110" cy="90" rx="32" ry="35" fill="#FDE68A" opacity="0.4"/>
-
-      <!-- Beard -->
-      <path d="M78 105 Q90 135 110 140 Q130 135 142 105 Q130 118 110 122 Q90 118 78 105 Z"
-            fill="#E5E7EB" opacity="0.9"/>
-      <!-- Beard lines -->
-      <path d="M95 110 Q100 125 110 128" stroke="#D1D5DB" stroke-width="1" fill="none"/>
-      <path d="M125 110 Q120 125 110 128" stroke="#D1D5DB" stroke-width="1" fill="none"/>
-
-      <!-- Eyebrows -->
-      <path d="M82 65 Q90 60 100 64" stroke="#92400E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <path d="M120 64 Q130 60 138 65" stroke="#92400E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-      <!-- Left Eye -->
-      <g class="eye eye-l">
-        <ellipse cx="90" cy="74" rx="11" ry="12" fill="white"/>
-        <ellipse cx="90" cy="74" rx="7" ry="8" fill="#4C1D95"/>
-        <ellipse cx="90" cy="74" rx="4" ry="4" fill="#1E0A36"/>
-        <ellipse cx="93" cy="71" rx="2" ry="2" fill="white" opacity="0.9"/>
-        <!-- Magic glow eye -->
-        <ellipse cx="90" cy="74" rx="7" ry="8" fill="#7C3AED" opacity="0.3" filter="url(#glow)"/>
-      </g>
-
-      <!-- Right Eye -->
-      <g class="eye eye-r">
-        <ellipse cx="130" cy="74" rx="11" ry="12" fill="white"/>
-        <ellipse cx="130" cy="74" rx="7" ry="8" fill="#4C1D95"/>
-        <ellipse cx="130" cy="74" rx="4" ry="4" fill="#1E0A36"/>
-        <ellipse cx="133" cy="71" rx="2" ry="2" fill="white" opacity="0.9"/>
-        <ellipse cx="130" cy="74" rx="7" ry="8" fill="#7C3AED" opacity="0.3" filter="url(#glow)"/>
-      </g>
-
-      <!-- Nose -->
-      <ellipse cx="110" cy="90" rx="5" ry="4" fill="#D97706" opacity="0.6"/>
-
-      <!-- Smile -->
-      <path d="M95 102 Q110 114 125 102" stroke="#92400E" stroke-width="2" fill="none" stroke-linecap="round"/>
-
-      <!-- Ears -->
-      <ellipse cx="72" cy="85" rx="8" ry="10" fill="url(#gSkin)"/>
-      <ellipse cx="148" cy="85" rx="8" ry="10" fill="url(#gSkin)"/>
-    </g>
-
-    <!-- LEFT ARM (holding robe) -->
-    <path d="M75 165 Q55 175 48 210 Q44 230 50 240 Q58 245 65 235 Q68 220 72 200 L78 178 Z"
-          fill="#5B21B6"/>
-    <!-- Left hand -->
-    <ellipse cx="52" cy="242" rx="12" ry="10" fill="url(#gSkin)"/>
-
-    <!-- RIGHT ARM with staff -->
-    <g class="arm-staff">
-      <path d="M145 165 Q162 172 168 195 Q172 215 165 230 L158 218 Q156 200 150 182 L142 170 Z"
-            fill="#5B21B6"/>
+    <!-- ===== RIGHT ARM + STAFF ===== -->
+    <g class="arm-r">
+      <path d="M172 200 Q192 218 200 250 Q205 268 198 278 Q188 285 180 272 Q176 255 170 230 L162 208 Z"
+            fill="#3B0764" filter="url(#shadow)"/>
       <!-- Right hand -->
-      <ellipse cx="163" cy="232" rx="12" ry="10" fill="url(#gSkin)"/>
-
+      <ellipse cx="197" cy="279" rx="13" ry="11" fill="url(#gFace)"/>
       <!-- Staff -->
-      <line x1="163" y1="225" x2="175" y2="120" stroke="#92400E" stroke-width="5" stroke-linecap="round"/>
-      <line x1="163" y1="225" x2="175" y2="120" stroke="#FDE68A" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
-
-      <!-- Orb on staff -->
+      <line x1="200" y1="275" x2="218" y2="85" stroke="#5C3A1E" stroke-width="7" stroke-linecap="round"/>
+      <line x1="200" y1="275" x2="218" y2="85" stroke="#92400E" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+      <!-- Staff glow line -->
+      <line x1="218" y1="85" x2="218" y2="130" stroke="#10B981" stroke-width="2" opacity="0.5" filter="url(#glow)"/>
+      <!-- ORB on staff -->
       <g class="orb">
-        <ellipse cx="175" cy="112" rx="18" ry="18" fill="#10B981" opacity="0.3" filter="url(#softglow)"/>
-        <ellipse cx="175" cy="112" rx="14" ry="14" fill="url(#gOrb)" filter="url(#glow)"/>
-        <ellipse cx="175" cy="112" rx="8" ry="8" fill="#34D399" opacity="0.6"/>
-        <ellipse cx="171" cy="108" rx="4" ry="4" fill="white" opacity="0.7"/>
+        <ellipse cx="218" cy="78" rx="24" ry="24" fill="#10B981" opacity="0.2" filter="url(#bigglow)"/>
+        <ellipse cx="218" cy="78" rx="18" ry="18" fill="url(#gOrb)" filter="url(#glow)"/>
+        <ellipse cx="218" cy="78" rx="10" ry="10" fill="#6EE7B7" opacity="0.5"/>
+        <ellipse cx="213" cy="73" rx="5" ry="5" fill="white" opacity="0.75"/>
+        <!-- Orb inner symbols -->
+        <text x="218" y="83" font-size="10" text-anchor="middle" fill="white" opacity="0.8">&#9670;</text>
       </g>
-
-      <!-- Magic particles from orb -->
-      <circle class="magic-particle mp1" cx="185" cy="100" r="3" fill="#10B981" opacity="0.8"/>
-      <circle class="magic-particle mp2" cx="162" cy="95" r="2" fill="#A855F7" opacity="0.8"/>
-      <circle class="magic-particle mp3" cx="190" cy="108" r="2" fill="#FDE68A" opacity="0.8"/>
-      <circle class="magic-particle mp4" cx="168" cy="88" r="3" fill="#10B981" opacity="0.8"/>
+      <!-- Magic particles -->
+      <circle class="mp mp1" cx="232" cy="65" r="3.5" fill="#10B981"/>
+      <circle class="mp mp2" cx="204" cy="58" r="2.5" fill="#A855F7"/>
+      <circle class="mp mp3" cx="238" cy="80" r="2" fill="#FDE68A"/>
+      <circle class="mp mp4" cx="210" cy="50" r="3" fill="#10B981"/>
     </g>
 
-    <!-- Feet -->
-    <ellipse cx="90" cy="360" rx="22" ry="8" fill="#3B0764" opacity="0.9"/>
-    <ellipse cx="130" cy="360" rx="22" ry="8" fill="#3B0764" opacity="0.9"/>
+    <!-- ===== HEAD GROUP ===== -->
+    <g class="head-g">
+      <!-- HAT -->
+      <!-- Brim -->
+      <ellipse cx="118" cy="52" rx="58" ry="11" fill="#2E1065" filter="url(#shadow)"/>
+      <!-- Cone body -->
+      <path d="M118 0 L74 52 L162 52 Z" fill="url(#gHat)" filter="url(#shadow)"/>
+      <!-- Hat highlight -->
+      <path d="M118 5 L102 52 L118 52 Z" fill="#A855F7" opacity="0.2"/>
+      <!-- Hat band with buckle -->
+      <rect x="74" y="47" width="88" height="9" rx="4" fill="#7C3AED" opacity="0.9"/>
+      <rect x="110" y="44" width="16" height="14" rx="3" fill="#A855F7"/>
+      <rect x="113" y="47" width="10" height="8" rx="2" fill="#10B981" opacity="0.8"/>
+      <!-- Hat stars -->
+      <text x="100" y="35" font-size="9" fill="#FDE68A" class="star s2">&#9733;</text>
+      <text x="126" y="28" font-size="7" fill="#10B981" class="star s4">&#9670;</text>
+      <!-- Hat tip glow -->
+      <ellipse cx="118" cy="4" rx="6" ry="6" fill="#A855F7" opacity="0.6" filter="url(#glow)"/>
+
+      <!-- NECK (wrinkled, old) -->
+      <rect x="106" y="148" width="24" height="22" rx="5" fill="#C8A96A"/>
+      <!-- Neck wrinkles -->
+      <line x1="110" y1="155" x2="126" y2="155" stroke="#A07845" stroke-width="1" opacity="0.5"/>
+      <line x1="110" y1="161" x2="126" y2="161" stroke="#A07845" stroke-width="1" opacity="0.5"/>
+
+      <!-- FACE - older, bigger nose, wrinkled -->
+      <ellipse cx="118" cy="108" rx="42" ry="46" fill="url(#gFace)" filter="url(#shadow)"/>
+      <!-- Cheek shading -->
+      <ellipse cx="96" cy="115" rx="12" ry="9" fill="#D4956A" opacity="0.3"/>
+      <ellipse cx="140" cy="115" rx="12" ry="9" fill="#D4956A" opacity="0.3"/>
+      <!-- Forehead wrinkles -->
+      <path d="M96 80 Q118 76 140 80" stroke="#A07845" stroke-width="1.2" fill="none" opacity="0.5"/>
+      <path d="M100 87 Q118 83 136 87" stroke="#A07845" stroke-width="1" fill="none" opacity="0.4"/>
+      <!-- Under-eye wrinkles -->
+      <path d="M94 107 Q100 110 106 107" stroke="#A07845" stroke-width="0.8" fill="none" opacity="0.5"/>
+      <path d="M130 107 Q136 110 142 107" stroke="#A07845" stroke-width="0.8" fill="none" opacity="0.5"/>
+
+      <!-- Bushy old eyebrows -->
+      <path d="M90 86 Q102 79 114 84" stroke="#9CA3AF" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M122 84 Q134 79 146 86" stroke="#9CA3AF" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- Eyebrow hairs -->
+      <path d="M92 84 Q97 81 102 83" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+      <path d="M124 83 Q129 80 134 84" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+
+      <!-- LEFT EYE (wise, small) -->
+      <g class="eye el">
+        <ellipse cx="106" cy="100" rx="12" ry="11" fill="white"/>
+        <ellipse cx="106" cy="100" rx="8" ry="8" fill="#4C1D95"/>
+        <ellipse cx="106" cy="100" rx="4" ry="4" fill="#1E0A36"/>
+        <ellipse cx="109" cy="97" rx="2.5" ry="2.5" fill="white" opacity="0.85"/>
+        <!-- Wisdom glow -->
+        <ellipse cx="106" cy="100" rx="8" ry="8" fill="#7C3AED" opacity="0.25" filter="url(#glow)"/>
+        <!-- Crow's feet -->
+        <path d="M118 96 Q122 94 124 91" stroke="#A07845" stroke-width="0.8" fill="none" opacity="0.6"/>
+        <path d="M118 100 Q122 100 125 99" stroke="#A07845" stroke-width="0.8" fill="none" opacity="0.6"/>
+        <path d="M118 104 Q122 106 124 109" stroke="#A07845" stroke-width="0.8" fill="none" opacity="0.6"/>
+      </g>
+
+      <!-- RIGHT EYE -->
+      <g class="eye er">
+        <ellipse cx="150" cy="100" rx="12" ry="11" fill="white"/>
+        <ellipse cx="150" cy="100" rx="8" ry="8" fill="#4C1D95"/>
+        <ellipse cx="150" cy="100" rx="4" ry="4" fill="#1E0A36"/>
+        <ellipse cx="153" cy="97" rx="2.5" ry="2.5" fill="white" opacity="0.85"/>
+        <ellipse cx="150" cy="100" rx="8" ry="8" fill="#7C3AED" opacity="0.25" filter="url(#glow)"/>
+        <!-- Crow's feet -->
+        <path d="M138 96 Q134 94 132 91" stroke="#A07845" stroke-width="0.8" fill="none" opacity="0.6"/>
+        <path d="M138 100 Q134 100 131 99" stroke="#A07845" stroke-width="0.8" fill="none" opacity="0.6"/>
+        <path d="M138 104 Q134 106 132 109" stroke="#A07845" stroke-width="0.8" fill="none" opacity="0.6"/>
+      </g>
+
+      <!-- BIG NOSE (old wizard) -->
+      <path d="M115 108 Q110 118 105 124 Q112 130 118 128 Q124 130 131 124 Q126 118 121 108 Z"
+            fill="#C8A96A" opacity="0.9"/>
+      <!-- Nose tip -->
+      <ellipse cx="118" cy="126" rx="9" ry="7" fill="#B8936A"/>
+      <!-- Nostril -->
+      <ellipse cx="113" cy="127" rx="3" ry="2" fill="#A07845" opacity="0.5"/>
+      <ellipse cx="123" cy="127" rx="3" ry="2" fill="#A07845" opacity="0.5"/>
+
+      <!-- Mustache (bushy) -->
+      <path d="M96 132 Q107 127 118 130 Q129 127 140 132 Q130 140 118 138 Q106 140 96 132 Z"
+            fill="#D1D5DB" opacity="0.95"/>
+      <!-- Mustache texture -->
+      <path d="M100 132 Q110 128 118 130" stroke="#E5E7EB" stroke-width="1.5" fill="none"/>
+      <path d="M118 130 Q126 128 136 132" stroke="#E5E7EB" stroke-width="1.5" fill="none"/>
+
+      <!-- LONG BEARD (old wizard) -->
+      <path d="M86 138 Q74 165 70 195 Q68 220 72 250 Q80 290 88 330 Q100 355 118 365 Q136 355 148 330 Q156 290 164 250 Q168 220 166 195 Q162 165 150 138 Q136 130 118 134 Q100 130 86 138 Z"
+            fill="url(#gBeard)" opacity="0.97"/>
+      <!-- Beard center line -->
+      <path d="M118 140 Q116 220 115 365" stroke="#E5E7EB" stroke-width="1.5" fill="none" opacity="0.5"/>
+      <!-- Beard side lines -->
+      <path d="M96 145 Q88 200 82 260" stroke="#E5E7EB" stroke-width="1" fill="none" opacity="0.4"/>
+      <path d="M140 145 Q148 200 154 260" stroke="#E5E7EB" stroke-width="1" fill="none" opacity="0.4"/>
+      <!-- Beard wave lines -->
+      <path d="M88 200 Q100 195 112 200 Q124 205 136 200" stroke="#D1D5DB" stroke-width="1" fill="none" opacity="0.6"/>
+      <path d="M84 240 Q98 235 114 240 Q130 245 142 240" stroke="#D1D5DB" stroke-width="1" fill="none" opacity="0.5"/>
+      <path d="M86 280 Q100 275 116 280 Q132 285 146 280" stroke="#D1D5DB" stroke-width="1" fill="none" opacity="0.4"/>
+      <!-- Beard tip -->
+      <path d="M105 355 Q118 370 131 355 Q122 362 118 363 Q114 362 105 355 Z" fill="#D1D5DB"/>
+
+      <!-- Ears (big, old) -->
+      <ellipse cx="76" cy="108" rx="10" ry="13" fill="url(#gFace)"/>
+      <ellipse cx="76" cy="108" rx="6" ry="8" fill="#C8A96A" opacity="0.5"/>
+      <ellipse cx="160" cy="108" rx="10" ry="13" fill="url(#gFace)"/>
+      <ellipse cx="160" cy="108" rx="6" ry="8" fill="#C8A96A" opacity="0.5"/>
+    </g>
   </svg>
 
   <div class="hud">&#128302; FEITICO ATIVO &middot; AGUARDANDO BRUXO &#128302;</div>
@@ -751,17 +415,16 @@ if not st.session_state.logado:
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
 function resize(){ cv.width=cv.offsetWidth; cv.height=cv.offsetHeight; }
-resize();
-window.addEventListener('resize', resize);
-const P = Array.from({length:30}, () => ({
+resize(); window.addEventListener('resize', resize);
+const P = Array.from({length:28}, () => ({
   x: Math.random()*cv.width, y: Math.random()*cv.height,
-  vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4,
-  r: Math.random()*2+0.5,
-  c: Math.random()>0.5 ? '#6B21A8' : '#10B981'
+  vx: (Math.random()-0.5)*0.35, vy: (Math.random()-0.5)*0.35,
+  r: Math.random()*2+0.4,
+  c: ['#6B21A8','#10B981','#A855F7','#FDE68A'][Math.floor(Math.random()*4)]
 }));
 function tick(){
   ctx.clearRect(0,0,cv.width,cv.height);
-  P.forEach(p => {
+  P.forEach(p=>{
     p.x+=p.vx; p.y+=p.vy;
     if(p.x<0||p.x>cv.width) p.vx*=-1;
     if(p.y<0||p.y>cv.height) p.vy*=-1;
@@ -777,36 +440,29 @@ tick();
 """
 
     col_bot, col_gap, col_form = st.columns([1.1, 0.05, 0.85])
-
     with col_bot:
-        components.html(LOGIN_HTML, height=620, scrolling=False)
-
+        components.html(LOGIN_HTML, height=640, scrolling=False)
     with col_form:
         st.markdown("""
         <div style="padding:48px 0 28px 0;">
           <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
               color:#6B21A8;margin-bottom:16px;">&#128302; SISTEMA ATIVO</div>
-          <div style="font-size:38px;margin-bottom:4px;">🧙‍♂️</div>
-          <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
+          <div style="font-size:38px;margin-bottom:8px;">&#129497;&#8205;&#9794;&#65039;</div>
+          <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;
               color:#6B21A8;line-height:1;margin-bottom:4px;">Bem-vindo,</div>
-          <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
-              color:#10B981;line-height:1;margin-bottom:20px;">Sabino.</div>
-          <p style="color:#5B4E72;font-size:14px;line-height:1.8;margin-bottom:0;">
-            O feitico aguarda.<br>
+          <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;
+              color:#10B981;line-height:1;margin-bottom:24px;">Sabino.</div>
+          <p style="color:#5B4E72;font-size:14px;line-height:1.9;margin-bottom:0;">
+            O feitico aguarda, Bruxo.<br>
             Insira sua credencial para<br>
             acessar o hub operacional.
           </p>
         </div>
         """, unsafe_allow_html=True)
 
-        senha = st.text_input(
-            "CREDENCIAL SECRETA",
-            type="password",
-            placeholder="••••••••",
-            label_visibility="visible"
-        )
+        senha = st.text_input("CREDENCIAL SECRETA", type="password", placeholder="••••••••", label_visibility="visible")
 
-        if st.button("🔮  INVOCAR ACESSO", use_container_width=True):
+        if st.button("&#128302;  INVOCAR ACESSO", use_container_width=True):
             if senha == "gsr17":
                 st.session_state.logado = True
                 st.rerun()
@@ -819,10 +475,8 @@ tick();
                 """, unsafe_allow_html=True)
 
         st.markdown("""
-        <div style="margin-top:28px;padding:16px;border:1px solid #DDD8F0;
-            border-radius:10px;background:#EFECF8;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
-              color:#5B4E72;line-height:2.2;">
+        <div style="margin-top:28px;padding:16px;border:1px solid #DDD8F0;border-radius:10px;background:#EFECF8;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:#5B4E72;line-height:2.2;">
             &#9670; GRIMORIUM &middot; AES-256<br>
             &#9670; SESSAO &middot; MONITORADA<br>
             &#9670; ACESSO &middot; REGISTRADO
@@ -832,55 +486,48 @@ tick();
 
     st.stop()
 
+
 # ============================================================
 # DATA LOADING
 # ============================================================
 STATUS_OPCOES = ["Reuniao", "A Iniciar", "Em Andamento", "Projetos Futuros", "Concluido"]
 STATUS_COLORS = {
     "Reuniao":          "#7048E8",
-    "A Iniciar":        "#8BA8C8",
-    "Em Andamento":     "#6B21A8",
+    "A Iniciar":        "#6B21A8",
+    "Em Andamento":     "#7C3AED",
     "Projetos Futuros": "#0C8599",
-    "Concluido":        "#2F9E44"
+    "Concluido":        "#10B981"
 }
-
 URL_DB = "https://docs.google.com/spreadsheets/d/1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg/edit#gid=0"
 
 def fix_encoding(text):
-    if not isinstance(text, str):
-        return text
-    try:
-        return text.encode('latin1').decode('utf-8')
-    except:
-        return text
+    if not isinstance(text, str): return text
+    try: return text.encode('latin1').decode('utf-8')
+    except: return text
 
 @st.cache_data(ttl=300)
 def carregar_dados():
     colunas = ["Projeto","Data Inicial","Prazo","Status","Foco","Escopo","Detalhamento","Resultado Esperado"]
     try:
         import requests
-        sheet_id = "1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg"
-        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
-        r = requests.get(csv_url, allow_redirects=True, timeout=15)
-        r.raise_for_status()
         from io import StringIO
+        sheet_id = "1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg"
+        r = requests.get(f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0", allow_redirects=True, timeout=15)
+        r.raise_for_status()
         df = pd.read_csv(StringIO(r.text), encoding='utf-8')
         if df is not None and not df.empty:
-            # Fix encoding for text columns
             for col in ["Projeto","Status","Foco","Escopo","Detalhamento","Resultado Esperado"]:
-                if col in df.columns:
-                    df[col] = df[col].apply(fix_encoding)
+                if col in df.columns: df[col] = df[col].apply(fix_encoding)
             df["Data Inicial"] = pd.to_datetime(df["Data Inicial"], errors="coerce").fillna(pd.Timestamp.now())
             df["Prazo"] = pd.to_datetime(df["Prazo"], errors="coerce").fillna(pd.Timestamp.now())
             cols_presentes = [c for c in colunas if c in df.columns]
             return df[cols_presentes].dropna(subset=["Projeto"])
     except Exception as e:
         st.sidebar.error(f"Erro: {e}")
-    return pd.DataFrame(columns=colunas)
+    return pd.DataFrame(columns=["Projeto","Data Inicial","Prazo","Status","Foco","Escopo","Detalhamento","Resultado Esperado"])
 
 if st.session_state.df_projetos is None:
     st.session_state.df_projetos = carregar_dados()
-
 df = st.session_state.df_projetos
 
 # ============================================================
@@ -889,52 +536,42 @@ df = st.session_state.df_projetos
 with st.sidebar:
     st.markdown("""
     <div style="padding:0 0 20px 0;">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:#6B21A8;margin-bottom:4px;">&#9679; SISTEMA ATIVO</div>
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
-          color:#6B21A8;">
-          SABINO OS</div>
-      <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">Hub Operacional v4.0</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:#6B21A8;margin-bottom:4px;">&#128302; SISTEMA ATIVO</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#6B21A8;">SABINO OS</div>
+      <div style="font-size:11px;color:#9588AA;margin-top:2px;">Hub Operacional v4.0 &#129497;&#8205;&#9794;&#65039;</div>
     </div>
     """, unsafe_allow_html=True)
-
     st.divider()
-
-    st.markdown("<div style='font-size:11px;color:#9CA3AF;letter-spacing:2px;margin-bottom:8px;'>ACOES</div>", unsafe_allow_html=True)
-
+    st.markdown("<div style='font-size:11px;color:#9588AA;letter-spacing:2px;margin-bottom:8px;'>ACOES</div>", unsafe_allow_html=True)
     if st.button("Sincronizar Dados", use_container_width=True):
         st.cache_data.clear()
         st.session_state.df_projetos = carregar_dados()
         df = st.session_state.df_projetos
         st.success("Sincronizado!")
         st.rerun()
-
     st.link_button("Editar Planilha", URL_DB, use_container_width=True)
-
     st.divider()
-
     if not df.empty:
         total = len(df)
         concluidos = len(df[df["Status"] == "Concluido"])
         em_exec = len(df[df["Status"] == "Em Andamento"])
         taxa = round(concluidos/total*100, 1) if total > 0 else 0
-
         st.markdown(f"""
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="background:#FFFFFF;border:1px solid #E8EAEF;border-radius:10px;padding:12px 14px;">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9CA3AF;margin-bottom:4px;">PROJETOS</div>
+          <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:10px;padding:12px 14px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:4px;">PROJETOS</div>
             <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#6B21A8;">{total}</div>
           </div>
-          <div style="background:#FFFFFF;border:1px solid #E8EAEF;border-radius:10px;padding:12px 14px;">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9CA3AF;margin-bottom:4px;">CONCLUSAO</div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#2F9E44;">{taxa}%</div>
+          <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:10px;padding:12px 14px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:4px;">CONCLUSAO</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#10B981;">{taxa}%</div>
           </div>
-          <div style="background:#FFFFFF;border:1px solid #E8EAEF;border-radius:10px;padding:12px 14px;">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9CA3AF;margin-bottom:4px;">EM EXECUCAO</div>
+          <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:10px;padding:12px 14px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:4px;">EM EXECUCAO</div>
             <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#7C3AED;">{em_exec}</div>
           </div>
         </div>
         """, unsafe_allow_html=True)
-
     st.divider()
     if st.button("Sair", use_container_width=True):
         st.session_state.logado = False
@@ -947,16 +584,14 @@ with st.sidebar:
 now = datetime.now()
 st.markdown(f"""
 <div style="display:flex;justify-content:space-between;align-items:center;
-    padding:16px 24px;border:1px solid #E2E4EA;border-radius:14px;
-    background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:24px;">
+    padding:16px 24px;border:1px solid #DDD8F0;border-radius:14px;
+    background:#FFFFFF;margin-bottom:24px;box-shadow:0 2px 8px rgba(107,33,168,0.06);">
   <div>
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
-    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
-        color:#6B21A8;">
-        GABRIEL SABINO</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#128302; HUB OPERACIONAL</div>
+    <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#6B21A8;">GABRIEL SABINO &#129497;&#8205;&#9794;&#65039;</div>
   </div>
-  <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:#9CA3AF;letter-spacing:1px;">
-    <div style="color:#2F9E44;margin-bottom:4px;">&#9679; JARVIS ONLINE</div>
+  <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:#9588AA;letter-spacing:1px;">
+    <div style="color:#10B981;margin-bottom:4px;">&#9679; JARVIS ONLINE</div>
     <div>{now.strftime('%A, %d %b %Y')}</div>
     <div>{now.strftime('%H:%M')}</div>
   </div>
@@ -966,12 +601,11 @@ st.markdown(f"""
 # ============================================================
 # TABS
 # ============================================================
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🤖 CHAT IA",
     "⚡ VISAO GERAL",
     "📋 KANBAN",
     "🗂️ DADOS",
-    "🗺️ MAPEAMENTO GS",
     "✍️ NOTAS"
 ])
 
@@ -994,17 +628,17 @@ with tab1:
 
     with col_sugest:
         st.markdown("""
-        <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:16px;padding:20px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #DDD8F0;">
-            <div style="width:48px;height:48px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+        <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0D9C8;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#E8720C,#D4880A);
                 border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
-                box-shadow:0 4px 12px rgba(107,33,168,0.3);">🤖</div>
+                box-shadow:0 4px 12px rgba(232,114,12,0.3);">🤖</div>
             <div>
-              <div style="font-weight:700;font-size:14px;color:#1A1225;">J.A.R.V.I.S</div>
-              <div style="font-size:11px;color:#6B21A8;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
+              <div style="font-weight:700;font-size:14px;color:#1A1208;">J.A.R.V.I.S</div>
+              <div style="font-size:11px;color:#E8720C;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
             </div>
           </div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:12px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:12px;">
             PERGUNTAS RAPIDAS
           </div>
         </div>
@@ -1021,7 +655,7 @@ with tab1:
 
     with col_chat:
         st.markdown("""
-        <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
+        <div style="background:linear-gradient(135deg,#E8720C,#D4880A);border-radius:16px;
             padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
           <div style="font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🤖</div>
           <div>
@@ -1037,13 +671,13 @@ with tab1:
         if not st.session_state.chat_history:
             st.markdown("""
             <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
-              <div style="width:44px;height:44px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+              <div style="width:44px;height:44px;background:linear-gradient(135deg,#E8720C,#D4880A);
                   border-radius:50%;display:flex;align-items:center;justify-content:center;
-                  font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(107,33,168,0.3);">🤖</div>
-              <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:4px 16px 16px 16px;
-                  padding:16px 20px;max-width:90%;box-shadow:0 2px 8px rgba(107,33,168,0.07);">
-                <div style="font-weight:700;color:#6B21A8;margin-bottom:8px;font-size:15px;">🔮 Salve, Bruxo! 🧙‍♂️</div>
-                <div style="font-size:14px;color:#1A1225;line-height:1.7;">
+                  font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
+              <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
+                  padding:16px 20px;max-width:90%;box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+                <div style="font-weight:700;color:#E8720C;margin-bottom:8px;font-size:15px;">✨ Salve, Bruxo! 🧙‍♂️</div>
+                <div style="font-size:14px;color:#1A1208;line-height:1.7;">
                   Sistema ativo e pronto. Tenho acesso completo ao seu portfolio —
                   prazos, clientes, escopo, tudo.<br><br>
                   Me diz o que precisa, Bruxo. Use os botoes ao lado ou
@@ -1057,12 +691,12 @@ with tab1:
             if msg["role"] == "user":
                 st.markdown(f"""
                 <div style="display:flex;justify-content:flex-end;margin:12px 0;gap:8px;">
-                  <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
+                  <div style="background:linear-gradient(135deg,#E8720C,#D4880A);color:#fff;
                       border-radius:16px 16px 4px 16px;padding:12px 18px;max-width:75%;
-                      font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(107,33,168,0.25);">
+                      font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(232,114,12,0.25);">
                     {msg['content']}
                   </div>
-                  <div style="width:36px;height:36px;background:#DDD8F0;border-radius:50%;
+                  <div style="width:36px;height:36px;background:#F0D9C8;border-radius:50%;
                       display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🧙‍♂️</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1070,12 +704,12 @@ with tab1:
                 content = msg['content'].replace(chr(10), '<br>')
                 st.markdown(f"""
                 <div style="display:flex;align-items:flex-start;gap:12px;margin:12px 0;">
-                  <div style="width:44px;height:44px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+                  <div style="width:44px;height:44px;background:linear-gradient(135deg,#E8720C,#D4880A);
                       border-radius:50%;display:flex;align-items:center;justify-content:center;
-                      font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(107,33,168,0.3);">🤖</div>
-                  <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:4px 16px 16px 16px;
-                      padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1225;
-                      box-shadow:0 2px 8px rgba(107,33,168,0.07);">
+                      font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
+                  <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
+                      padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1208;
+                      box-shadow:0 2px 8px rgba(232,114,12,0.08);">
                     {content}
                   </div>
                 </div>
@@ -1213,18 +847,18 @@ with tab2:
 
         cols = st.columns(5)
         kpis = [
-            ("TOTAL", total, "#6B21A8"),
-            ("EM EXECUCAO", em_exec, "#7C3AED"),
+            ("TOTAL", total, "#E8720C"),
+            ("EM EXECUCAO", em_exec, "#D4880A"),
             ("CONCLUIDOS", concluidos, "#2F9E44"),
             ("BACKLOG", backlog, "#7048E8"),
-            ("TAXA", f"{taxa}%", "#C92A2A" if taxa < 40 else "#7C3AED" if taxa < 70 else "#2F9E44"),
+            ("TAXA", f"{taxa}%", "#C92A2A" if taxa < 40 else "#D4880A" if taxa < 70 else "#2F9E44"),
         ]
         for i, (label, val, cor) in enumerate(kpis):
             cols[i].markdown(f"""
-            <div style="background:#FFFFFF;border:1px solid #DDD8F0;
+            <div style="background:#FFFFFF;border:1px solid #F0D9C8;
                 border-radius:14px;padding:20px 18px;
-                border-top:3px solid {cor};box-shadow:0 2px 8px rgba(107,33,168,0.07);">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">{label}</div>
+                border-top:3px solid {cor};box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:8px;">{label}</div>
               <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:{cor};">{val}</div>
             </div>
             """, unsafe_allow_html=True)
@@ -1253,7 +887,7 @@ with tab2:
 
         with col_a:
             st.markdown("""
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
             &#9670; PROJETOS ATIVOS — CARDS COMPLETOS
             </div>
             """, unsafe_allow_html=True)
@@ -1264,21 +898,21 @@ with tab2:
             if not ativos.empty:
                 for _, r in ativos.iterrows():
                     dias = (r["Prazo"] - pd.Timestamp.now()).days
-                    cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
+                    cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
                     label = "URGENTE" if dias < 7 else "ATENCAO" if dias < 30 else "OK"
                     foco = str(r.get("Foco", "")) if pd.notna(r.get("Foco")) else "—"
                     escopo = str(r.get("Escopo", "")) if pd.notna(r.get("Escopo")) else "—"
                     detalhamento = str(r.get("Detalhamento", "")) if pd.notna(r.get("Detalhamento")) else ""
                     resultado = str(r.get("Resultado Esperado", "")) if pd.notna(r.get("Resultado Esperado")) else ""
-                    status_cor = STATUS_COLORS.get(r.get("Status",""), "#6B21A8")
+                    status_cor = STATUS_COLORS.get(r.get("Status",""), "#E8720C")
                     data_ini = r["Data Inicial"].strftime("%d/%m/%Y") if pd.notna(r.get("Data Inicial")) else "—"
 
                     st.markdown(f"""
-                    <div style="background:#FFFFFF;border:1px solid #DDD8F0;
+                    <div style="background:#FFFFFF;border:1px solid #F0D9C8;
                         border-left:4px solid {cor};border-radius:12px;padding:16px;margin-bottom:12px;
-                        box-shadow:0 2px 8px rgba(107,33,168,0.07);">
+                        box-shadow:0 2px 8px rgba(232,114,12,0.08);">
                       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                        <div style="font-weight:700;font-size:15px;color:#1A1225;flex:1;">{r['Projeto']}</div>
+                        <div style="font-weight:700;font-size:15px;color:#1A1208;flex:1;">{r['Projeto']}</div>
                         <div style="display:flex;gap:6px;flex-shrink:0;margin-left:8px;">
                           <span style="background:{status_cor}22;color:{status_cor};border:1px solid {status_cor}44;
                               padding:2px 8px;border-radius:20px;font-size:10px;font-family:'JetBrains Mono',monospace;">{r.get('Status','')}</span>
@@ -1287,25 +921,25 @@ with tab2:
                         </div>
                       </div>
                       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
-                        <div style="background:#F6F5FA;border-radius:8px;padding:8px 10px;">
-                          <div style="font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:3px;">FOCO</div>
-                          <div style="font-size:12px;color:#1A1225;font-weight:500;">{foco}</div>
+                        <div style="background:#FDF6F0;border-radius:8px;padding:8px 10px;">
+                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">FOCO</div>
+                          <div style="font-size:12px;color:#1A1208;font-weight:500;">{foco}</div>
                         </div>
-                        <div style="background:#F6F5FA;border-radius:8px;padding:8px 10px;">
-                          <div style="font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:3px;">INICIO</div>
-                          <div style="font-size:12px;color:#1A1225;font-weight:500;">{data_ini}</div>
+                        <div style="background:#FDF6F0;border-radius:8px;padding:8px 10px;">
+                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">INICIO</div>
+                          <div style="font-size:12px;color:#1A1208;font-weight:500;">{data_ini}</div>
                         </div>
                         <div style="background:{cor}11;border-radius:8px;padding:8px 10px;border:1px solid {cor}33;">
-                          <div style="font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:3px;">PRAZO</div>
+                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">PRAZO</div>
                           <div style="font-size:12px;color:{cor};font-weight:700;">{r['Prazo'].strftime('%d/%m/%Y')}</div>
                         </div>
                       </div>
-                      <div style="background:#F6F5FA;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
-                        <div style="font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:4px;">ESCOPO</div>
-                        <div style="font-size:13px;color:#1A1225;line-height:1.5;">{escopo}</div>
+                      <div style="background:#FDF6F0;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+                        <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:4px;">ESCOPO</div>
+                        <div style="font-size:13px;color:#1A1208;line-height:1.5;">{escopo}</div>
                       </div>
-                      {"<div style='background:#F6F5FA;border-radius:8px;padding:10px 12px;margin-bottom:6px;'><div style='font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:4px;'>DETALHAMENTO</div><div style='font-size:13px;color:#1A1225;line-height:1.5;'>"+detalhamento+"</div></div>" if detalhamento and detalhamento != "—" else ""}
-                      {"<div style='background:#6B21A811;border:1px solid #6B21A833;border-radius:8px;padding:10px 12px;'><div style='font-size:9px;color:#6B21A8;letter-spacing:1px;margin-bottom:4px;'>RESULTADO ESPERADO</div><div style='font-size:13px;color:#1A1225;line-height:1.5;'>"+resultado+"</div></div>" if resultado and resultado != "—" else ""}
+                      {"<div style='background:#FDF6F0;border-radius:8px;padding:10px 12px;margin-bottom:6px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:4px;'>DETALHAMENTO</div><div style='font-size:13px;color:#1A1208;line-height:1.5;'>"+detalhamento+"</div></div>" if detalhamento and detalhamento != "—" else ""}
+                      {"<div style='background:#E8720C11;border:1px solid #E8720C33;border-radius:8px;padding:10px 12px;'><div style='font-size:9px;color:#E8720C;letter-spacing:1px;margin-bottom:4px;'>RESULTADO ESPERADO</div><div style='font-size:13px;color:#1A1208;line-height:1.5;'>"+resultado+"</div></div>" if resultado and resultado != "—" else ""}
                     </div>
                     """, unsafe_allow_html=True)
             else:
@@ -1313,7 +947,7 @@ with tab2:
 
         with col_b:
             st.markdown("""
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
             &#9670; DISTRIBUICAO
             </div>
             """, unsafe_allow_html=True)
@@ -1323,14 +957,14 @@ with tab2:
                 if count == 0:
                     continue
                 pct = count / total * 100
-                cor = STATUS_COLORS.get(status, "#6B21A8")
+                cor = STATUS_COLORS.get(status, "#E8720C")
                 st.markdown(f"""
                 <div style="margin-bottom:12px;">
                   <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-size:12px;color:#5B4E72;font-weight:500;">{status}</span>
+                    <span style="font-size:12px;color:#6B5A4E;font-weight:500;">{status}</span>
                     <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{cor};font-weight:700;">{count}</span>
                   </div>
-                  <div style="background:#DDD8F0;border-radius:4px;height:6px;overflow:hidden;">
+                  <div style="background:#F0D9C8;border-radius:4px;height:6px;overflow:hidden;">
                     <div style="background:{cor};width:{pct:.0f}%;height:100%;border-radius:4px;box-shadow:0 0 8px {cor}88;"></div>
                   </div>
                 </div>
@@ -1341,7 +975,7 @@ with tab2:
 # ─────────────────────────────────────────────
 with tab3:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:20px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:20px;">
     &#9670; FLUXO OPERACIONAL
     </div>
     """, unsafe_allow_html=True)
@@ -1368,14 +1002,14 @@ with tab3:
         st.markdown("<br>", unsafe_allow_html=True)
         cols = st.columns(len(STATUS_OPCOES))
         for i, status in enumerate(STATUS_OPCOES):
-            cor = STATUS_COLORS.get(status, "#6B21A8")
+            cor = STATUS_COLORS.get(status, "#E8720C")
             projetos = df_kb[df_kb["Status"] == status]
             count = len(projetos)
 
             with cols[i]:
                 st.markdown(f"""
-                <div style="background:#FFFFFF;border:1px solid #DDD8F0;
-                    border-top:2px solid {cor};box-shadow:0 1px 4px rgba(107,33,168,0.07);border-radius:12px;padding:12px 14px;margin-bottom:12px;
+                <div style="background:#FFFFFF;border:1px solid #F0D9C8;
+                    border-top:2px solid {cor};box-shadow:0 1px 4px rgba(232,114,12,0.08);border-radius:12px;padding:12px 14px;margin-bottom:12px;
                     text-align:center;">
                   <div style="font-size:10px;letter-spacing:2px;color:{cor};
                       font-family:'JetBrains Mono',monospace;">{status.upper()}</div>
@@ -1389,16 +1023,16 @@ with tab3:
                     foco = str(row.get("Foco", "")) if pd.notna(row.get("Foco")) else ""
                     escopo = str(row.get("Escopo", "")) if pd.notna(row.get("Escopo")) else ""
                     dias = (row["Prazo"] - pd.Timestamp.now()).days
-                    cor_prazo = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
+                    cor_prazo = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
                     st.markdown(f"""
-                    <div style="background:#FFFFFF;border:1px solid #DDD8F0;
+                    <div style="background:#FFFFFF;border:1px solid #F0D9C8;
                         border-left:3px solid {cor};border-radius:10px;padding:12px;margin-bottom:8px;
-                        box-shadow:0 1px 4px rgba(107,33,168,0.06);">
-                      <div style="font-weight:600;font-size:13px;color:#1A1225;margin-bottom:6px;line-height:1.3;">{row['Projeto']}</div>
-                      {"<div style='font-size:11px;color:#5B4E72;margin-bottom:4px;'>🎯 "+foco+"</div>" if foco else ""}
-                      {"<div style='font-size:11px;color:#5B4E72;margin-bottom:4px;'>📋 "+escopo+"</div>" if escopo else ""}
+                        box-shadow:0 1px 4px rgba(232,114,12,0.06);">
+                      <div style="font-weight:600;font-size:13px;color:#1A1208;margin-bottom:6px;line-height:1.3;">{row['Projeto']}</div>
+                      {"<div style='font-size:11px;color:#6B5A4E;margin-bottom:4px;'>🎯 "+foco+"</div>" if foco else ""}
+                      {"<div style='font-size:11px;color:#6B5A4E;margin-bottom:4px;'>📋 "+escopo+"</div>" if escopo else ""}
                       <div style="display:flex;justify-content:space-between;margin-top:6px;">
-                        <span style="font-size:10px;color:#9588AA;">📅 {data_str}</span>
+                        <span style="font-size:10px;color:#9C8B82;">📅 {data_str}</span>
                         <span style="font-size:10px;color:{cor_prazo};font-weight:600;">⏰ {prazo_str}</span>
                       </div>
                     </div>
@@ -1409,7 +1043,7 @@ with tab3:
 # ─────────────────────────────────────────────
 with tab4:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
     &#9670; BANCO DE DADOS OPERACIONAL
     </div>
     """, unsafe_allow_html=True)
@@ -1433,337 +1067,15 @@ with tab4:
         if data_d:
             df_d = df_d[df_d["Data Inicial"].dt.date >= data_d]
 
-        st.markdown(f"<div style='font-size:12px;color:#9588AA;margin-bottom:8px;'>{len(df_d)} projetos encontrados</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:12px;color:#9C8B82;margin-bottom:8px;'>{len(df_d)} projetos encontrados</div>", unsafe_allow_html=True)
         st.dataframe(df_d, use_container_width=True, height=500)
 
 # ─────────────────────────────────────────────
-# TAB 5 — MAPEAMENTO GS
+# TAB 5 — NOTAS
 # ─────────────────────────────────────────────
 with tab5:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:20px;">
-    &#9670; MAPEAMENTO GEOGRAFICO DE PROJETOS
-    </div>
-    """, unsafe_allow_html=True)
-
-    if df.empty:
-        st.warning("Sem dados carregados.")
-    else:
-        # Mapeamento de estados brasileiros para coordenadas
-        ESTADOS_COORDS = {
-            "AC": (-9.0238, -70.812, "Acre"),
-            "AL": (-9.5713, -36.782, "Alagoas"),
-            "AP": (1.4102, -51.770, "Amapa"),
-            "AM": (-3.4168, -65.856, "Amazonas"),
-            "BA": (-12.9718, -38.501, "Bahia"),
-            "CE": (-3.7172, -38.543, "Ceara"),
-            "DF": (-15.7801, -47.929, "Distrito Federal"),
-            "ES": (-19.1834, -40.308, "Espirito Santo"),
-            "GO": (-16.6864, -49.264, "Goias"),
-            "MA": (-2.5297, -44.302, "Maranhao"),
-            "MT": (-12.6819, -56.921, "Mato Grosso"),
-            "MS": (-20.7722, -54.785, "Mato Grosso do Sul"),
-            "MG": (-18.5122, -44.555, "Minas Gerais"),
-            "PA": (-1.9981, -54.930, "Para"),
-            "PB": (-7.2399, -36.782, "Paraiba"),
-            "PR": (-24.8950, -51.551, "Parana"),
-            "PE": (-8.8137, -36.954, "Pernambuco"),
-            "PI": (-6.6077, -42.285, "Piaui"),
-            "RJ": (-22.9068, -43.172, "Rio de Janeiro"),
-            "RN": (-5.7945, -36.341, "Rio Grande do Norte"),
-            "RS": (-30.0346, -51.217, "Rio Grande do Sul"),
-            "RO": (-11.5057, -63.580, "Rondonia"),
-            "RR": (2.7376, -62.075, "Roraima"),
-            "SC": (-27.5954, -48.548, "Santa Catarina"),
-            "SP": (-23.5505, -46.633, "Sao Paulo"),
-            "SE": (-10.9472, -37.073, "Sergipe"),
-            "TO": (-10.1753, -48.298, "Tocantins"),
-        }
-
-        # Siglas de cidades conhecidas -> estado
-        CIDADE_ESTADO = {
-            "ponta negra": "RN", "natal": "RN", "mossoro": "RN", "caico": "RN",
-            "fortaleza": "CE", "caucaia": "CE", "juazeiro": "CE", "sobral": "CE",
-            "recife": "PE", "olinda": "PE", "caruaru": "PE", "madalena": "PE", "piedade": "PE",
-            "joao pessoa": "PB", "campina grande": "PB", "paraiba": "PB",
-            "salvador": "BA", "feira de santana": "BA", "vitoria da conquista": "BA",
-            "sao paulo": "SP", "campinas": "SP", "santos": "SP", "sorocaba": "SP",
-            "rio de janeiro": "RJ", "niteroi": "RJ", "duque de caxias": "RJ",
-            "belo horizonte": "MG", "uberlandia": "MG", "contagem": "MG",
-            "brasilia": "DF", "taguatinga": "DF",
-            "manaus": "AM", "parintins": "AM",
-            "belem": "PA", "santarem": "PA",
-            "porto alegre": "RS", "caxias do sul": "RS", "pelotas": "RS",
-            "curitiba": "PR", "londrina": "PR", "maringa": "PR",
-            "goiania": "GO", "anapolis": "GO",
-            "florianopolis": "SC", "joinville": "SC", "blumenau": "SC",
-            "cuiaba": "MT", "sinop": "MT",
-            "campo grande": "MS", "dourados": "MS",
-            "macapa": "AP", "porto velho": "RO", "rio branco": "AC",
-            "boa vista": "RR", "palmas": "TO", "macaiba": "RN",
-            "jaboatao": "PE", "jaboatao dos guararapes": "PE",
-        }
-
-        def extrair_estado(nome_projeto):
-            if not isinstance(nome_projeto, str):
-                return None
-            nome_lower = nome_projeto.lower()
-            # Tenta formato "Cidade/UF"
-            import re
-            match = re.search(r'/\s*([A-Z]{2})', nome_projeto)
-            if match:
-                uf = match.group(1)
-                if uf in ESTADOS_COORDS:
-                    return uf
-            # Tenta por cidade conhecida
-            for cidade, uf in CIDADE_ESTADO.items():
-                if cidade in nome_lower:
-                    return uf
-            return None
-
-        # Extrai estado de cada projeto
-        df_mapa = df.copy()
-        df_mapa["UF"] = df_mapa["Projeto"].apply(extrair_estado)
-        df_mapa = df_mapa.dropna(subset=["UF"])
-
-        if df_mapa.empty:
-            st.warning("Nenhum projeto com localizacao identificada. Certifique-se que os projetos tem formato 'Cidade/UF - Cliente'.")
-        else:
-            # Agrupa por estado
-            resumo_estados = df_mapa.groupby("UF").agg(
-                total=("Projeto", "count"),
-                projetos=("Projeto", lambda x: list(x))
-            ).reset_index()
-
-            # Estado selecionado (session state)
-            if "estado_selecionado" not in st.session_state:
-                st.session_state.estado_selecionado = None
-            if "projeto_chat_mapa" not in st.session_state:
-                st.session_state.projeto_chat_mapa = None
-            if "chat_mapa_history" not in st.session_state:
-                st.session_state.chat_mapa_history = []
-
-            col_mapa, col_info = st.columns([1.6, 1])
-
-            with col_mapa:
-                # Monta dados para o mapa
-                map_data = []
-                for _, row in resumo_estados.iterrows():
-                    uf = row["UF"]
-                    if uf in ESTADOS_COORDS:
-                        lat, lon, nome = ESTADOS_COORDS[uf]
-                        map_data.append({
-                            "uf": uf, "nome": nome,
-                            "lat": lat, "lon": lon,
-                            "total": int(row["total"])
-                        })
-
-                # Gera mapa HTML interativo com Leaflet
-                map_markers = ""
-                for m in map_data:
-                    cor_marker = "#C92A2A" if m["total"] >= 5 else "#7C3AED" if m["total"] >= 3 else "#6B21A8"
-                    radius = 15 + m["total"] * 5
-                    map_markers += f"""
-                    L.circleMarker([{m['lat']}, {m['lon']}], {{
-                        radius: {radius},
-                        fillColor: '{cor_marker}',
-                        color: '#fff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.85
-                    }}).addTo(map)
-                    .bindPopup('<b>{m["nome"]} ({m["uf"]})</b><br>{m["total"]} projeto(s)')
-                    .on('click', function() {{
-                        window.parent.postMessage({{type:'estado_click', uf:'{m["uf"]}', nome:'{m["nome"]}'}}, '*');
-                    }});
-                    L.marker([{m['lat']}, {m['lon']}], {{
-                        icon: L.divIcon({{
-                            html: '<div style="background:transparent;color:#fff;font-weight:800;font-size:11px;text-align:center;margin-top:-4px;">{m["total"]}</div>',
-                            iconSize: [20, 20],
-                            iconAnchor: [10, 10]
-                        }})
-                    }}).addTo(map);
-                    """
-
-                mapa_html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-  body {{ margin: 0; padding: 0; background: #F6F5FA; }}
-  #map {{ width: 100%; height: 520px; border-radius: 16px; }}
-  .leaflet-popup-content-wrapper {{ border-radius: 10px; font-family: 'Inter', sans-serif; }}
-  .info-box {{
-    position: absolute; bottom: 20px; left: 20px; z-index: 1000;
-    background: rgba(255,255,255,0.95); border: 1px solid #DDD8F0;
-    border-radius: 12px; padding: 12px 16px;
-    font-family: monospace; font-size: 11px; color: #6B21A8;
-  }}
-</style>
-</head>
-<body>
-<div id="map"></div>
-<div class="info-box">&#9670; {len(df_mapa)} projetos mapeados em {len(map_data)} estados</div>
-<script>
-  var map = L.map('map', {{ zoomControl: true, scrollWheelZoom: true }})
-    .setView([-14.235, -51.925], 4);
-
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/light_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: 'abcd', maxZoom: 19
-  }}).addTo(map);
-
-  {map_markers}
-
-  map.on('popupopen', function(e) {{
-    map.flyTo(e.popup.getLatLng(), 7, {{ animate: true, duration: 1.2 }});
-  }});
-</script>
-</body>
-</html>
-                """
-
-                components.html(mapa_html, height=540)
-
-            with col_info:
-                # Seletor de estado
-                estados_disponiveis = sorted(resumo_estados["UF"].tolist())
-                estado_sel = st.selectbox(
-                    "🗺️ Selecione o Estado",
-                    options=["Todos"] + estados_disponiveis,
-                    format_func=lambda x: f"{x} — {ESTADOS_COORDS[x][2]}" if x != "Todos" and x in ESTADOS_COORDS else x,
-                    key="estado_sel"
-                )
-
-                if estado_sel == "Todos":
-                    df_estado = df_mapa.copy()
-                    titulo_estado = "Todos os Estados"
-                else:
-                    df_estado = df_mapa[df_mapa["UF"] == estado_sel].copy()
-                    nome_estado = ESTADOS_COORDS.get(estado_sel, ("","",""))[2]
-                    titulo_estado = f"{nome_estado} ({estado_sel})"
-
-                st.markdown(f"""
-                <div style="background:#6B21A8;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;text-align:center;">
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;opacity:0.8;">PROJETOS</div>
-                  <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;">{len(df_estado)}</div>
-                  <div style="font-size:11px;opacity:0.9;">{titulo_estado}</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-                # Tabela de projetos
-                st.markdown("""
-                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">
-                PROJETOS NO ESTADO
-                </div>
-                """, unsafe_allow_html=True)
-
-                projeto_selecionado = None
-                for _, row in df_estado.sort_values("Prazo").iterrows():
-                    dias = (row["Prazo"] - pd.Timestamp.now()).days
-                    cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
-                    status_cor = STATUS_COLORS.get(row.get("Status",""), "#6B21A8")
-                    if st.button(
-                        f"{'🔴' if dias < 7 else '🟡' if dias < 30 else '🟢'} {row['Projeto'][:35]}",
-                        key=f"proj_mapa_{row['Projeto'][:20]}_{row['Prazo']}",
-                        use_container_width=True
-                    ):
-                        st.session_state.projeto_chat_mapa = row.to_dict()
-                        st.session_state.chat_mapa_history = []
-
-                # Painel do projeto selecionado
-                if st.session_state.projeto_chat_mapa:
-                    proj = st.session_state.projeto_chat_mapa
-                    dias_p = (pd.Timestamp(proj["Prazo"]) - pd.Timestamp.now()).days
-                    cor_p = "#C92A2A" if dias_p < 7 else "#7C3AED" if dias_p < 30 else "#2F9E44"
-
-                    st.markdown(f"""
-                    <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-left:4px solid {cor_p};
-                        border-radius:12px;padding:14px;margin-top:12px;">
-                      <div style="font-weight:700;color:#1A1225;font-size:13px;margin-bottom:8px;">{proj.get('Projeto','')}</div>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-                        <div style="background:#F6F5FA;border-radius:6px;padding:6px 8px;">
-                          <div style="font-size:8px;color:#9588AA;">STATUS</div>
-                          <div style="font-size:11px;color:#6B21A8;font-weight:600;">{proj.get('Status','')}</div>
-                        </div>
-                        <div style="background:{cor_p}11;border-radius:6px;padding:6px 8px;">
-                          <div style="font-size:8px;color:#9588AA;">PRAZO</div>
-                          <div style="font-size:11px;color:{cor_p};font-weight:700;">{pd.Timestamp(proj['Prazo']).strftime('%d/%m/%Y')} ({dias_p}d)</div>
-                        </div>
-                      </div>
-                      <div style="font-size:11px;color:#5B4E72;line-height:1.5;">
-                        🎯 {proj.get('Foco','')}<br>
-                        📋 {proj.get('Escopo','') or '—'}
-                      </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    st.markdown("""
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#6B21A8;margin-bottom:6px;">
-                    🤖 JARVIS — PERGUNTE SOBRE ESTE PROJETO
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    for msg in st.session_state.chat_mapa_history:
-                        if msg["role"] == "user":
-                            st.markdown(f"""
-                            <div style="display:flex;justify-content:flex-end;margin:6px 0;">
-                              <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
-                                  border-radius:12px 12px 3px 12px;padding:8px 12px;max-width:85%;font-size:13px;">
-                                {msg['content']}
-                              </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            st.markdown(f"""
-                            <div style="background:#F6F5FA;border:1px solid #DDD8F0;border-radius:3px 12px 12px 12px;
-                                padding:10px 12px;font-size:13px;color:#1A1225;line-height:1.6;margin:6px 0;">
-                              🤖 {msg['content'].replace(chr(10), '<br>')}
-                            </div>
-                            """, unsafe_allow_html=True)
-
-                    chat_m_input = st.text_input(
-                        "chat_mapa_in",
-                        placeholder="Pergunta sobre este projeto...",
-                        label_visibility="collapsed",
-                        key="chat_mapa_input"
-                    )
-                    if st.button("Perguntar", use_container_width=True, key="btn_chat_mapa"):
-                        if chat_m_input:
-                            st.session_state.chat_mapa_history.append({"role": "user", "content": chat_m_input})
-                            q_m = chat_m_input.lower()
-                            p = st.session_state.projeto_chat_mapa
-                            dias_resp = (pd.Timestamp(p["Prazo"]) - pd.Timestamp.now()).days
-                            cor_r = "🔴 URGENTE" if dias_resp < 7 else "🟡 ATENCAO" if dias_resp < 30 else "🟢 OK"
-
-                            if any(w in q_m for w in ["prazo", "quando", "vence", "data"]):
-                                resp = f"Prazo: **{pd.Timestamp(p['Prazo']).strftime('%d/%m/%Y')}** — {dias_resp} dias restantes. Status: {cor_r}"
-                            elif any(w in q_m for w in ["escopo", "o que", "trata"]):
-                                resp = f"**Escopo:** {p.get('Escopo','—')}\n\n**Detalhamento:** {p.get('Detalhamento','—')}"
-                            elif any(w in q_m for w in ["resultado", "entrega", "objetivo"]):
-                                resp = f"**Resultado Esperado:** {p.get('Resultado Esperado','—')}"
-                            elif any(w in q_m for w in ["status", "situacao", "como"]):
-                                resp = f"Status atual: **{p.get('Status','—')}**\nFoco: **{p.get('Foco','—')}**\nDias restantes: **{dias_resp}d** ({cor_r})"
-                            elif any(w in q_m for w in ["foco", "prioridade"]):
-                                resp = f"Foco: **{p.get('Foco','—')}**"
-                            else:
-                                resp = f"""**{p.get('Projeto','')}**
-Status: {p.get('Status','—')} | Foco: {p.get('Foco','—')}
-Prazo: {pd.Timestamp(p['Prazo']).strftime('%d/%m/%Y')} ({dias_resp}d) {cor_r}
-Escopo: {p.get('Escopo','—')}"""
-                            st.session_state.chat_mapa_history.append({"role": "assistant", "content": resp})
-                            st.rerun()
-
-# ─────────────────────────────────────────────
-# TAB 6 — NOTAS
-# ─────────────────────────────────────────────
-with tab6:
-    st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
     &#9670; NOTAS ESTRATEGICAS
     </div>
     """, unsafe_allow_html=True)
@@ -1776,7 +1088,7 @@ with tab6:
     )
 
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:#9588AA;margin-top:8px;text-align:right;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:#9C8B82;margin-top:8px;text-align:right;">
     Notas sao locais e nao sao salvas entre sessoes
     </div>
     """, unsafe_allow_html=True)
