@@ -771,45 +771,81 @@ with tab1:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
+        # FILTROS VISAO GERAL
+        fc1, fc2, fc3 = st.columns(3)
+        with fc1:
+            busca_vg = st.text_input("🔍 Buscar projeto/cliente", placeholder="Digite para filtrar...", key="filtro_vg")
+        with fc2:
+            status_vg = st.multiselect("Status", STATUS_OPCOES, default=[], key="status_vg", placeholder="Todos")
+        with fc3:
+            data_vg = st.date_input("Data inicial a partir de", value=None, key="data_vg")
+
+        df_vg = df.copy()
+        if busca_vg:
+            df_vg = df_vg[df_vg["Projeto"].str.contains(busca_vg, case=False, na=False)]
+        if status_vg:
+            df_vg = df_vg[df_vg["Status"].isin(status_vg)]
+        if data_vg:
+            df_vg = df_vg[df_vg["Data Inicial"].dt.date >= data_vg]
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
         col_a, col_b = st.columns([1.3, 1])
 
         with col_a:
             st.markdown("""
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#3B5BDB;margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
             &#9670; PRAZOS CRITICOS
             </div>
             """, unsafe_allow_html=True)
 
-            ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento"])].copy()
-            ativos = ativos.sort_values("Prazo").head(6)
+            ativos = df_vg[df_vg["Status"].isin(["A Iniciar", "Em Andamento"])].copy()
+            ativos = ativos.sort_values("Prazo")
 
             if not ativos.empty:
                 for _, r in ativos.iterrows():
                     dias = (r["Prazo"] - pd.Timestamp.now()).days
                     cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
                     label = "URGENTE" if dias < 7 else "ATENCAO" if dias < 30 else "OK"
-                    foco = str(r.get("Foco", ""))[:30] if pd.notna(r.get("Foco")) else ""
+                    foco = str(r.get("Foco", "")) if pd.notna(r.get("Foco")) else ""
+                    escopo = str(r.get("Escopo", "")) if pd.notna(r.get("Escopo")) else ""
+                    detalhamento = str(r.get("Detalhamento", "")) if pd.notna(r.get("Detalhamento")) else ""
+                    resultado = str(r.get("Resultado Esperado", "")) if pd.notna(r.get("Resultado Esperado")) else ""
+                    status_cor = STATUS_COLORS.get(r.get("Status",""), "#E8720C")
                     st.markdown(f"""
-                    <div style="display:flex;align-items:center;justify-content:space-between;
-                        background:#F8F9FC;border:1px solid #E8EAEF;
-                        border-left:3px solid {cor};border-radius:10px;padding:12px 16px;margin-bottom:8px;">
-                      <div>
-                        <div style="font-weight:600;font-size:14px;color:#1A1D2E;">{r['Projeto']}</div>
-                        <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">{foco} &middot; {r['Prazo'].strftime('%d/%m/%Y')}</div>
+                    <div style="background:#FFFFFF;border:1px solid #F0D9C8;
+                        border-left:4px solid {cor};border-radius:12px;padding:16px;margin-bottom:10px;
+                        box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                        <div style="font-weight:700;font-size:15px;color:#1A1208;">{r['Projeto']}</div>
+                        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:8px;">
+                          <span style="background:{status_cor}22;color:{status_cor};border:1px solid {status_cor}44;
+                              padding:2px 8px;border-radius:20px;font-size:10px;font-family:'JetBrains Mono',monospace;">{r.get('Status','')}</span>
+                          <span style="background:{cor};color:#fff;padding:3px 10px;border-radius:20px;
+                              font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;">{dias}d &middot; {label}</span>
+                        </div>
                       </div>
-                      <div style="background:{cor};color:#F0F1F4;padding:4px 10px;border-radius:20px;
-                          font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
-                          white-space:nowrap;margin-left:12px;">
-                        {dias}d &middot; {label}
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                        <div style="background:#FDF6F0;border-radius:8px;padding:8px 10px;">
+                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;">FOCO</div>
+                          <div style="font-size:12px;color:#1A1208;font-weight:500;">{foco}</div>
+                        </div>
+                        <div style="background:#FDF6F0;border-radius:8px;padding:8px 10px;">
+                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;">PRAZO</div>
+                          <div style="font-size:12px;color:{cor};font-weight:700;">{r['Prazo'].strftime('%d/%m/%Y')}</div>
+                        </div>
                       </div>
+                      {"<div style='background:#FDF6F0;border-radius:8px;padding:8px 10px;margin-bottom:6px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;'>ESCOPO</div><div style='font-size:12px;color:#1A1208;'>"+escopo+"</div></div>" if escopo else ""}
+                      {"<div style='background:#FDF6F0;border-radius:8px;padding:8px 10px;margin-bottom:6px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;'>DETALHAMENTO</div><div style='font-size:12px;color:#1A1208;'>"+detalhamento+"</div></div>" if detalhamento else ""}
+                      {"<div style='background:#FDF6F0;border-radius:8px;padding:8px 10px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:2px;'>RESULTADO ESPERADO</div><div style='font-size:12px;color:#1A1208;'>"+resultado+"</div></div>" if resultado else ""}
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                st.info("Nenhum projeto ativo com prazo definido.")
+                st.info("Nenhum projeto ativo encontrado.")
 
         with col_b:
             st.markdown("""
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#3B5BDB;margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
             &#9670; DISTRIBUICAO
             </div>
             """, unsafe_allow_html=True)
@@ -819,14 +855,14 @@ with tab1:
                 if count == 0:
                     continue
                 pct = count / total * 100
-                cor = STATUS_COLORS.get(status, "#3B5BDB")
+                cor = STATUS_COLORS.get(status, "#E8720C")
                 st.markdown(f"""
                 <div style="margin-bottom:10px;">
                   <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-size:12px;color:#6B7280;">{status}</span>
+                    <span style="font-size:12px;color:#6B5A4E;">{status}</span>
                     <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{cor};">{count}</span>
                   </div>
-                  <div style="background:#F0F1F4;border-radius:4px;height:4px;overflow:hidden;">
+                  <div style="background:#F0D9C8;border-radius:4px;height:4px;overflow:hidden;">
                     <div style="background:{cor};width:{pct:.0f}%;height:100%;border-radius:4px;box-shadow:0 0 8px {cor};"></div>
                   </div>
                 </div>
@@ -845,16 +881,34 @@ with tab2:
     if df.empty:
         st.warning("Sem dados.")
     else:
+        # Filtros Kanban
+        fk1, fk2, fk3 = st.columns(3)
+        with fk1:
+            busca_kb = st.text_input("🔍 Buscar", placeholder="Projeto ou cliente...", key="filtro_kb")
+        with fk2:
+            status_kb = st.multiselect("Status", STATUS_OPCOES, default=[], key="status_kb", placeholder="Todos")
+        with fk3:
+            data_kb = st.date_input("Data inicial a partir de", value=None, key="data_kb")
+
+        df_kb = df.copy()
+        if busca_kb:
+            df_kb = df_kb[df_kb["Projeto"].str.contains(busca_kb, case=False, na=False)]
+        if status_kb:
+            df_kb = df_kb[df_kb["Status"].isin(status_kb)]
+        if data_kb:
+            df_kb = df_kb[df_kb["Data Inicial"].dt.date >= data_kb]
+
+        st.markdown("<br>", unsafe_allow_html=True)
         cols = st.columns(len(STATUS_OPCOES))
         for i, status in enumerate(STATUS_OPCOES):
-            cor = STATUS_COLORS.get(status, "#3B5BDB")
-            projetos = df[df["Status"] == status]
+            cor = STATUS_COLORS.get(status, "#E8720C")
+            projetos = df_kb[df_kb["Status"] == status]
             count = len(projetos)
 
             with cols[i]:
                 st.markdown(f"""
-                <div style="background:#F8F9FC;border:1px solid #E8EAEF;
-                    border-top:2px solid {cor};box-shadow:0 1px 4px rgba(0,0,0,0.05);border-radius:12px;padding:12px 14px;margin-bottom:12px;
+                <div style="background:#FFFFFF;border:1px solid #F0D9C8;
+                    border-top:2px solid {cor};box-shadow:0 1px 4px rgba(232,114,12,0.08);border-radius:12px;padding:12px 14px;margin-bottom:12px;
                     text-align:center;">
                   <div style="font-size:10px;letter-spacing:2px;color:{cor};
                       font-family:'JetBrains Mono',monospace;">{status.upper()}</div>
@@ -864,13 +918,21 @@ with tab2:
 
                 for _, row in projetos.iterrows():
                     data_str = pd.to_datetime(row.get("Data Inicial")).strftime("%d/%m/%Y") if pd.notna(row.get("Data Inicial")) else ""
-                    foco = str(row.get("Foco", ""))[:28] if pd.notna(row.get("Foco")) else ""
+                    prazo_str = pd.to_datetime(row.get("Prazo")).strftime("%d/%m/%Y") if pd.notna(row.get("Prazo")) else ""
+                    foco = str(row.get("Foco", "")) if pd.notna(row.get("Foco")) else ""
+                    escopo = str(row.get("Escopo", "")) if pd.notna(row.get("Escopo")) else ""
+                    dias = (row["Prazo"] - pd.Timestamp.now()).days
+                    cor_prazo = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
                     st.markdown(f"""
-                    <div style="background:#F8F9FC;border:1px solid #E8EAEF;
-                        border-left:3px solid {cor};border-radius:10px;padding:12px;margin-bottom:8px;">
-                      <div style="font-weight:600;font-size:13px;color:#1A1D2E;margin-bottom:4px;line-height:1.3;">{row['Projeto']}</div>
-                      <div style="font-size:11px;color:#9CA3AF;line-height:1.5;">
-                        {data_str}<br>{foco}
+                    <div style="background:#FFFFFF;border:1px solid #F0D9C8;
+                        border-left:3px solid {cor};border-radius:10px;padding:12px;margin-bottom:8px;
+                        box-shadow:0 1px 4px rgba(232,114,12,0.06);">
+                      <div style="font-weight:600;font-size:13px;color:#1A1208;margin-bottom:6px;line-height:1.3;">{row['Projeto']}</div>
+                      {"<div style='font-size:11px;color:#6B5A4E;margin-bottom:4px;'>🎯 "+foco+"</div>" if foco else ""}
+                      {"<div style='font-size:11px;color:#6B5A4E;margin-bottom:4px;'>📋 "+escopo+"</div>" if escopo else ""}
+                      <div style="display:flex;justify-content:space-between;margin-top:6px;">
+                        <span style="font-size:10px;color:#9C8B82;">📅 {data_str}</span>
+                        <span style="font-size:10px;color:{cor_prazo};font-weight:600;">⏰ {prazo_str}</span>
                       </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -974,17 +1036,32 @@ with tab3:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
+        fi1, fi2, fi3 = st.columns(3)
+        with fi1:
+            busca_i = st.text_input("🔍 Buscar projeto", placeholder="Filtrar por nome...", key="filtro_i")
+        with fi2:
+            status_i = st.multiselect("Status", STATUS_OPCOES, default=[], key="status_i", placeholder="Todos")
+        with fi3:
+            data_i = st.date_input("Data inicial a partir de", value=None, key="data_i")
+
+        df_i = df.copy()
+        if busca_i:
+            df_i = df_i[df_i["Projeto"].str.contains(busca_i, case=False, na=False)]
+        if status_i:
+            df_i = df_i[df_i["Status"].isin(status_i)]
+        if data_i:
+            df_i = df_i[df_i["Data Inicial"].dt.date >= data_i]
+
         st.markdown("""
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#3B5BDB;margin-bottom:16px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
         &#9670; RADAR DE PROJETOS ATIVOS
         </div>
         """, unsafe_allow_html=True)
 
-        ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento", "Reuniao"])].sort_values("Prazo").head(8)
+        ativos = df_i[df_i["Status"].isin(["A Iniciar", "Em Andamento", "Reuniao"])].sort_values("Prazo")
         if not ativos.empty:
             cols_radar = st.columns(2)
-            for idx, (_, row) in enumerate(ativos.iterrows()):
-                dias = (row["Prazo"] - pd.Timestamp.now()).days
+            for idx, (_, row) in enumerate(ativos.iterrows()):                dias = (row["Prazo"] - pd.Timestamp.now()).days
                 cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
                 status_cor = STATUS_COLORS.get(row["Status"], "#3B5BDB")
                 escopo = str(row.get("Escopo", ""))[:60] if pd.notna(row.get("Escopo")) else ""
@@ -1020,7 +1097,24 @@ with tab4:
     if df.empty:
         st.warning("Sem dados carregados.")
     else:
-        st.dataframe(df, use_container_width=True, height=500)
+        fd1, fd2, fd3 = st.columns(3)
+        with fd1:
+            busca_d = st.text_input("🔍 Buscar", placeholder="Projeto ou cliente...", key="filtro_d")
+        with fd2:
+            status_d = st.multiselect("Status", STATUS_OPCOES, default=[], key="status_d", placeholder="Todos")
+        with fd3:
+            data_d = st.date_input("Data inicial a partir de", value=None, key="data_d")
+
+        df_d = df.copy()
+        if busca_d:
+            df_d = df_d[df_d["Projeto"].str.contains(busca_d, case=False, na=False)]
+        if status_d:
+            df_d = df_d[df_d["Status"].isin(status_d)]
+        if data_d:
+            df_d = df_d[df_d["Data Inicial"].dt.date >= data_d]
+
+        st.markdown(f"<div style='font-size:12px;color:#9C8B82;margin-bottom:8px;'>{len(df_d)} projetos encontrados</div>", unsafe_allow_html=True)
+        st.dataframe(df_d, use_container_width=True, height=500)
 
 # ─────────────────────────────────────────────
 # TAB 5 — CHAT IA
@@ -1068,6 +1162,8 @@ with tab5:
             if st.button("🗑️  Limpar conversa", use_container_width=True):
                 st.session_state.chat_history = []
                 st.rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with col_chat:
         # Header do chat
