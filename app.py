@@ -52,6 +52,7 @@ html, body, .stApp {
 [data-testid="stHeader"], #MainMenu, footer, .stDeployButton { display: none !important; }
 [data-testid="collapsedControl"] { display: none !important; }
 [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+section[data-testid="stSidebar"] { transform: none !important; width: 240px !important; min-width: 240px !important; }
 [data-testid="stAppViewContainer"] { background: var(--bg) !important; }
 .block-container { padding: 1.5rem 1.5rem 2rem !important; max-width: 100% !important; }
 
@@ -1138,31 +1139,100 @@ Regras:
 
         with st.spinner("J.A.R.V.I.S processando..."):
             try:
-                import requests
-                resp = requests.post(
-                    "https://api.anthropic.com/v1/messages",
-                    headers={
-                        "Content-Type": "application/json",
-                        "x-api-key": st.secrets.get("ANTHROPIC_API_KEY", ""),
-                        "anthropic-version": "2023-06-01"
-                    },
-                    json={
-                        "model": "claude-haiku-4-5-20251001",
-                        "max_tokens": 800,
-                        "system": system_prompt,
-                        "messages": messages
-                    },
-                    timeout=45
-                )
-                data = resp.json()
-                if data.get("content"):
-                    answer = data["content"][0]["text"]
-                elif data.get("error"):
-                    answer = f"API error: {data['error'].get('message', 'Erro desconhecido')}"
+                q = query.lower()
+                now = pd.Timestamp.now()
+
+                if df.empty:
+                    answer = "⚠️ Nenhum projeto carregado. Sincronize a planilha primeiro."
                 else:
-                    answer = f"Resposta inesperada: {str(data)[:200]}"
+                    ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento"])]
+                    concluidos = df[df["Status"] == "Concluido"]
+                    em_exec = df[df["Status"] == "Em Andamento"]
+                    backlog = df[df["Status"] == "A Iniciar"]
+                    futuros = df[df["Status"] == "Projetos Futuros"]
+                    total = len(df)
+                    taxa = round(len(concluidos)/total*100, 1) if total > 0 else 0
+
+                    # Projetos com prazo mais próximo
+                    urgentes = ativos.copy()
+                    urgentes["dias"] = (urgentes["Prazo"] - now).dt.days
+                    urgentes = urgentes.sort_values("dias")
+
+                    if any(w in q for w in ["risco", "atraso", "urgente", "critico"]):
+                        top = urgentes.head(5)
+                        linhas = ""
+                        for _, r in top.iterrows():
+                            d = int((r["Prazo"] - now).days)
+                            emoji = "🔴" if d < 7 else "🟡" if d < 30 else "🟢"
+                            linhas += f"\n{emoji} **{r['Projeto']}** — {d} dias ({r['Prazo'].strftime('%d/%m/%Y')})"
+                        answer = f"**⚠️ Projetos com maior risco de atraso:**\n{linhas}\n\n💡 **Recomendacao:** Priorize os marcados em 🔴 imediatamente."
+
+                    elif any(w in q for w in ["focar", "energia", "semana", "prioridade", "foco"]):
+                        top = urgentes.head(3)
+                        linhas = ""
+                        for _, r in top.iterrows():
+                            d = int((r["Prazo"] - now).days)
+                            foco = str(r.get("Foco",""))[:50] if pd.notna(r.get("Foco")) else ""
+                            linhas += f"\n🎯 **{r['Projeto']}** ({d}d) — {foco}"
+                        answer = f"**🎯 Foco desta semana:**\n{linhas}\n\n⚡ Concentre energia nestes projetos para evitar atrasos criticos."
+
+                    elif any(w in q for w in ["diagnostico", "geral", "portfolio", "situacao", "status"]):
+                        answer = f"""**📊 Diagnostico do Portfolio:**
+
+🔢 **Total de projetos:** {total}
+✅ **Concluidos:** {len(concluidos)} ({taxa}%)
+⚙️ **Em Andamento:** {len(em_exec)}
+📋 **Backlog:** {len(backlog)}
+🔮 **Futuros:** {len(futuros)}
+
+{"🟢 **Performance Excepcional** — Pipeline acima da media!" if taxa >= 70 else "🟡 **Performance Estavel** — Ha espaco para acelerar o backlog." if taxa >= 40 else "🔴 **Atencao Requerida** — Revisao estrategica recomendada."}
+
+💡 Projetos mais urgentes: **{urgentes.iloc[0]['Projeto'] if not urgentes.empty else 'N/A'}** vence em {int(urgentes.iloc[0]['dias']) if not urgentes.empty else 0} dias."""
+
+                    elif any(w in q for w in ["acelerar", "rapido", "adiantar"]):
+                        top = urgentes[urgentes["dias"] > 30].head(4)
+                        if top.empty:
+                            answer = "⚡ Todos os projetos ativos estao com prazo proximo. Foque em concluir os urgentes primeiro."
+                        else:
+                            linhas = "\n".join([f"⚡ **{r['Projeto']}** — {int(r['dias'])} dias" for _, r in top.iterrows()])
+                            answer = f"**Projetos que podem ser acelerados (prazo folgado):**\n{linhas}\n\n✅ Aproveite para adiantar enquanto os urgentes nao chegam."
+
+                    elif any(w in q for w in ["gargalo", "problema", "bloqueio", "travar"]):
+                        muitos_urgentes = urgentes[urgentes["dias"] < 14]
+                        answer = f"""**🔍 Gargalos Identificados:**
+
+{"🔴 **"+str(len(muitos_urgentes))+" projetos vencem em menos de 14 dias** — risco de sobrecarga operacional." if not muitos_urgentes.empty else "✅ Nenhum gargalo critico identificado no momento."}
+
+📋 **Backlog represado:** {len(backlog)} projetos aguardando inicio.
+{"⚠️ Alto volume no backlog — considere priorizar ou redistribuir." if len(backlog) > 5 else "✅ Backlog em nivel saudavel."}"""
+
+                    elif any(w in q for w in ["30 dias", "vence", "prazo", "mes"]):
+                        proximos = urgentes[urgentes["dias"] <= 30]
+                        if proximos.empty:
+                            answer = "✅ Nenhum projeto vence nos proximos 30 dias."
+                        else:
+                            linhas = ""
+                            for _, r in proximos.iterrows():
+                                d = int(r["dias"])
+                                emoji = "🔴" if d < 7 else "🟡"
+                                linhas += f"\n{emoji} **{r['Projeto']}** — {r['Prazo'].strftime('%d/%m/%Y')} ({d}d)"
+                            answer = f"**📅 Vence nos proximos 30 dias ({len(proximos)} projetos):**\n{linhas}"
+
+                    else:
+                        top3 = urgentes.head(3)
+                        linhas = "\n".join([f"• **{r['Projeto']}** — {int(r['dias'])}d" for _, r in top3.iterrows()])
+                        answer = f"""**🤖 J.A.R.V.I.S — Resumo Executivo:**
+
+📊 Portfolio: **{total} projetos** | Taxa de conclusao: **{taxa}%**
+⚙️ Em execucao: **{len(em_exec)}** | Backlog: **{len(backlog)}**
+
+**Top prioridades agora:**
+{linhas}
+
+💬 Pergunte sobre: *risco de atraso, foco da semana, diagnostico geral, gargalos, proximos prazos.*"""
+
             except Exception as e:
-                answer = f"Erro: {str(e)}"
+                answer = f"Erro interno: {str(e)}"
 
         st.session_state.chat_history.append({"role": "assistant", "content": answer})
         st.rerun()
