@@ -21,24 +21,25 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    --bg: #FDF6F0;
+    --bg: #F6F5FA;
     --bg2: #FFFFFF;
     --surface: #FFFFFF;
-    --surface2: #FEF0E6;
-    --border: #F0D9C8;
-    --border-strong: #E8C4A0;
-    --accent: #E8720C;
-    --accent-light: rgba(232,114,12,0.08);
-    --accent-muted: rgba(232,114,12,0.15);
-    --gold: #D4880A;
-    --green: #2F9E44;
+    --surface2: #EFECF8;
+    --border: #DDD8F0;
+    --border-strong: #C4BCDF;
+    --accent: #6B21A8;
+    --accent2: #10B981;
+    --accent-light: rgba(107,33,168,0.07);
+    --accent-muted: rgba(107,33,168,0.14);
+    --gold: #10B981;
+    --green: #10B981;
     --red: #C92A2A;
-    --orange: #E8720C;
-    --purple: #7048E8;
+    --orange: #7C3AED;
+    --purple: #6B21A8;
     --teal: #0C8599;
-    --text: #1A1208;
-    --text-muted: #6B5A4E;
-    --text-dim: #9C8B82;
+    --text: #1A1225;
+    --text-muted: #5B4E72;
+    --text-dim: #9588AA;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -254,12 +255,12 @@ JARVIS_HTML = """
   /* Orbit dot */
   .orbit-dot {
     position: absolute; width: 6px; height: 6px;
-    background: var(--c, #3B5BDB); border-radius: 50%;
-    box-shadow: 0 0 8px var(--c, #3B5BDB);
+    background: var(--c, #6B21A8); border-radius: 50%;
+    box-shadow: 0 0 8px var(--c, #6B21A8);
     top: 0; left: 50%; transform: translateX(-50%) translateY(-3px);
   }
-  .ring-1 .orbit-dot { --c: #3B5BDB; }
-  .ring-2 .orbit-dot { --c: #D4880A; }
+  .ring-1 .orbit-dot { --c: #6B21A8; }
+  .ring-2 .orbit-dot { --c: #7C3AED; }
 
   @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
 
@@ -318,12 +319,12 @@ JARVIS_HTML = """
     <defs>
       <radialGradient id="gGold" cx="50%" cy="35%">
         <stop offset="0%" stop-color="#D4C090"/>
-        <stop offset="60%" stop-color="#D4880A"/>
+        <stop offset="60%" stop-color="#7C3AED"/>
         <stop offset="100%" stop-color="#6B5020"/>
       </radialGradient>
       <radialGradient id="gCyan" cx="50%" cy="50%">
         <stop offset="0%" stop-color="#1A1D2E"/>
-        <stop offset="60%" stop-color="#3B5BDB"/>
+        <stop offset="60%" stop-color="#6B21A8"/>
         <stop offset="100%" stop-color="#2A2D3A"/>
       </radialGradient>
       <linearGradient id="gMetal" x1="0" x2="0" y1="0" y2="1">
@@ -340,10 +341,10 @@ JARVIS_HTML = """
     </defs>
 
     <!-- Shadow -->
-    <ellipse cx="200" cy="490" rx="100" ry="7" fill="#3B5BDB" opacity="0.2" filter="url(#bigGlow)"/>
+    <ellipse cx="200" cy="490" rx="100" ry="7" fill="#6B21A8" opacity="0.2" filter="url(#bigGlow)"/>
 
     <!-- Antenna -->
-    <line x1="200" y1="38" x2="200" y2="78" stroke="#D4880A" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="200" y1="38" x2="200" y2="78" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
     <circle cx="200" cy="32" r="6" fill="url(#gGold)" filter="url(#glow)">
       <animate attributeName="r" values="4;8;4" dur="1.2s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0.7;1;0.7" dur="1.2s" repeatCount="indefinite"/>
@@ -363,9 +364,9 @@ JARVIS_HTML = """
       <rect x="135" y="112" width="130" height="72" rx="10" fill="#F0F1F4"/>
       <rect x="135" y="112" width="130" height="72" rx="10" fill="url(#gCyan)" opacity="0.15"/>
       <rect x="135" y="112" width="130" height="72" rx="10" fill="none" stroke="rgba(59,91,219,0.3)" stroke-width="1.5"/>
-      <line x1="135" y1="130" x2="265" y2="130" stroke="#3B5BDB" stroke-width="0.3" opacity="0.4"/>
-      <line x1="135" y1="148" x2="265" y2="148" stroke="#3B5BDB" stroke-width="0.3" opacity="0.4"/>
-      <line x1="135" y1="166" x2="265" y2="166" stroke="#3B5BDB" stroke-width="0.3" opacity="0.4"/>
+      <line x1="135" y1="130" x2="265" y2="130" stroke="#6B21A8" stroke-width="0.3" opacity="0.4"/>
+      <line x1="135" y1="148" x2="265" y2="148" stroke="#6B21A8" stroke-width="0.3" opacity="0.4"/>
+      <line x1="135" y1="166" x2="265" y2="166" stroke="#6B21A8" stroke-width="0.3" opacity="0.4"/>
       <!-- Left Eye -->
       <g class="eye eye-l">
         <circle cx="163" cy="148" r="16" fill="#F0F1F4" stroke="rgba(200,169,110,0.5)" stroke-width="1.5"/>
@@ -381,19 +382,19 @@ JARVIS_HTML = """
         <circle cx="237" cy="148" r="4" fill="#1A1E2A" opacity="0.6"/>
       </g>
       <!-- Corner accents on visor -->
-      <path d="M140 116 L152 116" stroke="#3B5BDB" stroke-width="1.5" opacity="0.5"/>
-      <path d="M140 116 L140 124" stroke="#3B5BDB" stroke-width="1.5" opacity="0.5"/>
-      <path d="M260 116 L248 116" stroke="#D4880A" stroke-width="1.5" opacity="0.5"/>
-      <path d="M260 116 L260 124" stroke="#D4880A" stroke-width="1.5" opacity="0.5"/>
+      <path d="M140 116 L152 116" stroke="#6B21A8" stroke-width="1.5" opacity="0.5"/>
+      <path d="M140 116 L140 124" stroke="#6B21A8" stroke-width="1.5" opacity="0.5"/>
+      <path d="M260 116 L248 116" stroke="#7C3AED" stroke-width="1.5" opacity="0.5"/>
+      <path d="M260 116 L260 124" stroke="#7C3AED" stroke-width="1.5" opacity="0.5"/>
       <!-- Equalizer mouth -->
       <g transform="translate(164,210)">
-        <rect class="bar b1" x="0"  y="-5"  width="6" height="10" rx="2" fill="#D4880A" opacity="0.8"/>
-        <rect class="bar b2" x="9"  y="-8"  width="6" height="16" rx="2" fill="#3B5BDB"/>
-        <rect class="bar b3" x="18" y="-11" width="6" height="22" rx="2" fill="#D4880A" opacity="0.8"/>
-        <rect class="bar b4" x="27" y="-14" width="6" height="28" rx="2" fill="#3B5BDB"/>
-        <rect class="bar b5" x="36" y="-11" width="6" height="22" rx="2" fill="#D4880A" opacity="0.8"/>
-        <rect class="bar b6" x="45" y="-8"  width="6" height="16" rx="2" fill="#3B5BDB"/>
-        <rect class="bar b7" x="54" y="-5"  width="6" height="10" rx="2" fill="#D4880A" opacity="0.8"/>
+        <rect class="bar b1" x="0"  y="-5"  width="6" height="10" rx="2" fill="#7C3AED" opacity="0.8"/>
+        <rect class="bar b2" x="9"  y="-8"  width="6" height="16" rx="2" fill="#6B21A8"/>
+        <rect class="bar b3" x="18" y="-11" width="6" height="22" rx="2" fill="#7C3AED" opacity="0.8"/>
+        <rect class="bar b4" x="27" y="-14" width="6" height="28" rx="2" fill="#6B21A8"/>
+        <rect class="bar b5" x="36" y="-11" width="6" height="22" rx="2" fill="#7C3AED" opacity="0.8"/>
+        <rect class="bar b6" x="45" y="-8"  width="6" height="16" rx="2" fill="#6B21A8"/>
+        <rect class="bar b7" x="54" y="-5"  width="6" height="10" rx="2" fill="#7C3AED" opacity="0.8"/>
       </g>
       <!-- Side vents -->
       <rect x="118" y="140" width="8" height="3" rx="1" fill="rgba(99,179,237,0.4)"/>
@@ -424,10 +425,10 @@ JARVIS_HTML = """
       <circle cx="200" cy="340" r="10" fill="white" opacity="0.95"/>
       <!-- Rotor ticks -->
       <g class="rotor">
-        <line x1="200" y1="304" x2="200" y2="314" stroke="#D4880A" stroke-width="2"/>
-        <line x1="200" y1="366" x2="200" y2="376" stroke="#D4880A" stroke-width="2"/>
-        <line x1="164" y1="340" x2="174" y2="340" stroke="#D4880A" stroke-width="2"/>
-        <line x1="226" y1="340" x2="236" y2="340" stroke="#D4880A" stroke-width="2"/>
+        <line x1="200" y1="304" x2="200" y2="314" stroke="#7C3AED" stroke-width="2"/>
+        <line x1="200" y1="366" x2="200" y2="376" stroke="#7C3AED" stroke-width="2"/>
+        <line x1="164" y1="340" x2="174" y2="340" stroke="#7C3AED" stroke-width="2"/>
+        <line x1="226" y1="340" x2="236" y2="340" stroke="#7C3AED" stroke-width="2"/>
         <line x1="177" y1="317" x2="183" y2="325" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
         <line x1="223" y1="317" x2="217" y2="325" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
         <line x1="177" y1="363" x2="183" y2="355" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
@@ -437,10 +438,10 @@ JARVIS_HTML = """
       <circle cx="128" cy="316" r="4" fill="#2F9E44" filter="url(#glow)">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="272" cy="316" r="4" fill="#3B5BDB" filter="url(#glow)">
+      <circle cx="272" cy="316" r="4" fill="#6B21A8" filter="url(#glow)">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1.5s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="128" cy="328" r="3" fill="#D4880A">
+      <circle cx="128" cy="328" r="3" fill="#7C3AED">
         <animate attributeName="opacity" values="0.9;0.2;0.9" dur="0.8s" repeatCount="indefinite"/>
       </circle>
     </g>
@@ -468,7 +469,7 @@ JARVIS_HTML = """
     <rect x="208" y="485" width="58" height="14" rx="7" fill="url(#gGold)" opacity="0.7"/>
   </svg>
 
-  <div class="hud">&#9670; J.A.R.V.I.S &middot; NEURAL ENGINE ONLINE &#9670;</div>
+  <div class="hud">&#128302; J.A.R.V.I.S &middot; FEITICO ATIVO &#128302;</div>
 </div>
 
 <script>
@@ -481,7 +482,7 @@ const P = Array.from({length: 35}, () => ({
   x: Math.random()*cv.width, y: Math.random()*cv.height,
   vx: (Math.random()-0.5)*0.35, vy: (Math.random()-0.5)*0.35,
   r: Math.random()*1.6+0.4,
-  c: Math.random()>0.5 ? '#3B5BDB' : '#D4880A'
+  c: Math.random()>0.5 ? '#6B21A8' : '#7C3AED'
 }));
 function tick(){
   ctx.clearRect(0,0,cv.width,cv.height);
@@ -549,13 +550,13 @@ if not st.session_state.logado:
         st.markdown("""
         <div style="padding:40px 0 24px 0;">
           <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
-              color:#3B5BDB;margin-bottom:12px;">&#9679; J.A.R.V.I.S ONLINE</div>
+              color:#6B21A8;margin-bottom:12px;">&#9679; J.A.R.V.I.S ONLINE</div>
           <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;
-              background:linear-gradient(135deg,#D4880A 0%,#3B5BDB 100%);
+              background:linear-gradient(135deg,#7C3AED 0%,#6B21A8 100%);
               -webkit-background-clip:text;-webkit-text-fill-color:transparent;
               line-height:1;margin-bottom:8px;">SABINO<br>OS</div>
           <p style="color:#6B7280;font-size:14px;line-height:1.7;margin-top:12px;">
-            Bem-vindo, <span style="color:#D4880A;font-weight:600;">Senhor Sabino</span>.<br>
+            Bem-vindo, <span style="color:#7C3AED;font-weight:600;">Senhor Sabino</span>.<br>
             Aguardando autenticacao para<br>acesso ao hub operacional.
           </p>
         </div>
@@ -601,7 +602,7 @@ STATUS_OPCOES = ["Reuniao", "A Iniciar", "Em Andamento", "Projetos Futuros", "Co
 STATUS_COLORS = {
     "Reuniao":          "#7048E8",
     "A Iniciar":        "#8BA8C8",
-    "Em Andamento":     "#E8720C",
+    "Em Andamento":     "#6B21A8",
     "Projetos Futuros": "#0C8599",
     "Concluido":        "#2F9E44"
 }
@@ -651,9 +652,9 @@ df = st.session_state.df_projetos
 with st.sidebar:
     st.markdown("""
     <div style="padding:0 0 20px 0;">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:#3B5BDB;margin-bottom:4px;">&#9679; SISTEMA ATIVO</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:#6B21A8;margin-bottom:4px;">&#9679; SISTEMA ATIVO</div>
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
-          background:linear-gradient(135deg,#D4880A,#3B5BDB);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          background:linear-gradient(135deg,#6B21A8,#4C1D95);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
           SABINO OS</div>
       <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">Hub Operacional v4.0</div>
     </div>
@@ -684,7 +685,7 @@ with st.sidebar:
         <div style="display:flex;flex-direction:column;gap:8px;">
           <div style="background:#FFFFFF;border:1px solid #E8EAEF;border-radius:10px;padding:12px 14px;">
             <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9CA3AF;margin-bottom:4px;">PROJETOS</div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#3B5BDB;">{total}</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#6B21A8;">{total}</div>
           </div>
           <div style="background:#FFFFFF;border:1px solid #E8EAEF;border-radius:10px;padding:12px 14px;">
             <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9CA3AF;margin-bottom:4px;">CONCLUSAO</div>
@@ -692,7 +693,7 @@ with st.sidebar:
           </div>
           <div style="background:#FFFFFF;border:1px solid #E8EAEF;border-radius:10px;padding:12px 14px;">
             <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9CA3AF;margin-bottom:4px;">EM EXECUCAO</div>
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#D4880A;">{em_exec}</div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#7C3AED;">{em_exec}</div>
           </div>
         </div>
         """, unsafe_allow_html=True)
@@ -712,9 +713,9 @@ st.markdown(f"""
     padding:16px 24px;border:1px solid #E2E4EA;border-radius:14px;
     background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:24px;">
   <div>
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#3B5BDB;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
     <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
-        background:linear-gradient(135deg,#D4880A,#3B5BDB);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+        background:linear-gradient(135deg,#6B21A8,#4C1D95);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
         GABRIEL SABINO</div>
   </div>
   <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:#9CA3AF;letter-spacing:1px;">
@@ -756,17 +757,17 @@ with tab1:
 
     with col_sugest:
         st.markdown("""
-        <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:16px;padding:20px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0D9C8;">
-            <div style="width:48px;height:48px;background:linear-gradient(135deg,#E8720C,#D4880A);
+        <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #DDD8F0;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
                 border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
-                box-shadow:0 4px 12px rgba(232,114,12,0.3);">🤖</div>
+                box-shadow:0 4px 12px rgba(107,33,168,0.3);">🤖</div>
             <div>
-              <div style="font-weight:700;font-size:14px;color:#1A1208;">J.A.R.V.I.S</div>
-              <div style="font-size:11px;color:#E8720C;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
+              <div style="font-weight:700;font-size:14px;color:#1A1225;">J.A.R.V.I.S</div>
+              <div style="font-size:11px;color:#6B21A8;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
             </div>
           </div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:12px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:12px;">
             PERGUNTAS RAPIDAS
           </div>
         </div>
@@ -783,7 +784,7 @@ with tab1:
 
     with col_chat:
         st.markdown("""
-        <div style="background:linear-gradient(135deg,#E8720C,#D4880A);border-radius:16px;
+        <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
             padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
           <div style="font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🤖</div>
           <div>
@@ -799,13 +800,13 @@ with tab1:
         if not st.session_state.chat_history:
             st.markdown("""
             <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
-              <div style="width:44px;height:44px;background:linear-gradient(135deg,#E8720C,#D4880A);
+              <div style="width:44px;height:44px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
                   border-radius:50%;display:flex;align-items:center;justify-content:center;
-                  font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
-              <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
-                  padding:16px 20px;max-width:90%;box-shadow:0 2px 8px rgba(232,114,12,0.08);">
-                <div style="font-weight:700;color:#E8720C;margin-bottom:8px;font-size:15px;">✨ Salve, Bruxo! 🧙‍♂️</div>
-                <div style="font-size:14px;color:#1A1208;line-height:1.7;">
+                  font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(107,33,168,0.3);">🤖</div>
+              <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:4px 16px 16px 16px;
+                  padding:16px 20px;max-width:90%;box-shadow:0 2px 8px rgba(107,33,168,0.07);">
+                <div style="font-weight:700;color:#6B21A8;margin-bottom:8px;font-size:15px;">🔮 Salve, Bruxo! 🧙‍♂️</div>
+                <div style="font-size:14px;color:#1A1225;line-height:1.7;">
                   Sistema ativo e pronto. Tenho acesso completo ao seu portfolio —
                   prazos, clientes, escopo, tudo.<br><br>
                   Me diz o que precisa, Bruxo. Use os botoes ao lado ou
@@ -819,12 +820,12 @@ with tab1:
             if msg["role"] == "user":
                 st.markdown(f"""
                 <div style="display:flex;justify-content:flex-end;margin:12px 0;gap:8px;">
-                  <div style="background:linear-gradient(135deg,#E8720C,#D4880A);color:#fff;
+                  <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
                       border-radius:16px 16px 4px 16px;padding:12px 18px;max-width:75%;
-                      font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(232,114,12,0.25);">
+                      font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(107,33,168,0.25);">
                     {msg['content']}
                   </div>
-                  <div style="width:36px;height:36px;background:#F0D9C8;border-radius:50%;
+                  <div style="width:36px;height:36px;background:#DDD8F0;border-radius:50%;
                       display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🧙‍♂️</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -832,12 +833,12 @@ with tab1:
                 content = msg['content'].replace(chr(10), '<br>')
                 st.markdown(f"""
                 <div style="display:flex;align-items:flex-start;gap:12px;margin:12px 0;">
-                  <div style="width:44px;height:44px;background:linear-gradient(135deg,#E8720C,#D4880A);
+                  <div style="width:44px;height:44px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
                       border-radius:50%;display:flex;align-items:center;justify-content:center;
-                      font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
-                  <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
-                      padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1208;
-                      box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+                      font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(107,33,168,0.3);">🤖</div>
+                  <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:4px 16px 16px 16px;
+                      padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1225;
+                      box-shadow:0 2px 8px rgba(107,33,168,0.07);">
                     {content}
                   </div>
                 </div>
@@ -975,18 +976,18 @@ with tab2:
 
         cols = st.columns(5)
         kpis = [
-            ("TOTAL", total, "#E8720C"),
-            ("EM EXECUCAO", em_exec, "#D4880A"),
+            ("TOTAL", total, "#6B21A8"),
+            ("EM EXECUCAO", em_exec, "#7C3AED"),
             ("CONCLUIDOS", concluidos, "#2F9E44"),
             ("BACKLOG", backlog, "#7048E8"),
-            ("TAXA", f"{taxa}%", "#C92A2A" if taxa < 40 else "#D4880A" if taxa < 70 else "#2F9E44"),
+            ("TAXA", f"{taxa}%", "#C92A2A" if taxa < 40 else "#7C3AED" if taxa < 70 else "#2F9E44"),
         ]
         for i, (label, val, cor) in enumerate(kpis):
             cols[i].markdown(f"""
-            <div style="background:#FFFFFF;border:1px solid #F0D9C8;
+            <div style="background:#FFFFFF;border:1px solid #DDD8F0;
                 border-radius:14px;padding:20px 18px;
-                border-top:3px solid {cor};box-shadow:0 2px 8px rgba(232,114,12,0.08);">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:8px;">{label}</div>
+                border-top:3px solid {cor};box-shadow:0 2px 8px rgba(107,33,168,0.07);">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">{label}</div>
               <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:{cor};">{val}</div>
             </div>
             """, unsafe_allow_html=True)
@@ -1015,7 +1016,7 @@ with tab2:
 
         with col_a:
             st.markdown("""
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
             &#9670; PROJETOS ATIVOS — CARDS COMPLETOS
             </div>
             """, unsafe_allow_html=True)
@@ -1026,21 +1027,21 @@ with tab2:
             if not ativos.empty:
                 for _, r in ativos.iterrows():
                     dias = (r["Prazo"] - pd.Timestamp.now()).days
-                    cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
+                    cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
                     label = "URGENTE" if dias < 7 else "ATENCAO" if dias < 30 else "OK"
                     foco = str(r.get("Foco", "")) if pd.notna(r.get("Foco")) else "—"
                     escopo = str(r.get("Escopo", "")) if pd.notna(r.get("Escopo")) else "—"
                     detalhamento = str(r.get("Detalhamento", "")) if pd.notna(r.get("Detalhamento")) else ""
                     resultado = str(r.get("Resultado Esperado", "")) if pd.notna(r.get("Resultado Esperado")) else ""
-                    status_cor = STATUS_COLORS.get(r.get("Status",""), "#E8720C")
+                    status_cor = STATUS_COLORS.get(r.get("Status",""), "#6B21A8")
                     data_ini = r["Data Inicial"].strftime("%d/%m/%Y") if pd.notna(r.get("Data Inicial")) else "—"
 
                     st.markdown(f"""
-                    <div style="background:#FFFFFF;border:1px solid #F0D9C8;
+                    <div style="background:#FFFFFF;border:1px solid #DDD8F0;
                         border-left:4px solid {cor};border-radius:12px;padding:16px;margin-bottom:12px;
-                        box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+                        box-shadow:0 2px 8px rgba(107,33,168,0.07);">
                       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                        <div style="font-weight:700;font-size:15px;color:#1A1208;flex:1;">{r['Projeto']}</div>
+                        <div style="font-weight:700;font-size:15px;color:#1A1225;flex:1;">{r['Projeto']}</div>
                         <div style="display:flex;gap:6px;flex-shrink:0;margin-left:8px;">
                           <span style="background:{status_cor}22;color:{status_cor};border:1px solid {status_cor}44;
                               padding:2px 8px;border-radius:20px;font-size:10px;font-family:'JetBrains Mono',monospace;">{r.get('Status','')}</span>
@@ -1049,25 +1050,25 @@ with tab2:
                         </div>
                       </div>
                       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
-                        <div style="background:#FDF6F0;border-radius:8px;padding:8px 10px;">
-                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">FOCO</div>
-                          <div style="font-size:12px;color:#1A1208;font-weight:500;">{foco}</div>
+                        <div style="background:#F6F5FA;border-radius:8px;padding:8px 10px;">
+                          <div style="font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:3px;">FOCO</div>
+                          <div style="font-size:12px;color:#1A1225;font-weight:500;">{foco}</div>
                         </div>
-                        <div style="background:#FDF6F0;border-radius:8px;padding:8px 10px;">
-                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">INICIO</div>
-                          <div style="font-size:12px;color:#1A1208;font-weight:500;">{data_ini}</div>
+                        <div style="background:#F6F5FA;border-radius:8px;padding:8px 10px;">
+                          <div style="font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:3px;">INICIO</div>
+                          <div style="font-size:12px;color:#1A1225;font-weight:500;">{data_ini}</div>
                         </div>
                         <div style="background:{cor}11;border-radius:8px;padding:8px 10px;border:1px solid {cor}33;">
-                          <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:3px;">PRAZO</div>
+                          <div style="font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:3px;">PRAZO</div>
                           <div style="font-size:12px;color:{cor};font-weight:700;">{r['Prazo'].strftime('%d/%m/%Y')}</div>
                         </div>
                       </div>
-                      <div style="background:#FDF6F0;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
-                        <div style="font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:4px;">ESCOPO</div>
-                        <div style="font-size:13px;color:#1A1208;line-height:1.5;">{escopo}</div>
+                      <div style="background:#F6F5FA;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+                        <div style="font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:4px;">ESCOPO</div>
+                        <div style="font-size:13px;color:#1A1225;line-height:1.5;">{escopo}</div>
                       </div>
-                      {"<div style='background:#FDF6F0;border-radius:8px;padding:10px 12px;margin-bottom:6px;'><div style='font-size:9px;color:#9C8B82;letter-spacing:1px;margin-bottom:4px;'>DETALHAMENTO</div><div style='font-size:13px;color:#1A1208;line-height:1.5;'>"+detalhamento+"</div></div>" if detalhamento and detalhamento != "—" else ""}
-                      {"<div style='background:#E8720C11;border:1px solid #E8720C33;border-radius:8px;padding:10px 12px;'><div style='font-size:9px;color:#E8720C;letter-spacing:1px;margin-bottom:4px;'>RESULTADO ESPERADO</div><div style='font-size:13px;color:#1A1208;line-height:1.5;'>"+resultado+"</div></div>" if resultado and resultado != "—" else ""}
+                      {"<div style='background:#F6F5FA;border-radius:8px;padding:10px 12px;margin-bottom:6px;'><div style='font-size:9px;color:#9588AA;letter-spacing:1px;margin-bottom:4px;'>DETALHAMENTO</div><div style='font-size:13px;color:#1A1225;line-height:1.5;'>"+detalhamento+"</div></div>" if detalhamento and detalhamento != "—" else ""}
+                      {"<div style='background:#6B21A811;border:1px solid #6B21A833;border-radius:8px;padding:10px 12px;'><div style='font-size:9px;color:#6B21A8;letter-spacing:1px;margin-bottom:4px;'>RESULTADO ESPERADO</div><div style='font-size:13px;color:#1A1225;line-height:1.5;'>"+resultado+"</div></div>" if resultado and resultado != "—" else ""}
                     </div>
                     """, unsafe_allow_html=True)
             else:
@@ -1075,7 +1076,7 @@ with tab2:
 
         with col_b:
             st.markdown("""
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
             &#9670; DISTRIBUICAO
             </div>
             """, unsafe_allow_html=True)
@@ -1085,14 +1086,14 @@ with tab2:
                 if count == 0:
                     continue
                 pct = count / total * 100
-                cor = STATUS_COLORS.get(status, "#E8720C")
+                cor = STATUS_COLORS.get(status, "#6B21A8")
                 st.markdown(f"""
                 <div style="margin-bottom:12px;">
                   <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-size:12px;color:#6B5A4E;font-weight:500;">{status}</span>
+                    <span style="font-size:12px;color:#5B4E72;font-weight:500;">{status}</span>
                     <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{cor};font-weight:700;">{count}</span>
                   </div>
-                  <div style="background:#F0D9C8;border-radius:4px;height:6px;overflow:hidden;">
+                  <div style="background:#DDD8F0;border-radius:4px;height:6px;overflow:hidden;">
                     <div style="background:{cor};width:{pct:.0f}%;height:100%;border-radius:4px;box-shadow:0 0 8px {cor}88;"></div>
                   </div>
                 </div>
@@ -1103,7 +1104,7 @@ with tab2:
 # ─────────────────────────────────────────────
 with tab3:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:20px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:20px;">
     &#9670; FLUXO OPERACIONAL
     </div>
     """, unsafe_allow_html=True)
@@ -1130,14 +1131,14 @@ with tab3:
         st.markdown("<br>", unsafe_allow_html=True)
         cols = st.columns(len(STATUS_OPCOES))
         for i, status in enumerate(STATUS_OPCOES):
-            cor = STATUS_COLORS.get(status, "#E8720C")
+            cor = STATUS_COLORS.get(status, "#6B21A8")
             projetos = df_kb[df_kb["Status"] == status]
             count = len(projetos)
 
             with cols[i]:
                 st.markdown(f"""
-                <div style="background:#FFFFFF;border:1px solid #F0D9C8;
-                    border-top:2px solid {cor};box-shadow:0 1px 4px rgba(232,114,12,0.08);border-radius:12px;padding:12px 14px;margin-bottom:12px;
+                <div style="background:#FFFFFF;border:1px solid #DDD8F0;
+                    border-top:2px solid {cor};box-shadow:0 1px 4px rgba(107,33,168,0.07);border-radius:12px;padding:12px 14px;margin-bottom:12px;
                     text-align:center;">
                   <div style="font-size:10px;letter-spacing:2px;color:{cor};
                       font-family:'JetBrains Mono',monospace;">{status.upper()}</div>
@@ -1151,16 +1152,16 @@ with tab3:
                     foco = str(row.get("Foco", "")) if pd.notna(row.get("Foco")) else ""
                     escopo = str(row.get("Escopo", "")) if pd.notna(row.get("Escopo")) else ""
                     dias = (row["Prazo"] - pd.Timestamp.now()).days
-                    cor_prazo = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
+                    cor_prazo = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
                     st.markdown(f"""
-                    <div style="background:#FFFFFF;border:1px solid #F0D9C8;
+                    <div style="background:#FFFFFF;border:1px solid #DDD8F0;
                         border-left:3px solid {cor};border-radius:10px;padding:12px;margin-bottom:8px;
-                        box-shadow:0 1px 4px rgba(232,114,12,0.06);">
-                      <div style="font-weight:600;font-size:13px;color:#1A1208;margin-bottom:6px;line-height:1.3;">{row['Projeto']}</div>
-                      {"<div style='font-size:11px;color:#6B5A4E;margin-bottom:4px;'>🎯 "+foco+"</div>" if foco else ""}
-                      {"<div style='font-size:11px;color:#6B5A4E;margin-bottom:4px;'>📋 "+escopo+"</div>" if escopo else ""}
+                        box-shadow:0 1px 4px rgba(107,33,168,0.06);">
+                      <div style="font-weight:600;font-size:13px;color:#1A1225;margin-bottom:6px;line-height:1.3;">{row['Projeto']}</div>
+                      {"<div style='font-size:11px;color:#5B4E72;margin-bottom:4px;'>🎯 "+foco+"</div>" if foco else ""}
+                      {"<div style='font-size:11px;color:#5B4E72;margin-bottom:4px;'>📋 "+escopo+"</div>" if escopo else ""}
                       <div style="display:flex;justify-content:space-between;margin-top:6px;">
-                        <span style="font-size:10px;color:#9C8B82;">📅 {data_str}</span>
+                        <span style="font-size:10px;color:#9588AA;">📅 {data_str}</span>
                         <span style="font-size:10px;color:{cor_prazo};font-weight:600;">⏰ {prazo_str}</span>
                       </div>
                     </div>
@@ -1171,7 +1172,7 @@ with tab3:
 # ─────────────────────────────────────────────
 with tab4:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
     &#9670; BANCO DE DADOS OPERACIONAL
     </div>
     """, unsafe_allow_html=True)
@@ -1195,7 +1196,7 @@ with tab4:
         if data_d:
             df_d = df_d[df_d["Data Inicial"].dt.date >= data_d]
 
-        st.markdown(f"<div style='font-size:12px;color:#9C8B82;margin-bottom:8px;'>{len(df_d)} projetos encontrados</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:12px;color:#9588AA;margin-bottom:8px;'>{len(df_d)} projetos encontrados</div>", unsafe_allow_html=True)
         st.dataframe(df_d, use_container_width=True, height=500)
 
 # ─────────────────────────────────────────────
@@ -1203,7 +1204,7 @@ with tab4:
 # ─────────────────────────────────────────────
 with tab5:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:20px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:20px;">
     &#9670; MAPEAMENTO GEOGRAFICO DE PROJETOS
     </div>
     """, unsafe_allow_html=True)
@@ -1323,7 +1324,7 @@ with tab5:
                 # Gera mapa HTML interativo com Leaflet
                 map_markers = ""
                 for m in map_data:
-                    cor_marker = "#C92A2A" if m["total"] >= 5 else "#D4880A" if m["total"] >= 3 else "#E8720C"
+                    cor_marker = "#C92A2A" if m["total"] >= 5 else "#7C3AED" if m["total"] >= 3 else "#6B21A8"
                     radius = 15 + m["total"] * 5
                     map_markers += f"""
                     L.circleMarker([{m['lat']}, {m['lon']}], {{
@@ -1355,14 +1356,14 @@ with tab5:
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  body {{ margin: 0; padding: 0; background: #FDF6F0; }}
+  body {{ margin: 0; padding: 0; background: #F6F5FA; }}
   #map {{ width: 100%; height: 520px; border-radius: 16px; }}
   .leaflet-popup-content-wrapper {{ border-radius: 10px; font-family: 'Inter', sans-serif; }}
   .info-box {{
     position: absolute; bottom: 20px; left: 20px; z-index: 1000;
-    background: rgba(255,255,255,0.95); border: 1px solid #F0D9C8;
+    background: rgba(255,255,255,0.95); border: 1px solid #DDD8F0;
     border-radius: 12px; padding: 12px 16px;
-    font-family: monospace; font-size: 11px; color: #E8720C;
+    font-family: monospace; font-size: 11px; color: #6B21A8;
   }}
 </style>
 </head>
@@ -1409,7 +1410,7 @@ with tab5:
                     titulo_estado = f"{nome_estado} ({estado_sel})"
 
                 st.markdown(f"""
-                <div style="background:#E8720C;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;text-align:center;">
+                <div style="background:#6B21A8;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;text-align:center;">
                   <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;opacity:0.8;">PROJETOS</div>
                   <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;">{len(df_estado)}</div>
                   <div style="font-size:11px;opacity:0.9;">{titulo_estado}</div>
@@ -1418,7 +1419,7 @@ with tab5:
 
                 # Tabela de projetos
                 st.markdown("""
-                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:8px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">
                 PROJETOS NO ESTADO
                 </div>
                 """, unsafe_allow_html=True)
@@ -1426,8 +1427,8 @@ with tab5:
                 projeto_selecionado = None
                 for _, row in df_estado.sort_values("Prazo").iterrows():
                     dias = (row["Prazo"] - pd.Timestamp.now()).days
-                    cor = "#C92A2A" if dias < 7 else "#D4880A" if dias < 30 else "#2F9E44"
-                    status_cor = STATUS_COLORS.get(row.get("Status",""), "#E8720C")
+                    cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
+                    status_cor = STATUS_COLORS.get(row.get("Status",""), "#6B21A8")
                     if st.button(
                         f"{'🔴' if dias < 7 else '🟡' if dias < 30 else '🟢'} {row['Projeto'][:35]}",
                         key=f"proj_mapa_{row['Projeto'][:20]}_{row['Prazo']}",
@@ -1440,23 +1441,23 @@ with tab5:
                 if st.session_state.projeto_chat_mapa:
                     proj = st.session_state.projeto_chat_mapa
                     dias_p = (pd.Timestamp(proj["Prazo"]) - pd.Timestamp.now()).days
-                    cor_p = "#C92A2A" if dias_p < 7 else "#D4880A" if dias_p < 30 else "#2F9E44"
+                    cor_p = "#C92A2A" if dias_p < 7 else "#7C3AED" if dias_p < 30 else "#2F9E44"
 
                     st.markdown(f"""
-                    <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-left:4px solid {cor_p};
+                    <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-left:4px solid {cor_p};
                         border-radius:12px;padding:14px;margin-top:12px;">
-                      <div style="font-weight:700;color:#1A1208;font-size:13px;margin-bottom:8px;">{proj.get('Projeto','')}</div>
+                      <div style="font-weight:700;color:#1A1225;font-size:13px;margin-bottom:8px;">{proj.get('Projeto','')}</div>
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-                        <div style="background:#FDF6F0;border-radius:6px;padding:6px 8px;">
-                          <div style="font-size:8px;color:#9C8B82;">STATUS</div>
-                          <div style="font-size:11px;color:#E8720C;font-weight:600;">{proj.get('Status','')}</div>
+                        <div style="background:#F6F5FA;border-radius:6px;padding:6px 8px;">
+                          <div style="font-size:8px;color:#9588AA;">STATUS</div>
+                          <div style="font-size:11px;color:#6B21A8;font-weight:600;">{proj.get('Status','')}</div>
                         </div>
                         <div style="background:{cor_p}11;border-radius:6px;padding:6px 8px;">
-                          <div style="font-size:8px;color:#9C8B82;">PRAZO</div>
+                          <div style="font-size:8px;color:#9588AA;">PRAZO</div>
                           <div style="font-size:11px;color:{cor_p};font-weight:700;">{pd.Timestamp(proj['Prazo']).strftime('%d/%m/%Y')} ({dias_p}d)</div>
                         </div>
                       </div>
-                      <div style="font-size:11px;color:#6B5A4E;line-height:1.5;">
+                      <div style="font-size:11px;color:#5B4E72;line-height:1.5;">
                         🎯 {proj.get('Foco','')}<br>
                         📋 {proj.get('Escopo','') or '—'}
                       </div>
@@ -1465,7 +1466,7 @@ with tab5:
 
                     st.markdown("<br>", unsafe_allow_html=True)
                     st.markdown("""
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#E8720C;margin-bottom:6px;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#6B21A8;margin-bottom:6px;">
                     🤖 JARVIS — PERGUNTE SOBRE ESTE PROJETO
                     </div>
                     """, unsafe_allow_html=True)
@@ -1474,7 +1475,7 @@ with tab5:
                         if msg["role"] == "user":
                             st.markdown(f"""
                             <div style="display:flex;justify-content:flex-end;margin:6px 0;">
-                              <div style="background:linear-gradient(135deg,#E8720C,#D4880A);color:#fff;
+                              <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
                                   border-radius:12px 12px 3px 12px;padding:8px 12px;max-width:85%;font-size:13px;">
                                 {msg['content']}
                               </div>
@@ -1482,8 +1483,8 @@ with tab5:
                             """, unsafe_allow_html=True)
                         else:
                             st.markdown(f"""
-                            <div style="background:#FDF6F0;border:1px solid #F0D9C8;border-radius:3px 12px 12px 12px;
-                                padding:10px 12px;font-size:13px;color:#1A1208;line-height:1.6;margin:6px 0;">
+                            <div style="background:#F6F5FA;border:1px solid #DDD8F0;border-radius:3px 12px 12px 12px;
+                                padding:10px 12px;font-size:13px;color:#1A1225;line-height:1.6;margin:6px 0;">
                               🤖 {msg['content'].replace(chr(10), '<br>')}
                             </div>
                             """, unsafe_allow_html=True)
@@ -1525,7 +1526,7 @@ Escopo: {p.get('Escopo','—')}"""
 # ─────────────────────────────────────────────
 with tab6:
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#E8720C;margin-bottom:16px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
     &#9670; NOTAS ESTRATEGICAS
     </div>
     """, unsafe_allow_html=True)
@@ -1538,7 +1539,7 @@ with tab6:
     )
 
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:#9C8B82;margin-top:8px;text-align:right;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:#9588AA;margin-top:8px;text-align:right;">
     Notas sao locais e nao sao salvas entre sessoes
     </div>
     """, unsafe_allow_html=True)
