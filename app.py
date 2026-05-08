@@ -529,47 +529,282 @@ if "df_projetos" not in st.session_state:
 # LOGIN
 # ============================================================
 if not st.session_state.logado:
-    st.markdown("""
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 20px;
-        border:1px solid #E2E4EA;border-radius:10px;
-        background:#F8F9FC;backdrop-filter:blur(10px);
-        margin-bottom:28px;font-family:'JetBrains Mono',monospace;font-size:10px;
-        letter-spacing:2px;color:rgba(99,179,237,0.5);">
-      <span>&#9670; SABINO OS &middot; v4.0</span>
-      <span style="color:#2F9E44;">&#9679; SISTEMA ONLINE</span>
-      <span>AES-256 ENCRYPTED</span>
-    </div>
-    """, unsafe_allow_html=True)
 
-    col_bot, col_gap, col_form = st.columns([1.05, 0.05, 0.9])
+    LOGIN_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }
+  #stage { width: 100%; height: 100%; position: relative; background: transparent; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Humanoid Robot */
+  #humanoid {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -54%);
+    width: min(220px, 80vw);
+    animation: float 4s ease-in-out infinite;
+    filter: drop-shadow(0 8px 32px rgba(107,33,168,0.25));
+  }
+  @keyframes float {
+    0%,100% { transform: translate(-50%,-54%); }
+    50%      { transform: translate(-50%,-60%); }
+  }
+
+  /* Head animations */
+  .head-group { animation: headtilt 5s ease-in-out infinite; transform-origin: 110px 80px; }
+  @keyframes headtilt { 0%,100%{transform:rotate(0);} 35%{transform:rotate(-4deg);} 70%{transform:rotate(4deg);} }
+
+  .eye { animation: blink 4s infinite; }
+  .eye-l { transform-origin: 90px 70px; }
+  .eye-r { transform-origin: 130px 70px; }
+  @keyframes blink { 0%,88%,100%{transform:scaleY(1);} 92%{transform:scaleY(0.05);} }
+
+  /* Robe/cloak sway */
+  .robe { animation: robesway 6s ease-in-out infinite; transform-origin: 110px 200px; }
+  @keyframes robesway { 0%,100%{transform:rotate(0);} 50%{transform:rotate(2deg);} }
+
+  /* Magic orb pulse */
+  .orb { animation: orbpulse 2s ease-in-out infinite; transform-origin: 155px 185px; }
+  @keyframes orbpulse { 0%,100%{transform:scale(1);opacity:0.8;} 50%{transform:scale(1.2);opacity:1;} }
+
+  /* Stars */
+  .star { animation: twinkle 1.5s ease-in-out infinite; }
+  .s1{animation-delay:0s;} .s2{animation-delay:.3s;} .s3{animation-delay:.6s;} .s4{animation-delay:.9s;}
+  @keyframes twinkle { 0%,100%{opacity:0.3;transform:scale(0.8);} 50%{opacity:1;transform:scale(1.2);} }
+
+  /* Arm with staff */
+  .arm-staff { animation: staffwave 3s ease-in-out infinite; transform-origin: 155px 160px; }
+  @keyframes staffwave { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-8deg);} }
+
+  /* Particles */
+  .magic-particle { animation: magicfloat 3s ease-in-out infinite; }
+  .mp1{animation-delay:0s;} .mp2{animation-delay:.5s;} .mp3{animation-delay:1s;} .mp4{animation-delay:1.5s;}
+  @keyframes magicfloat { 0%{transform:translateY(0) scale(1);opacity:1;} 100%{transform:translateY(-30px) scale(0);opacity:0;} }
+
+  .hud {
+    position: absolute; bottom: 10px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px; letter-spacing: 3px; color: rgba(107,33,168,0.6);
+    font-family: monospace; white-space: nowrap;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+
+  <svg id="humanoid" viewBox="0 0 220 380" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="gPurple" cx="50%" cy="30%">
+        <stop offset="0%" stop-color="#A855F7"/>
+        <stop offset="100%" stop-color="#4C1D95"/>
+      </radialGradient>
+      <radialGradient id="gRobe" cx="50%" cy="20%">
+        <stop offset="0%" stop-color="#7C3AED"/>
+        <stop offset="100%" stop-color="#2E1065"/>
+      </radialGradient>
+      <radialGradient id="gSkin" cx="50%" cy="40%">
+        <stop offset="0%" stop-color="#FDE68A"/>
+        <stop offset="100%" stop-color="#D97706"/>
+      </radialGradient>
+      <radialGradient id="gOrb" cx="50%" cy="40%">
+        <stop offset="0%" stop-color="#10B981"/>
+        <stop offset="60%" stop-color="#059669"/>
+        <stop offset="100%" stop-color="#065F46"/>
+      </radialGradient>
+      <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="softglow"><feGaussianBlur stdDeviation="6"/></filter>
+    </defs>
+
+    <!-- Shadow -->
+    <ellipse cx="110" cy="372" rx="55" ry="6" fill="#4C1D95" opacity="0.2" filter="url(#softglow)"/>
+
+    <!-- ROBE/CLOAK -->
+    <g class="robe">
+      <!-- Main robe body -->
+      <path d="M55 175 Q45 200 35 280 Q30 340 40 360 L180 360 Q190 340 185 280 Q175 200 165 175 Z"
+            fill="url(#gRobe)" opacity="0.95"/>
+      <!-- Robe highlight -->
+      <path d="M75 175 Q70 210 65 280 L155 280 Q150 210 145 175 Z"
+            fill="#7C3AED" opacity="0.3"/>
+      <!-- Robe bottom edge -->
+      <path d="M35 360 Q55 370 110 368 Q165 370 180 360 L185 355 Q165 365 110 363 Q55 365 35 355 Z"
+            fill="#A855F7" opacity="0.5"/>
+      <!-- Star on robe -->
+      <text x="88" y="270" font-size="22" text-anchor="middle" class="star s1">⭐</text>
+      <text x="130" y="240" font-size="14" text-anchor="middle" class="star s2">✨</text>
+      <text x="70" y="310" font-size="12" text-anchor="middle" class="star s3">⭐</text>
+    </g>
+
+    <!-- BODY under robe -->
+    <rect x="75" y="155" width="70" height="30" rx="6" fill="#5B21B6" opacity="0.8"/>
+
+    <!-- NECK -->
+    <rect x="98" y="128" width="24" height="18" rx="4" fill="#D97706"/>
+
+    <!-- HEAD GROUP -->
+    <g class="head-group">
+      <!-- Hat brim -->
+      <ellipse cx="110" cy="30" rx="52" ry="9" fill="#4C1D95"/>
+      <!-- Hat cone -->
+      <path d="M110 0 L70 30 L150 30 Z" fill="url(#gPurple)"/>
+      <!-- Hat band -->
+      <rect x="70" y="26" width="80" height="7" rx="3" fill="#A855F7" opacity="0.8"/>
+      <!-- Hat star -->
+      <text x="110" y="18" font-size="10" text-anchor="middle" class="star s4" fill="#FDE68A">★</text>
+
+      <!-- Face -->
+      <ellipse cx="110" cy="85" rx="38" ry="42" fill="url(#gSkin)"/>
+      <!-- Face shading -->
+      <ellipse cx="110" cy="90" rx="32" ry="35" fill="#FDE68A" opacity="0.4"/>
+
+      <!-- Beard -->
+      <path d="M78 105 Q90 135 110 140 Q130 135 142 105 Q130 118 110 122 Q90 118 78 105 Z"
+            fill="#E5E7EB" opacity="0.9"/>
+      <!-- Beard lines -->
+      <path d="M95 110 Q100 125 110 128" stroke="#D1D5DB" stroke-width="1" fill="none"/>
+      <path d="M125 110 Q120 125 110 128" stroke="#D1D5DB" stroke-width="1" fill="none"/>
+
+      <!-- Eyebrows -->
+      <path d="M82 65 Q90 60 100 64" stroke="#92400E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M120 64 Q130 60 138 65" stroke="#92400E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+      <!-- Left Eye -->
+      <g class="eye eye-l">
+        <ellipse cx="90" cy="74" rx="11" ry="12" fill="white"/>
+        <ellipse cx="90" cy="74" rx="7" ry="8" fill="#4C1D95"/>
+        <ellipse cx="90" cy="74" rx="4" ry="4" fill="#1E0A36"/>
+        <ellipse cx="93" cy="71" rx="2" ry="2" fill="white" opacity="0.9"/>
+        <!-- Magic glow eye -->
+        <ellipse cx="90" cy="74" rx="7" ry="8" fill="#7C3AED" opacity="0.3" filter="url(#glow)"/>
+      </g>
+
+      <!-- Right Eye -->
+      <g class="eye eye-r">
+        <ellipse cx="130" cy="74" rx="11" ry="12" fill="white"/>
+        <ellipse cx="130" cy="74" rx="7" ry="8" fill="#4C1D95"/>
+        <ellipse cx="130" cy="74" rx="4" ry="4" fill="#1E0A36"/>
+        <ellipse cx="133" cy="71" rx="2" ry="2" fill="white" opacity="0.9"/>
+        <ellipse cx="130" cy="74" rx="7" ry="8" fill="#7C3AED" opacity="0.3" filter="url(#glow)"/>
+      </g>
+
+      <!-- Nose -->
+      <ellipse cx="110" cy="90" rx="5" ry="4" fill="#D97706" opacity="0.6"/>
+
+      <!-- Smile -->
+      <path d="M95 102 Q110 114 125 102" stroke="#92400E" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+      <!-- Ears -->
+      <ellipse cx="72" cy="85" rx="8" ry="10" fill="url(#gSkin)"/>
+      <ellipse cx="148" cy="85" rx="8" ry="10" fill="url(#gSkin)"/>
+    </g>
+
+    <!-- LEFT ARM (holding robe) -->
+    <path d="M75 165 Q55 175 48 210 Q44 230 50 240 Q58 245 65 235 Q68 220 72 200 L78 178 Z"
+          fill="#5B21B6"/>
+    <!-- Left hand -->
+    <ellipse cx="52" cy="242" rx="12" ry="10" fill="url(#gSkin)"/>
+
+    <!-- RIGHT ARM with staff -->
+    <g class="arm-staff">
+      <path d="M145 165 Q162 172 168 195 Q172 215 165 230 L158 218 Q156 200 150 182 L142 170 Z"
+            fill="#5B21B6"/>
+      <!-- Right hand -->
+      <ellipse cx="163" cy="232" rx="12" ry="10" fill="url(#gSkin)"/>
+
+      <!-- Staff -->
+      <line x1="163" y1="225" x2="175" y2="120" stroke="#92400E" stroke-width="5" stroke-linecap="round"/>
+      <line x1="163" y1="225" x2="175" y2="120" stroke="#FDE68A" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+
+      <!-- Orb on staff -->
+      <g class="orb">
+        <ellipse cx="175" cy="112" rx="18" ry="18" fill="#10B981" opacity="0.3" filter="url(#softglow)"/>
+        <ellipse cx="175" cy="112" rx="14" ry="14" fill="url(#gOrb)" filter="url(#glow)"/>
+        <ellipse cx="175" cy="112" rx="8" ry="8" fill="#34D399" opacity="0.6"/>
+        <ellipse cx="171" cy="108" rx="4" ry="4" fill="white" opacity="0.7"/>
+      </g>
+
+      <!-- Magic particles from orb -->
+      <circle class="magic-particle mp1" cx="185" cy="100" r="3" fill="#10B981" opacity="0.8"/>
+      <circle class="magic-particle mp2" cx="162" cy="95" r="2" fill="#A855F7" opacity="0.8"/>
+      <circle class="magic-particle mp3" cx="190" cy="108" r="2" fill="#FDE68A" opacity="0.8"/>
+      <circle class="magic-particle mp4" cx="168" cy="88" r="3" fill="#10B981" opacity="0.8"/>
+    </g>
+
+    <!-- Feet -->
+    <ellipse cx="90" cy="360" rx="22" ry="8" fill="#3B0764" opacity="0.9"/>
+    <ellipse cx="130" cy="360" rx="22" ry="8" fill="#3B0764" opacity="0.9"/>
+  </svg>
+
+  <div class="hud">&#128302; FEITICO ATIVO &middot; AGUARDANDO BRUXO &#128302;</div>
+</div>
+
+<script>
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+function resize(){ cv.width=cv.offsetWidth; cv.height=cv.offsetHeight; }
+resize();
+window.addEventListener('resize', resize);
+const P = Array.from({length:30}, () => ({
+  x: Math.random()*cv.width, y: Math.random()*cv.height,
+  vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4,
+  r: Math.random()*2+0.5,
+  c: Math.random()>0.5 ? '#6B21A8' : '#10B981'
+}));
+function tick(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  P.forEach(p => {
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>cv.width) p.vx*=-1;
+    if(p.y<0||p.y>cv.height) p.vy*=-1;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.c; ctx.shadowBlur=8; ctx.shadowColor=p.c; ctx.fill();
+  });
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>
+"""
+
+    col_bot, col_gap, col_form = st.columns([1.1, 0.05, 0.85])
 
     with col_bot:
-        components.html(JARVIS_HTML, height=560, scrolling=False)
+        components.html(LOGIN_HTML, height=580, scrolling=False)
 
     with col_form:
         st.markdown("""
-        <div style="padding:40px 0 24px 0;">
+        <div style="padding:48px 0 28px 0;">
           <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
-              color:#6B21A8;margin-bottom:12px;">&#9679; J.A.R.V.I.S ONLINE</div>
-          <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;
-              background:linear-gradient(135deg,#7C3AED 0%,#6B21A8 100%);
-              -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-              line-height:1;margin-bottom:8px;">SABINO<br>OS</div>
-          <p style="color:#6B7280;font-size:14px;line-height:1.7;margin-top:12px;">
-            Bem-vindo, <span style="color:#7C3AED;font-weight:600;">Senhor Sabino</span>.<br>
-            Aguardando autenticacao para<br>acesso ao hub operacional.
+              color:#6B21A8;margin-bottom:16px;">&#128302; SISTEMA ATIVO</div>
+          <div style="font-size:38px;margin-bottom:4px;">🧙‍♂️</div>
+          <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
+              color:#6B21A8;line-height:1;margin-bottom:4px;">Bem-vindo,</div>
+          <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
+              color:#10B981;line-height:1;margin-bottom:20px;">Sabino.</div>
+          <p style="color:#5B4E72;font-size:14px;line-height:1.8;margin-bottom:0;">
+            O feitico aguarda.<br>
+            Insira sua credencial para<br>
+            acessar o hub operacional.
           </p>
         </div>
         """, unsafe_allow_html=True)
 
         senha = st.text_input(
-            "CREDENCIAL",
+            "CREDENCIAL SECRETA",
             type="password",
             placeholder="••••••••",
             label_visibility="visible"
         )
 
-        if st.button("AUTENTICAR", use_container_width=True):
+        if st.button("🔮  INVOCAR ACESSO", use_container_width=True):
             if senha == "gsr17":
                 st.session_state.logado = True
                 st.rerun()
@@ -577,18 +812,18 @@ if not st.session_state.logado:
                 st.markdown("""
                 <div style="background:rgba(201,42,42,0.06);border:1px solid rgba(201,42,42,0.2);
                     border-radius:10px;padding:12px 16px;color:#C92A2A;font-size:13px;margin-top:8px;">
-                  &#10007; &nbsp; Credencial invalida. Acesso negado.
+                  &#10007; &nbsp; Feitico invalido. Acesso negado, impostor!
                 </div>
                 """, unsafe_allow_html=True)
 
         st.markdown("""
-        <div style="margin-top:28px;padding:16px;border:1px solid #E8EAEF;
-            border-radius:10px;background:#F8F9FC;">
+        <div style="margin-top:28px;padding:16px;border:1px solid #DDD8F0;
+            border-radius:10px;background:#EFECF8;">
           <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
-              color:#6B7280;line-height:2;">
-            PROTOCOLO &middot; AES-256<br>
-            SESSAO &middot; MONITORADA<br>
-            ACESSO &middot; LOG REGISTRADO
+              color:#5B4E72;line-height:2.2;">
+            &#9670; GRIMORIUM &middot; AES-256<br>
+            &#9670; SESSAO &middot; MONITORADA<br>
+            &#9670; ACESSO &middot; REGISTRADO
           </div>
         </div>
         """, unsafe_allow_html=True)
@@ -654,7 +889,7 @@ with st.sidebar:
     <div style="padding:0 0 20px 0;">
       <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:#6B21A8;margin-bottom:4px;">&#9679; SISTEMA ATIVO</div>
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
-          background:linear-gradient(135deg,#6B21A8,#4C1D95);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          color:#6B21A8;">
           SABINO OS</div>
       <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">Hub Operacional v4.0</div>
     </div>
@@ -715,7 +950,7 @@ st.markdown(f"""
   <div>
     <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
     <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
-        background:linear-gradient(135deg,#6B21A8,#4C1D95);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+        color:#6B21A8;">
         GABRIEL SABINO</div>
   </div>
   <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:#9CA3AF;letter-spacing:1px;">
