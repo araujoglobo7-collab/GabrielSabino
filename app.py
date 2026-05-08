@@ -4,17 +4,13 @@ import pandas as pd
 import json
 from datetime import datetime, timedelta
 
-try:
-    from streamlit_gsheets import GSheetsConnection
-    LIB_PRONTA = True
-except ImportError:
-    LIB_PRONTA = False
+LIB_PRONTA = True
 
 st.set_page_config(
     layout="wide",
     page_title="Sabino OS",
     page_icon=":zap:",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # ============================================================
@@ -612,17 +608,21 @@ URL_DB = "https://docs.google.com/spreadsheets/d/1SRUQwYW4acuehJ9St0bo2A2AFGW2UD
 @st.cache_data(ttl=300)
 def carregar_dados():
     colunas = ["Projeto","Data Inicial","Prazo","Status","Foco","Escopo","Detalhamento","Resultado Esperado"]
-    if not LIB_PRONTA:
-        return pd.DataFrame(columns=colunas)
     try:
-        conn = st.connection("gsheets", type=GSheetsConnection)
-        df = conn.read(spreadsheet=URL_DB, ttl=0)
+        import requests
+        sheet_id = "1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg"
+        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
+        r = requests.get(csv_url, allow_redirects=True, timeout=15)
+        r.raise_for_status()
+        from io import StringIO
+        df = pd.read_csv(StringIO(r.text))
         if df is not None and not df.empty:
             df["Data Inicial"] = pd.to_datetime(df["Data Inicial"], errors="coerce").fillna(pd.Timestamp.now())
             df["Prazo"] = pd.to_datetime(df["Prazo"], errors="coerce").fillna(pd.Timestamp.now())
-            return df[colunas].dropna(subset=["Projeto"])
+            cols_presentes = [c for c in colunas if c in df.columns]
+            return df[cols_presentes].dropna(subset=["Projeto"])
     except Exception as e:
-        st.sidebar.error(f"Erro GSheets: {e}")
+        st.sidebar.error(f"Erro: {e}")
     return pd.DataFrame(columns=colunas)
 
 if st.session_state.df_projetos is None:
