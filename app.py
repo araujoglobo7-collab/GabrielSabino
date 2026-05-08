@@ -13,7 +13,8 @@ except ImportError
 st.set_page_config(
     layout=wide,
     page_title=Sabino OS,
-    page_icon=⚡,
+ page_icon=":zap:",
+
     initial_sidebar_state=collapsed
 )
 
