@@ -21,24 +21,24 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    --bg: #F5F6F8;
+    --bg: #FDF6F0;
     --bg2: #FFFFFF;
     --surface: #FFFFFF;
-    --surface2: #F0F1F4;
-    --border: #E2E4EA;
-    --border-strong: #CDD0DA;
-    --accent: #3B5BDB;
-    --accent-light: rgba(59,91,219,0.08);
-    --accent-muted: rgba(59,91,219,0.15);
+    --surface2: #FEF0E6;
+    --border: #F0D9C8;
+    --border-strong: #E8C4A0;
+    --accent: #E8720C;
+    --accent-light: rgba(232,114,12,0.08);
+    --accent-muted: rgba(232,114,12,0.15);
     --gold: #D4880A;
     --green: #2F9E44;
     --red: #C92A2A;
-    --orange: #E07B1A;
+    --orange: #E8720C;
     --purple: #7048E8;
     --teal: #0C8599;
-    --text: #1A1D2E;
-    --text-muted: #6B7280;
-    --text-dim: #9CA3AF;
+    --text: #1A1208;
+    --text-muted: #6B5A4E;
+    --text-dim: #9C8B82;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -601,12 +601,20 @@ STATUS_OPCOES = ["Reuniao", "A Iniciar", "Em Andamento", "Projetos Futuros", "Co
 STATUS_COLORS = {
     "Reuniao":          "#7048E8",
     "A Iniciar":        "#8BA8C8",
-    "Em Andamento":     "#D4880A",
+    "Em Andamento":     "#E8720C",
     "Projetos Futuros": "#0C8599",
     "Concluido":        "#2F9E44"
 }
 
 URL_DB = "https://docs.google.com/spreadsheets/d/1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg/edit#gid=0"
+
+def fix_encoding(text):
+    if not isinstance(text, str):
+        return text
+    try:
+        return text.encode('latin1').decode('utf-8')
+    except:
+        return text
 
 @st.cache_data(ttl=300)
 def carregar_dados():
@@ -618,8 +626,12 @@ def carregar_dados():
         r = requests.get(csv_url, allow_redirects=True, timeout=15)
         r.raise_for_status()
         from io import StringIO
-        df = pd.read_csv(StringIO(r.text))
+        df = pd.read_csv(StringIO(r.text), encoding='utf-8')
         if df is not None and not df.empty:
+            # Fix encoding for text columns
+            for col in ["Projeto","Status","Foco","Escopo","Detalhamento","Resultado Esperado"]:
+                if col in df.columns:
+                    df[col] = df[col].apply(fix_encoding)
             df["Data Inicial"] = pd.to_datetime(df["Data Inicial"], errors="coerce").fillna(pd.Timestamp.now())
             df["Prazo"] = pd.to_datetime(df["Prazo"], errors="coerce").fillna(pd.Timestamp.now())
             cols_presentes = [c for c in colunas if c in df.columns]
@@ -1014,228 +1026,234 @@ with tab4:
 # TAB 5 — CHAT IA
 # ─────────────────────────────────────────────
 with tab5:
-    st.markdown("""
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;
-        padding-bottom:16px;border-bottom:1px solid #E2E4EA;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:32px;height:32px;background:#3B5BDB;border-radius:8px;
-            display:flex;align-items:center;justify-content:center;font-size:14px;">&#129302;</div>
-        <div>
-          <div style="font-weight:700;font-size:15px;color:#1A1D2E;">J.A.R.V.I.S</div>
-          <div style="font-size:11px;color:#6B7280;">Consultor estrategico &middot; contexto do seu portfolio</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <div style="width:7px;height:7px;background:#2F9E44;border-radius:50%;"></div>
-        <span style="font-size:11px;color:#6B7280;font-family:'JetBrains Mono',monospace;">ONLINE</span>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
     sugestoes = [
-        "Qual projeto tem maior risco de atraso",
-        "Onde focar energia essa semana",
-        "Diagnostico geral do portfolio",
-        "Quais projetos posso acelerar",
-        "Identifique gargalos",
-        "O que vence nos proximos 30 dias",
+        ("🔴", "Qual projeto tem maior risco de atraso"),
+        ("🎯", "Onde focar energia essa semana"),
+        ("📊", "Diagnostico geral do portfolio"),
+        ("⚡", "Quais projetos posso acelerar"),
+        ("🔍", "Identifique gargalos"),
+        ("📅", "O que vence nos proximos 30 dias"),
     ]
 
     pergunta_sugerida = None
-    if not st.session_state.chat_history:
+
+    # Layout: chat à esquerda, sugestões à direita
+    col_chat, col_sugest = st.columns([2.5, 1])
+
+    with col_sugest:
         st.markdown("""
-        <div style="font-size:11px;color:#9CA3AF;letter-spacing:0.5px;margin-bottom:10px;font-weight:500;">
-        SUGESTOES RAPIDAS
+        <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:16px;padding:20px;
+            position:sticky;top:0;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0D9C8;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#E8720C,#D4880A);
+                border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
+                box-shadow:0 4px 12px rgba(232,114,12,0.3);">🤖</div>
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#1A1208;">J.A.R.V.I.S</div>
+              <div style="font-size:11px;color:#E8720C;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
+            </div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9C8B82;margin-bottom:12px;">
+            PERGUNTAS RAPIDAS
+          </div>
         </div>
         """, unsafe_allow_html=True)
-        cols_s = st.columns(3)
-        for i, s in enumerate(sugestoes):
-            with cols_s[i % 3]:
-                if st.button(s, key=f"sug_{i}", use_container_width=True):
-                    pergunta_sugerida = s
 
-    if st.session_state.chat_history:
-        for msg in st.session_state.chat_history:
-            if msg["role"] == "user":
-                st.markdown(f"""
-                <div style="display:flex;justify-content:flex-end;margin:12px 0;">
-                  <div style="background:#3B5BDB;color:#fff;border-radius:12px 12px 3px 12px;
-                      padding:10px 16px;max-width:70%;font-size:14px;line-height:1.5;">
-                    {msg['content']}
-                  </div>
+        for emoji, s in sugestoes:
+            if st.button(f"{emoji}  {s}", key=f"sug_{s[:10]}", use_container_width=True):
+                pergunta_sugerida = s
+
+        if st.session_state.chat_history:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🗑️  Limpar conversa", use_container_width=True):
+                st.session_state.chat_history = []
+                st.rerun()
+
+    with col_chat:
+        # Header do chat
+        st.markdown("""
+        <div style="background:linear-gradient(135deg,#E8720C,#D4880A);border-radius:16px;
+            padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
+          <div style="font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🤖</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">J.A.R.V.I.S</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);">Consultor estrategico do seu portfolio</div>
+          </div>
+          <div style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;">
+            <span style="font-size:11px;color:#fff;font-family:'JetBrains Mono',monospace;">● ATIVO</span>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Mensagem de boas-vindas se chat vazio
+        if not st.session_state.chat_history:
+            st.markdown("""
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,#E8720C,#D4880A);
+                  border-radius:50%;display:flex;align-items:center;justify-content:center;
+                  font-size:20px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
+              <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
+                  padding:16px 20px;max-width:85%;box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+                <div style="font-weight:600;color:#1A1208;margin-bottom:6px;">Ola, senhor Sabino! 👋</div>
+                <div style="font-size:14px;color:#6B5A4E;line-height:1.6;">
+                  Sou seu assistente estrategico. Tenho acesso completo ao seu portfolio e posso ajudar com analises, prioridades e insights.<br><br>
+                  Use os botoes ao lado para perguntas rapidas, ou digite o que precisar!
                 </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div style="display:flex;align-items:flex-start;gap:8px;margin:12px 0;">
-                  <div style="width:26px;height:26px;background:#3B5BDB;border-radius:6px;flex-shrink:0;
-                      display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:2px;">&#129302;</div>
-                  <div style="background:#FFFFFF;border:1px solid #E2E4EA;border-radius:3px 12px 12px 12px;
-                      padding:14px 18px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1D2E;
-                      box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-                    {msg['content'].replace(chr(10), '<br>')}
-                  </div>
-                </div>
-                """, unsafe_allow_html=True)
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+        # Historico do chat
+        chat_container = st.container()
+        with chat_container:
+            for msg in st.session_state.chat_history:
+                if msg["role"] == "user":
+                    st.markdown(f"""
+                    <div style="display:flex;justify-content:flex-end;margin:12px 0;gap:8px;">
+                      <div style="background:linear-gradient(135deg,#E8720C,#D4880A);color:#fff;
+                          border-radius:16px 16px 4px 16px;padding:12px 18px;max-width:75%;
+                          font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(232,114,12,0.25);">
+                        {msg['content']}
+                      </div>
+                      <div style="width:36px;height:36px;background:#F0D9C8;border-radius:50%;
+                          display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
+                        👤
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    content = msg['content'].replace(chr(10), '<br>')
+                    st.markdown(f"""
+                    <div style="display:flex;align-items:flex-start;gap:12px;margin:12px 0;">
+                      <div style="width:40px;height:40px;background:linear-gradient(135deg,#E8720C,#D4880A);
+                          border-radius:50%;display:flex;align-items:center;justify-content:center;
+                          font-size:20px;flex-shrink:0;box-shadow:0 2px 8px rgba(232,114,12,0.3);">🤖</div>
+                      <div style="background:#FFFFFF;border:1px solid #F0D9C8;border-radius:4px 16px 16px 16px;
+                          padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1208;
+                          box-shadow:0 2px 8px rgba(232,114,12,0.08);">
+                        {content}
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-    col_input, col_btn = st.columns([6, 1])
-    with col_input:
-        user_input = st.text_input(
-            "msg",
-            value=pergunta_sugerida or "",
-            placeholder="Pergunte algo sobre seus projetos...",
-            label_visibility="collapsed",
-            key="chat_input"
-        )
-    with col_btn:
-        enviar = st.button("Enviar", use_container_width=True)
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-    if st.session_state.chat_history:
-        if st.button("Limpar", use_container_width=False):
-            st.session_state.chat_history = []
-            st.rerun()
+        # Input
+        col_input, col_btn = st.columns([5, 1])
+        with col_input:
+            user_input = st.text_input(
+                "msg",
+                value=pergunta_sugerida or "",
+                placeholder="Digite sua pergunta para o J.A.R.V.I.S...",
+                label_visibility="collapsed",
+                key="chat_input"
+            )
+        with col_btn:
+            enviar = st.button("Enviar", use_container_width=True)
 
     if (enviar or pergunta_sugerida) and (user_input or pergunta_sugerida):
         query = user_input or pergunta_sugerida
 
-        if not df.empty:
-            projetos_ctx = []
-            for _, row in df.iterrows():
-                dias_prazo = (row["Prazo"] - pd.Timestamp.now()).days
-                projetos_ctx.append({
-                    "projeto": row.get("Projeto", ""),
-                    "status": row.get("Status", ""),
-                    "foco": str(row.get("Foco", "")) if pd.notna(row.get("Foco")) else "",
-                    "escopo": str(row.get("Escopo", "")) if pd.notna(row.get("Escopo")) else "",
-                    "resultado_esperado": str(row.get("Resultado Esperado", "")) if pd.notna(row.get("Resultado Esperado")) else "",
-                    "dias_para_prazo": dias_prazo,
-                    "prazo": row["Prazo"].strftime("%d/%m/%Y")
-                })
-            ctx_str = json.dumps(projetos_ctx, ensure_ascii=False, indent=1)
-        else:
-            ctx_str = "Nenhum projeto carregado no momento."
-
-        system_prompt = f"""Voce e J.A.R.V.I.S, o assistente estrategico de Gabriel Sabino.
-
-Voce tem acesso ao portfolio de projetos de Gabriel:
-{ctx_str}
-
-Regras:
-- Seja direto, preciso e estrategico. Zero enrolacao.
-- Use dados concretos do portfolio para embasar cada resposta.
-- Formate com emojis, negrito e quebras de linha para facilitar leitura.
-- De recomendacoes acionaveis e prioritizadas.
-- Se identificar riscos, seja claro sobre impacto e urgencia.
-- Maximo de 400 palavras por resposta.
-- Fale sempre em portugues brasileiro."""
-
         st.session_state.chat_history.append({"role": "user", "content": query})
 
-        messages = []
-        for m in st.session_state.chat_history:
-            messages.append({"role": m["role"], "content": m["content"]})
+        now = pd.Timestamp.now()
+        q = query.lower()
 
-        with st.spinner("J.A.R.V.I.S processando..."):
-            try:
-                q = query.lower()
-                now = pd.Timestamp.now()
+        try:
+            if df.empty:
+                answer = "⚠️ Nenhum projeto carregado. Sincronize a planilha primeiro."
+            else:
+                ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento"])]
+                concluidos_df = df[df["Status"] == "Concluido"]
+                em_exec = df[df["Status"] == "Em Andamento"]
+                backlog = df[df["Status"] == "A Iniciar"]
+                futuros = df[df["Status"] == "Projetos Futuros"]
+                total = len(df)
+                taxa = round(len(concluidos_df)/total*100, 1) if total > 0 else 0
 
-                if df.empty:
-                    answer = "⚠️ Nenhum projeto carregado. Sincronize a planilha primeiro."
-                else:
-                    ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento"])]
-                    concluidos = df[df["Status"] == "Concluido"]
-                    em_exec = df[df["Status"] == "Em Andamento"]
-                    backlog = df[df["Status"] == "A Iniciar"]
-                    futuros = df[df["Status"] == "Projetos Futuros"]
-                    total = len(df)
-                    taxa = round(len(concluidos)/total*100, 1) if total > 0 else 0
+                urgentes = ativos.copy()
+                urgentes["dias"] = (urgentes["Prazo"] - now).dt.days
+                urgentes = urgentes.sort_values("dias")
 
-                    # Projetos com prazo mais próximo
-                    urgentes = ativos.copy()
-                    urgentes["dias"] = (urgentes["Prazo"] - now).dt.days
-                    urgentes = urgentes.sort_values("dias")
+                if any(w in q for w in ["risco", "atraso", "urgente", "critico"]):
+                    top = urgentes.head(5)
+                    linhas = ""
+                    for _, r in top.iterrows():
+                        d = int((r["Prazo"] - now).days)
+                        emoji = "🔴" if d < 7 else "🟡" if d < 30 else "🟢"
+                        linhas += f"\n{emoji} **{r['Projeto']}** — {d} dias ({r['Prazo'].strftime('%d/%m/%Y')})"
+                    answer = f"**⚠️ Projetos com maior risco de atraso:**\n{linhas}\n\n💡 **Recomendacao:** Priorize os marcados em 🔴 imediatamente."
 
-                    if any(w in q for w in ["risco", "atraso", "urgente", "critico"]):
-                        top = urgentes.head(5)
-                        linhas = ""
-                        for _, r in top.iterrows():
-                            d = int((r["Prazo"] - now).days)
-                            emoji = "🔴" if d < 7 else "🟡" if d < 30 else "🟢"
-                            linhas += f"\n{emoji} **{r['Projeto']}** — {d} dias ({r['Prazo'].strftime('%d/%m/%Y')})"
-                        answer = f"**⚠️ Projetos com maior risco de atraso:**\n{linhas}\n\n💡 **Recomendacao:** Priorize os marcados em 🔴 imediatamente."
+                elif any(w in q for w in ["focar", "energia", "semana", "prioridade", "foco"]):
+                    top = urgentes.head(3)
+                    linhas = ""
+                    for _, r in top.iterrows():
+                        d = int((r["Prazo"] - now).days)
+                        foco = str(r.get("Foco",""))[:50] if pd.notna(r.get("Foco")) else ""
+                        linhas += f"\n🎯 **{r['Projeto']}** ({d}d) — {foco}"
+                    answer = f"**🎯 Foco desta semana:**\n{linhas}\n\n⚡ Concentre energia nestes projetos para evitar atrasos criticos."
 
-                    elif any(w in q for w in ["focar", "energia", "semana", "prioridade", "foco"]):
-                        top = urgentes.head(3)
-                        linhas = ""
-                        for _, r in top.iterrows():
-                            d = int((r["Prazo"] - now).days)
-                            foco = str(r.get("Foco",""))[:50] if pd.notna(r.get("Foco")) else ""
-                            linhas += f"\n🎯 **{r['Projeto']}** ({d}d) — {foco}"
-                        answer = f"**🎯 Foco desta semana:**\n{linhas}\n\n⚡ Concentre energia nestes projetos para evitar atrasos criticos."
-
-                    elif any(w in q for w in ["diagnostico", "geral", "portfolio", "situacao", "status"]):
-                        answer = f"""**📊 Diagnostico do Portfolio:**
+                elif any(w in q for w in ["diagnostico", "geral", "portfolio", "situacao", "status"]):
+                    answer = f"""**📊 Diagnostico do Portfolio:**
 
 🔢 **Total de projetos:** {total}
-✅ **Concluidos:** {len(concluidos)} ({taxa}%)
+✅ **Concluidos:** {len(concluidos_df)} ({taxa}%)
 ⚙️ **Em Andamento:** {len(em_exec)}
 📋 **Backlog:** {len(backlog)}
 🔮 **Futuros:** {len(futuros)}
 
 {"🟢 **Performance Excepcional** — Pipeline acima da media!" if taxa >= 70 else "🟡 **Performance Estavel** — Ha espaco para acelerar o backlog." if taxa >= 40 else "🔴 **Atencao Requerida** — Revisao estrategica recomendada."}
 
-💡 Projetos mais urgentes: **{urgentes.iloc[0]['Projeto'] if not urgentes.empty else 'N/A'}** vence em {int(urgentes.iloc[0]['dias']) if not urgentes.empty else 0} dias."""
+💡 Proximo prazo critico: **{urgentes.iloc[0]['Projeto'] if not urgentes.empty else 'N/A'}** — vence em {int(urgentes.iloc[0]['dias']) if not urgentes.empty else 0} dias."""
 
-                    elif any(w in q for w in ["acelerar", "rapido", "adiantar"]):
-                        top = urgentes[urgentes["dias"] > 30].head(4)
-                        if top.empty:
-                            answer = "⚡ Todos os projetos ativos estao com prazo proximo. Foque em concluir os urgentes primeiro."
-                        else:
-                            linhas = "\n".join([f"⚡ **{r['Projeto']}** — {int(r['dias'])} dias" for _, r in top.iterrows()])
-                            answer = f"**Projetos que podem ser acelerados (prazo folgado):**\n{linhas}\n\n✅ Aproveite para adiantar enquanto os urgentes nao chegam."
+                elif any(w in q for w in ["acelerar", "rapido", "adiantar"]):
+                    top = urgentes[urgentes["dias"] > 30].head(4)
+                    if top.empty:
+                        answer = "⚡ Todos os projetos ativos estao com prazo proximo. Foque em concluir os urgentes primeiro."
+                    else:
+                        linhas = "\n".join([f"⚡ **{r['Projeto']}** — {int(r['dias'])} dias" for _, r in top.iterrows()])
+                        answer = f"**Projetos que podem ser acelerados (prazo folgado):**\n{linhas}\n\n✅ Aproveite para adiantar enquanto os urgentes nao chegam."
 
-                    elif any(w in q for w in ["gargalo", "problema", "bloqueio", "travar"]):
-                        muitos_urgentes = urgentes[urgentes["dias"] < 14]
-                        answer = f"""**🔍 Gargalos Identificados:**
+                elif any(w in q for w in ["gargalo", "problema", "bloqueio"]):
+                    muitos_urgentes = urgentes[urgentes["dias"] < 14]
+                    answer = f"""**🔍 Gargalos Identificados:**
 
-{"🔴 **"+str(len(muitos_urgentes))+" projetos vencem em menos de 14 dias** — risco de sobrecarga operacional." if not muitos_urgentes.empty else "✅ Nenhum gargalo critico identificado no momento."}
+{"🔴 **"+str(len(muitos_urgentes))+" projetos vencem em menos de 14 dias** — risco de sobrecarga." if not muitos_urgentes.empty else "✅ Nenhum gargalo critico identificado."}
 
 📋 **Backlog represado:** {len(backlog)} projetos aguardando inicio.
 {"⚠️ Alto volume no backlog — considere priorizar ou redistribuir." if len(backlog) > 5 else "✅ Backlog em nivel saudavel."}"""
 
-                    elif any(w in q for w in ["30 dias", "vence", "prazo", "mes"]):
-                        proximos = urgentes[urgentes["dias"] <= 30]
-                        if proximos.empty:
-                            answer = "✅ Nenhum projeto vence nos proximos 30 dias."
-                        else:
-                            linhas = ""
-                            for _, r in proximos.iterrows():
-                                d = int(r["dias"])
-                                emoji = "🔴" if d < 7 else "🟡"
-                                linhas += f"\n{emoji} **{r['Projeto']}** — {r['Prazo'].strftime('%d/%m/%Y')} ({d}d)"
-                            answer = f"**📅 Vence nos proximos 30 dias ({len(proximos)} projetos):**\n{linhas}"
-
+                elif any(w in q for w in ["30 dias", "vence", "prazo", "mes"]):
+                    proximos = urgentes[urgentes["dias"] <= 30]
+                    if proximos.empty:
+                        answer = "✅ Nenhum projeto vence nos proximos 30 dias."
                     else:
-                        top3 = urgentes.head(3)
-                        linhas = "\n".join([f"• **{r['Projeto']}** — {int(r['dias'])}d" for _, r in top3.iterrows()])
-                        answer = f"""**🤖 J.A.R.V.I.S — Resumo Executivo:**
+                        linhas = ""
+                        for _, r in proximos.iterrows():
+                            d = int(r["dias"])
+                            emoji = "🔴" if d < 7 else "🟡"
+                            linhas += f"\n{emoji} **{r['Projeto']}** — {r['Prazo'].strftime('%d/%m/%Y')} ({d}d)"
+                        answer = f"**📅 Vence nos proximos 30 dias ({len(proximos)} projetos):**\n{linhas}"
 
-📊 Portfolio: **{total} projetos** | Taxa de conclusao: **{taxa}%**
-⚙️ Em execucao: **{len(em_exec)}** | Backlog: **{len(backlog)}**
+                else:
+                    top3 = urgentes.head(3)
+                    linhas = "\n".join([f"• **{r['Projeto']}** — {int(r['dias'])}d" for _, r in top3.iterrows()])
+                    answer = f"""**🤖 J.A.R.V.I.S — Resumo Executivo:**
+
+📊 Portfolio: **{total} projetos** | Conclusao: **{taxa}%**
+⚙️ Em andamento: **{len(em_exec)}** | Backlog: **{len(backlog)}**
 
 **Top prioridades agora:**
 {linhas}
 
-💬 Pergunte sobre: *risco de atraso, foco da semana, diagnostico geral, gargalos, proximos prazos.*"""
+💬 Use os botoes ao lado para analises especificas!"""
 
-            except Exception as e:
-                answer = f"Erro interno: {str(e)}"
+        except Exception as e:
+            answer = f"Erro interno: {str(e)}"
 
         st.session_state.chat_history.append({"role": "assistant", "content": answer})
         st.rerun()
+
 
 # ─────────────────────────────────────────────
 # TAB 6 — NOTAS
