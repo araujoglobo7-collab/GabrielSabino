@@ -518,6 +518,7 @@ setTimeout(() => {
 # ============================================================
 # ============================================================
 # ============================================================
+# ============================================================
 # SESSION STATE
 # ============================================================
 if "logado" not in st.session_state:
@@ -532,6 +533,8 @@ if "nome_convidado" not in st.session_state:
     st.session_state.nome_convidado = ""
 if "login_step" not in st.session_state:
     st.session_state.login_step = "senha"
+if "pw_erro" not in st.session_state:
+    st.session_state.pw_erro = False
 
 # ============================================================
 # LOGIN
@@ -540,322 +543,307 @@ if not st.session_state.logado:
 
     st.markdown("""
     <style>
-    [data-testid="stSidebar"],[data-testid="stHeader"],footer,[data-testid="stToolbar"]{display:none!important;}
-    html,body,.stApp,[data-testid="stAppViewContainer"]{background:#060912!important;}
-    .block-container{padding:0!important;max-width:100%!important;}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+    [data-testid="stSidebar"],[data-testid="stHeader"],
+    footer,[data-testid="stToolbar"]  { display:none !important; }
+
+    html,body,.stApp,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"],
+    .block-container                  { background:#060912 !important;
+                                        padding:0 !important;
+                                        max-width:100% !important; }
+
+    /* Coluna do form — fundo escuro e centralizado verticalmente */
+    [data-testid="column"]:last-child {
+        background:#060912 !important;
+        display:flex !important;
+        flex-direction:column !important;
+        justify-content:center !important;
+        min-height:100vh !important;
+        padding:40px 36px !important;
+    }
+    [data-testid="column"]:first-child {
+        background:#060912 !important;
+        padding:0 !important;
+    }
+
+    /* Label oculto */
+    .stTextInput label, .stTextInput > div > label { display:none !important; }
+
+    /* Input estilizado */
+    .stTextInput input {
+        background: rgba(255,255,255,.05) !important;
+        border: 1.5px solid rgba(107,33,168,.4) !important;
+        border-radius: 12px !important;
+        color: #fff !important;
+        font-size: 16px !important;
+        font-family: 'Inter', sans-serif !important;
+        padding: 14px 16px !important;
+        caret-color: #A855F7 !important;
+        transition: all .2s !important;
+    }
+    .stTextInput input:focus {
+        border-color: #7C3AED !important;
+        box-shadow: 0 0 0 3px rgba(107,33,168,.2) !important;
+        background: rgba(107,33,168,.07) !important;
+        outline: none !important;
+    }
+    .stTextInput input::placeholder { color: rgba(255,255,255,.2) !important; }
+
+    /* Botão */
+    .stButton > button {
+        background: linear-gradient(135deg,#7C3AED,#4C1D95) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        padding: 14px 24px !important;
+        width: 100% !important;
+        box-shadow: 0 4px 18px rgba(107,33,168,.4) !important;
+        transition: all .2s !important;
+        letter-spacing: .3px !important;
+        margin-top: 4px !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 24px rgba(107,33,168,.6) !important;
+    }
+    .stButton > button:active { transform: translateY(0) !important; }
+
+    /* Remove margin extra do stButton */
+    .stButton { margin-top: 0 !important; }
+
+    /* Esconde "Press Enter to apply" do Streamlit */
+    .stTextInput [data-baseweb="input"] + div { display:none !important; }
+
+    /* Gap entre elementos da coluna */
+    [data-testid="column"]:last-child > div { gap: 0 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-    # Processa query params vindos do form HTML
-    qp = st.query_params
-    if qp.get("pw") == "gr1723":
-        st.session_state.logado = True
-        st.session_state.is_convidado = False
-        st.session_state.nome_convidado = "Gabriel"
-        st.query_params.clear()
-        st.rerun()
-    elif qp.get("pw") == "gsr17" and not qp.get("nome"):
-        st.session_state.login_step = "nome_conv"
-        st.query_params.clear()
-        st.rerun()
-    elif qp.get("pw") == "gsr17" and qp.get("nome"):
-        st.session_state.logado = True
-        st.session_state.is_convidado = True
-        st.session_state.nome_convidado = qp.get("nome", "Convidado")
-        st.session_state.login_step = "senha"
-        st.query_params.clear()
-        st.rerun()
-    elif qp.get("pw") and qp.get("pw") not in ["gr1723", "gsr17"]:
-        st.session_state["pw_erro"] = True
-        st.query_params.clear()
-        st.rerun()
-
-    pw_erro = st.session_state.get("pw_erro", False)
-    if pw_erro:
-        st.session_state["pw_erro"] = False
-
-    step = st.session_state.login_step
-    erro_js = "true" if pw_erro else "false"
-
-    LOGIN_HTML = f"""<!DOCTYPE html>
-<html>
-<head>
+    # ── Robô HTML (visual puro) ──
+    ROBO_HTML = """<!DOCTYPE html><html><head>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
-*{{margin:0;padding:0;box-sizing:border-box;}}
-html,body{{width:100%;height:100%;background:#060912;font-family:'Inter',sans-serif;color:#fff;overflow:hidden;}}
-
-#pc{{position:fixed;inset:0;pointer-events:none;z-index:0;}}
-
-/* Layout lado a lado */
-#wrap{{
-  position:relative;z-index:1;
-  display:flex;align-items:center;justify-content:center;
-  width:100%;min-height:100vh;
-  gap:48px;padding:24px;
-  flex-wrap:nowrap;
-}}
-
-/* ── ROBÔ ── */
-#robo-wrap{{flex:0 0 auto;}}
-#robo{{
-  width:clamp(180px,22vw,260px);
-  filter:drop-shadow(0 0 28px rgba(107,33,168,.6));
-  animation:float 5s ease-in-out infinite;
-  display:block;
-}}
-@keyframes float{{0%,100%{{transform:translateY(0);}}50%{{transform:translateY(-14px);}}}}
-
-/* Animações robô */
-.rh{{animation:ht 7s ease-in-out infinite;transform-origin:100px 85px;}}
-@keyframes ht{{0%,100%{{transform:rotate(0);}}35%{{transform:rotate(-3deg);}}70%{{transform:rotate(2.5deg);}}}}
-.re{{animation:bl 5s infinite;}}
-.el{{transform-origin:80px 74px;}}.er{{transform-origin:120px 74px;}}
-@keyframes bl{{0%,88%,100%{{transform:scaleY(1);}}92%{{transform:scaleY(.05);}}}}
-.rb{{animation:eq .22s ease-in-out infinite alternate;transform-origin:center bottom;}}
-.b1{{animation-delay:0s;}}.b2{{animation-delay:.04s;}}.b3{{animation-delay:.08s;}}
-.b4{{animation-delay:.12s;}}.b5{{animation-delay:.08s;}}.b6{{animation-delay:.04s;}}
-@keyframes eq{{from{{transform:scaleY(.15);}}to{{transform:scaleY(1.6);}}}}
-.al{{animation:aL 5s ease-in-out infinite;transform-origin:26px 132px;}}
-.ar{{animation:aR 5s ease-in-out infinite;transform-origin:174px 132px;}}
-@keyframes aL{{0%,100%{{transform:rotate(0);}}50%{{transform:rotate(-9deg);}}}}
-@keyframes aR{{0%,100%{{transform:rotate(0);}}50%{{transform:rotate(9deg);}}}}
-.ac{{animation:ap 2s ease-in-out infinite;}}
-@keyframes ap{{0%,100%{{opacity:.7;}}50%{{opacity:1;filter:drop-shadow(0 0 8px #A855F7);}}}}
-.ro{{animation:sp 3s linear infinite;transform-origin:100px 182px;}}
-@keyframes sp{{to{{transform:rotate(360deg);}}}}
-.l1{{animation:p1 2s infinite;}}.l2{{animation:p2 1.4s infinite;}}
-@keyframes p1{{0%,100%{{opacity:.2;}}50%{{opacity:1;}}}}
-@keyframes p2{{0%,100%{{opacity:.2;}}50%{{opacity:1;}}}}
-
-/* ── PAINEL FORM ── */
-#panel{{
-  flex:0 0 auto;
-  width:clamp(280px,32vw,380px);
-  display:flex;flex-direction:column;gap:20px;
-}}
-
-.badge{{
-  display:inline-block;
-  font-family:'JetBrains Mono',monospace;
-  font-size:9px;letter-spacing:4px;color:#7C3AED;
-  background:rgba(107,33,168,.1);
-  border:1px solid rgba(107,33,168,.2);
-  padding:5px 12px;border-radius:20px;
-  margin-bottom:4px;
-}}
-.title{{
-  font-family:'Syne',sans-serif;
-  font-size:clamp(28px,3.5vw,42px);
-  font-weight:800;line-height:1.1;
-}}
-.title span{{color:#10B981;}}
-.sub{{font-size:13px;color:rgba(255,255,255,.4);margin-top:6px;}}
-
-/* Card do form */
-.form-card{{
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(107,33,168,.2);
-  border-radius:16px;
-  padding:22px;
-  display:flex;flex-direction:column;gap:12px;
-}}
-.inp-label{{
-  font-family:'JetBrains Mono',monospace;
-  font-size:9px;letter-spacing:2px;color:rgba(167,139,250,.6);
-  margin-bottom:2px;
-}}
-input.field{{
-  width:100%;
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(107,33,168,.3);
-  border-radius:10px;
-  color:#fff;font-size:15px;
-  font-family:'Inter',sans-serif;
-  padding:13px 15px;
-  outline:none;
-  transition:border-color .2s,box-shadow .2s;
-}}
-input.field:focus{{
-  border-color:rgba(107,33,168,.8);
-  box-shadow:0 0 0 3px rgba(107,33,168,.18);
-  background:rgba(107,33,168,.07);
-}}
-input.field::placeholder{{color:rgba(255,255,255,.25);}}
-button.go{{
-  width:100%;padding:14px;
-  background:linear-gradient(135deg,#7C3AED,#4C1D95);
-  color:#fff;border:none;border-radius:12px;
-  font-size:15px;font-weight:700;font-family:'Inter',sans-serif;
-  cursor:pointer;letter-spacing:.3px;
-  box-shadow:0 4px 18px rgba(107,33,168,.45);
-  transition:all .2s;
-}}
-button.go:hover{{
-  transform:translateY(-2px);
-  box-shadow:0 8px 24px rgba(107,33,168,.6);
-  background:linear-gradient(135deg,#8B46F7,#5B27A8);
-}}
-button.go:active{{transform:translateY(0);}}
-
-/* Erro */
-.erro{{
-  background:rgba(201,42,42,.08);
-  border:1px solid rgba(201,42,42,.22);
-  border-radius:10px;padding:11px 15px;
-  color:#F87171;font-size:13px;
-  display:{"block" if pw_erro else "none"};
-}}
-
-/* Info card */
-.info-card{{
-  background:rgba(255,255,255,.02);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:12px;padding:14px 16px;
-}}
-.info-row{{display:flex;align-items:center;gap:10px;padding:6px 0;}}
-.info-dot{{width:24px;height:24px;border-radius:50%;
-  background:rgba(107,33,168,.2);border:1px solid rgba(107,33,168,.35);
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;flex-shrink:0;}}
-.info-txt{{font-size:12px;color:rgba(255,255,255,.5);}}
-.info-txt strong{{color:rgba(255,255,255,.8);}}
-
-.hud{{
-  position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
-  font-family:'JetBrains Mono',monospace;font-size:9px;
-  letter-spacing:3px;color:rgba(107,33,168,.4);white-space:nowrap;
-  animation:ph 2s ease-in-out infinite;z-index:5;
-}}
-@keyframes ph{{0%,100%{{opacity:.3;}}50%{{opacity:.8;}}}}
-
-@media(max-width:680px){{
-  #wrap{{flex-direction:column;gap:20px;padding:16px;overflow-y:auto;min-height:100vh;}}
-  #robo{{width:clamp(130px,45vw,180px);}}
-  #panel{{width:100%;}}
-}}
-</style>
-</head>
-<body>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#060912;overflow:hidden;}
+#pc{position:absolute;inset:0;pointer-events:none;}
+#w{display:flex;align-items:center;justify-content:center;height:100vh;}
+#robo{width:clamp(180px,28vw,280px);filter:drop-shadow(0 0 28px rgba(107,33,168,.6));animation:fl 5s ease-in-out infinite;}
+@keyframes fl{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+.rh{animation:ht 7s ease-in-out infinite;transform-origin:100px 85px;}
+@keyframes ht{0%,100%{transform:rotate(0);}35%{transform:rotate(-3deg);}70%{transform:rotate(2.5deg);}}
+.re{animation:bl 5s infinite;}
+.el{transform-origin:80px 74px;}.er{transform-origin:120px 74px;}
+@keyframes bl{0%,88%,100%{transform:scaleY(1);}92%{transform:scaleY(.05);}}
+.rb{animation:eq .22s ease-in-out infinite alternate;transform-origin:center bottom;}
+.b1{animation-delay:0s;}.b2{animation-delay:.04s;}.b3{animation-delay:.08s;}
+.b4{animation-delay:.12s;}.b5{animation-delay:.08s;}.b6{animation-delay:.04s;}
+@keyframes eq{from{transform:scaleY(.15);}to{transform:scaleY(1.6);}}
+.al{animation:aL 5s ease-in-out infinite;transform-origin:26px 132px;}
+.ar{animation:aR 5s ease-in-out infinite;transform-origin:174px 132px;}
+@keyframes aL{0%,100%{transform:rotate(0);}50%{transform:rotate(-9deg);}}
+@keyframes aR{0%,100%{transform:rotate(0);}50%{transform:rotate(9deg);}}
+.ac{animation:ap 2s ease-in-out infinite;}
+@keyframes ap{0%,100%{opacity:.7;}50%{opacity:1;filter:drop-shadow(0 0 8px #A855F7);}}
+.ro{animation:sp 3s linear infinite;transform-origin:100px 182px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.l1{animation:p1 2s infinite;}.l2{animation:p2 1.4s infinite;}
+@keyframes p1{0%,100%{opacity:.2;}50%{opacity:1;}}
+@keyframes p2{0%,100%{opacity:.2;}50%{opacity:1;}}
+.hud{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-family:monospace;font-size:9px;letter-spacing:3px;color:rgba(107,33,168,.4);white-space:nowrap;animation:ph 2s ease-in-out infinite;}
+@keyframes ph{0%,100%{opacity:.3;}50%{opacity:.8;}}
+</style></head><body>
 <canvas id="pc"></canvas>
-<div id="wrap">
-
-  <!-- ROBÔ -->
-  <div id="robo-wrap">
-    <svg id="robo" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="gM" cx="50%" cy="30%"><stop offset="0%" stop-color="#C8CDD8"/><stop offset="100%" stop-color="#8B92A0"/></radialGradient>
-      <radialGradient id="gV" cx="50%" cy="40%"><stop offset="0%" stop-color="#0A0D1E"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
-      <radialGradient id="gB" cx="50%" cy="20%"><stop offset="0%" stop-color="#E5E7EB"/><stop offset="100%" stop-color="#C8CDD8"/></radialGradient>
-      <radialGradient id="gA" cx="50%" cy="35%"><stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
-      <filter id="gw"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="sw"><feGaussianBlur stdDeviation="8"/></filter>
-    </defs>
-    <ellipse cx="100" cy="357" rx="62" ry="5" fill="#6B21A8" opacity=".3" filter="url(#sw)"/>
-    <g class="al"><rect x="10" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/><rect x="14" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/><circle cx="21" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/><circle cx="21" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/></g>
-    <g class="ar"><rect x="168" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/><rect x="168" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/><circle cx="179" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/><circle cx="179" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/></g>
-    <rect x="38" y="124" width="124" height="132" rx="18" fill="url(#gB)" stroke="rgba(107,33,168,.15)" stroke-width="1.5"/>
-    <path d="M38 143 L68 124 L132 124 L162 143" fill="none" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
-    <line x1="38" y1="162" x2="162" y2="162" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
-    <line x1="38" y1="218" x2="162" y2="218" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
-    <circle cx="100" cy="182" r="34" fill="rgba(8,10,20,.5)"/>
-    <circle cx="100" cy="182" r="27" fill="none" stroke="rgba(124,58,237,.4)" stroke-width="1.5"/>
-    <circle cx="100" cy="182" r="19" fill="none" stroke="rgba(99,179,237,.35)" stroke-width="1"/>
-    <circle cx="100" cy="182" r="11" fill="url(#gA)" class="ac" filter="url(#gw)"/>
-    <circle cx="100" cy="182" r="5" fill="white" opacity=".92"/>
-    <g class="ro">
-      <line x1="100" y1="148" x2="100" y2="158" stroke="#7C3AED" stroke-width="2"/>
-      <line x1="100" y1="206" x2="100" y2="216" stroke="#7C3AED" stroke-width="2"/>
-      <line x1="66" y1="182" x2="76" y2="182" stroke="#7C3AED" stroke-width="2"/>
-      <line x1="124" y1="182" x2="134" y2="182" stroke="#7C3AED" stroke-width="2"/>
-      <line x1="76" y1="160" x2="82" y2="168" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-      <line x1="124" y1="160" x2="118" y2="168" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-      <line x1="76" y1="204" x2="82" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-      <line x1="124" y1="204" x2="118" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-    </g>
-    <circle cx="54" cy="144" r="4" fill="#10B981" class="l1" filter="url(#gw)"/>
-    <circle cx="146" cy="144" r="4" fill="#7C3AED" class="l2" filter="url(#gw)"/>
-    <circle cx="54" cy="156" r="3" fill="#7C3AED" class="l2"/>
-    <rect x="82" y="112" width="36" height="16" rx="5" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
-    <g class="rh">
-      <line x1="100" y1="16" x2="100" y2="40" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="100" cy="11" r="7" fill="url(#gA)" filter="url(#gw)"><animate attributeName="r" values="5;9;5" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".65;1;.65" dur="1.4s" repeatCount="indefinite"/></circle>
-      <rect x="52" y="40" width="96" height="76" rx="16" fill="url(#gM)"/>
-      <rect x="52" y="40" width="96" height="76" rx="16" fill="none" stroke="rgba(107,33,168,.25)" stroke-width="1.5"/>
-      <rect x="58" y="40" width="84" height="16" rx="8" fill="rgba(107,33,168,.3)"/>
-      <text x="100" y="53" text-anchor="middle" fill="rgba(200,180,255,.8)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
-      <rect x="60" y="60" width="80" height="46" rx="10" fill="#060912"/>
-      <rect x="60" y="60" width="80" height="46" rx="10" fill="url(#gV)" opacity=".5"/>
-      <rect x="60" y="60" width="80" height="46" rx="10" fill="none" stroke="rgba(107,33,168,.55)" stroke-width="1.5"/>
-      <line x1="61" y1="72" x2="139" y2="72" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-      <line x1="61" y1="82" x2="139" y2="82" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-      <line x1="61" y1="92" x2="139" y2="92" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-      <path d="M64 64 L71 64" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/><path d="M64 64 L64 70" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
-      <path d="M136 64 L129 64" stroke="#A855F7" stroke-width="1.5" opacity=".6"/><path d="M136 64 L136 70" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
-      <g class="re el"><circle cx="80" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/><circle cx="80" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/><circle cx="83" cy="75" r="3" fill="white" opacity=".85"/><circle cx="80" cy="78" r="4" fill="#060912" opacity=".55"/></g>
-      <g class="re er"><circle cx="120" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/><circle cx="120" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/><circle cx="123" cy="75" r="3" fill="white" opacity=".85"/><circle cx="120" cy="78" r="4" fill="#060912" opacity=".55"/></g>
-      <g transform="translate(76,106)">
-        <rect class="rb b1" x="0" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
-        <rect class="rb b2" x="7" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-        <rect class="rb b3" x="14" y="-9" width="5" height="18" rx="2" fill="#A855F7" opacity=".8"/>
-        <rect class="rb b4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-        <rect class="rb b5" x="28" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
-        <rect class="rb b6" x="35" y="-2" width="5" height="4" rx="2" fill="#A855F7" opacity=".5"/>
-      </g>
-      <rect x="53" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-      <rect x="53" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-      <rect x="142" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-      <rect x="142" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-    </g>
-    <rect x="52" y="256" width="40" height="52" rx="10" fill="url(#gM)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
-    <rect x="108" y="256" width="40" height="52" rx="10" fill="url(#gM)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
-    <rect x="48" y="302" width="50" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
-    <rect x="102" y="302" width="50" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
-    </svg>
-  </div>
-
-  <!-- PAINEL -->
-  <div id="panel">
-    <div>
-      <div class="badge">⬡ J.A.R.V.I.S · ONLINE</div>
-      <div class="title">Hub<br><span>Operacional</span></div>
-      <div class="sub">{"Digite sua senha para entrar." if step == "senha" else "Acesso de convidado — qual é o seu nome?"}</div>
-    </div>
-
-    <div class="form-card">
-      <div class="inp-label">{"SENHA" if step == "senha" else "SEU NOME"}</div>
-      {"<form method='GET' id='frm'><input class='field' name='pw' type='password' placeholder='••••••••' autofocus autocomplete='off' onkeydown=\"if(event.key==='Enter'){{event.preventDefault();document.getElementById('frm').submit();}}\"/><br><br><button class='go' type='submit'>Entrar →</button></form>" if step == "senha" else "<form method='GET' id='frm'><input class='field' name='nome' type='text' placeholder='Seu nome...' autofocus autocomplete='off' onkeydown=\"if(event.key==='Enter'){{event.preventDefault();document.getElementById('frm').submit();}}\"/><input type='hidden' name='pw' value='gsr17'/><button class='go' type='submit'>Entrar →</button></form>"}
-      <div class="erro">❌ Senha incorreta. Tente novamente.</div>
-    </div>
-  </div>
-
+<div id="w">
+<svg id="robo" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="gM" cx="50%" cy="30%"><stop offset="0%" stop-color="#C8CDD8"/><stop offset="100%" stop-color="#8B92A0"/></radialGradient>
+  <radialGradient id="gV" cx="50%" cy="40%"><stop offset="0%" stop-color="#0A0D1E"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
+  <radialGradient id="gB" cx="50%" cy="20%"><stop offset="0%" stop-color="#E5E7EB"/><stop offset="100%" stop-color="#C8CDD8"/></radialGradient>
+  <radialGradient id="gA" cx="50%" cy="35%"><stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
+  <filter id="gw"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="sw"><feGaussianBlur stdDeviation="8"/></filter>
+</defs>
+<ellipse cx="100" cy="357" rx="62" ry="5" fill="#6B21A8" opacity=".3" filter="url(#sw)"/>
+<g class="al"><rect x="10" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/><rect x="14" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/><circle cx="21" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/><circle cx="21" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/></g>
+<g class="ar"><rect x="168" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/><rect x="168" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/><circle cx="179" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/><circle cx="179" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/></g>
+<rect x="38" y="124" width="124" height="132" rx="18" fill="url(#gB)" stroke="rgba(107,33,168,.15)" stroke-width="1.5"/>
+<path d="M38 143 L68 124 L132 124 L162 143" fill="none" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
+<line x1="38" y1="162" x2="162" y2="162" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
+<line x1="38" y1="218" x2="162" y2="218" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
+<circle cx="100" cy="182" r="34" fill="rgba(8,10,20,.5)"/>
+<circle cx="100" cy="182" r="27" fill="none" stroke="rgba(124,58,237,.4)" stroke-width="1.5"/>
+<circle cx="100" cy="182" r="19" fill="none" stroke="rgba(99,179,237,.35)" stroke-width="1"/>
+<circle cx="100" cy="182" r="11" fill="url(#gA)" class="ac" filter="url(#gw)"/>
+<circle cx="100" cy="182" r="5" fill="white" opacity=".92"/>
+<g class="ro">
+  <line x1="100" y1="148" x2="100" y2="158" stroke="#7C3AED" stroke-width="2"/>
+  <line x1="100" y1="206" x2="100" y2="216" stroke="#7C3AED" stroke-width="2"/>
+  <line x1="66" y1="182" x2="76" y2="182" stroke="#7C3AED" stroke-width="2"/>
+  <line x1="124" y1="182" x2="134" y2="182" stroke="#7C3AED" stroke-width="2"/>
+  <line x1="76" y1="160" x2="82" y2="168" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+  <line x1="124" y1="160" x2="118" y2="168" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+  <line x1="76" y1="204" x2="82" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+  <line x1="124" y1="204" x2="118" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+</g>
+<circle cx="54" cy="144" r="4" fill="#10B981" class="l1" filter="url(#gw)"/>
+<circle cx="146" cy="144" r="4" fill="#7C3AED" class="l2" filter="url(#gw)"/>
+<circle cx="54" cy="156" r="3" fill="#7C3AED" class="l2"/>
+<rect x="82" y="112" width="36" height="16" rx="5" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
+<g class="rh">
+  <line x1="100" y1="16" x2="100" y2="40" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="100" cy="11" r="7" fill="url(#gA)" filter="url(#gw)"><animate attributeName="r" values="5;9;5" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".65;1;.65" dur="1.4s" repeatCount="indefinite"/></circle>
+  <rect x="52" y="40" width="96" height="76" rx="16" fill="url(#gM)"/>
+  <rect x="52" y="40" width="96" height="76" rx="16" fill="none" stroke="rgba(107,33,168,.25)" stroke-width="1.5"/>
+  <rect x="58" y="40" width="84" height="16" rx="8" fill="rgba(107,33,168,.3)"/>
+  <text x="100" y="53" text-anchor="middle" fill="rgba(200,180,255,.8)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
+  <rect x="60" y="60" width="80" height="46" rx="10" fill="#060912"/>
+  <rect x="60" y="60" width="80" height="46" rx="10" fill="url(#gV)" opacity=".5"/>
+  <rect x="60" y="60" width="80" height="46" rx="10" fill="none" stroke="rgba(107,33,168,.55)" stroke-width="1.5"/>
+  <line x1="61" y1="72" x2="139" y2="72" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+  <line x1="61" y1="82" x2="139" y2="82" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+  <line x1="61" y1="92" x2="139" y2="92" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+  <path d="M64 64 L71 64" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/><path d="M64 64 L64 70" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
+  <path d="M136 64 L129 64" stroke="#A855F7" stroke-width="1.5" opacity=".6"/><path d="M136 64 L136 70" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
+  <g class="re el"><circle cx="80" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/><circle cx="80" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/><circle cx="83" cy="75" r="3" fill="white" opacity=".85"/><circle cx="80" cy="78" r="4" fill="#060912" opacity=".55"/></g>
+  <g class="re er"><circle cx="120" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/><circle cx="120" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/><circle cx="123" cy="75" r="3" fill="white" opacity=".85"/><circle cx="120" cy="78" r="4" fill="#060912" opacity=".55"/></g>
+  <g transform="translate(76,106)">
+    <rect class="rb b1" x="0" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
+    <rect class="rb b2" x="7" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
+    <rect class="rb b3" x="14" y="-9" width="5" height="18" rx="2" fill="#A855F7" opacity=".8"/>
+    <rect class="rb b4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
+    <rect class="rb b5" x="28" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
+    <rect class="rb b6" x="35" y="-2" width="5" height="4" rx="2" fill="#A855F7" opacity=".5"/>
+  </g>
+  <rect x="53" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+  <rect x="53" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+  <rect x="142" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+  <rect x="142" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+</g>
+<rect x="52" y="256" width="40" height="52" rx="10" fill="url(#gM)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
+<rect x="108" y="256" width="40" height="52" rx="10" fill="url(#gM)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
+<rect x="48" y="302" width="50" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
+<rect x="102" y="302" width="50" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
+</svg>
 </div>
 <div class="hud">⬡ J.A.R.V.I.S · HUB OPERACIONAL SABINO OS ⬡</div>
-
 <script>
 const pc=document.getElementById("pc"),ctx=pc.getContext("2d");
-function r(){{pc.width=window.innerWidth;pc.height=window.innerHeight;}}
+function r(){pc.width=window.innerWidth;pc.height=window.innerHeight;}
 r();window.addEventListener("resize",r);
-const p=Array.from({{length:30}},()=>({{
+const p=Array.from({length:30},()=>({
   x:Math.random()*pc.width,y:Math.random()*pc.height,
   vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,
   r:Math.random()*1.8+.4,c:Math.random()>.5?"#6B21A8":"#10B981"
-}}));
-(function loop(){{
+}));
+(function loop(){
   ctx.clearRect(0,0,pc.width,pc.height);
-  p.forEach(q=>{{q.x+=q.vx;q.y+=q.vy;
+  p.forEach(q=>{q.x+=q.vx;q.y+=q.vy;
     if(q.x<0||q.x>pc.width)q.vx*=-1;
     if(q.y<0||q.y>pc.height)q.vy*=-1;
     ctx.beginPath();ctx.arc(q.x,q.y,q.r,0,Math.PI*2);
-    ctx.fillStyle=q.c;ctx.shadowBlur=7;ctx.shadowColor=q.c;ctx.fill();}});
+    ctx.fillStyle=q.c;ctx.shadowBlur=7;ctx.shadowColor=q.c;ctx.fill();});
   requestAnimationFrame(loop);
-}})();
-</script>
-</body></html>"""
+})();
+</script></body></html>"""
 
-    components.html(LOGIN_HTML, height=700, scrolling=False)
+    # Layout: robô (HTML visual) | form (Streamlit nativo)
+    col_robo, col_form = st.columns([1.1, 0.9])
+
+    with col_robo:
+        components.html(ROBO_HTML, height=640, scrolling=False)
+
+    with col_form:
+        if st.session_state.login_step == "senha":
+            st.markdown("""
+            <div style="margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                  letter-spacing:4px;color:#7C3AED;margin-bottom:14px;">⬡ IDENTIFICAÇÃO</div>
+              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+                  color:#fff;line-height:1.05;">Hub</div>
+              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+                  color:#10B981;line-height:1.05;margin-bottom:12px;">Operacional</div>
+              <div style="font-size:14px;color:rgba(255,255,255,.38);line-height:1.7;">
+                Digite sua senha para entrar.</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            senha = st.text_input("pw", type="password",
+                placeholder="••••••••", label_visibility="collapsed", key="inp_senha")
+
+            entrar = st.button("Entrar →", use_container_width=True, key="btn_entrar")
+
+            # Enter também funciona (Streamlit processa ao digitar + Enter)
+            if entrar or (senha and st.session_state.get("_enter_pw")):
+                if senha == "gr1723":
+                    st.session_state.logado = True
+                    st.session_state.is_convidado = False
+                    st.session_state.nome_convidado = "Gabriel"
+                    st.session_state.pw_erro = False
+                    st.rerun()
+                elif senha == "gsr17":
+                    st.session_state.login_step = "nome_conv"
+                    st.session_state.pw_erro = False
+                    st.rerun()
+                elif senha:
+                    st.session_state.pw_erro = True
+                    st.rerun()
+
+            if st.session_state.pw_erro:
+                st.markdown("""
+                <div style="background:rgba(201,42,42,.08);border:1px solid rgba(201,42,42,.2);
+                    border-radius:10px;padding:12px 16px;color:#F87171;font-size:13px;margin-top:8px;">
+                  ❌ Senha incorreta.
+                </div>""", unsafe_allow_html=True)
+
+            st.markdown("""
+            <div style="margin-top:24px;padding:14px 16px;
+                background:rgba(107,33,168,.06);
+                border:1px solid rgba(107,33,168,.14);
+                border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                  letter-spacing:2px;color:rgba(167,139,250,.4);line-height:2.4;">
+                ⬡ ACESSO · CRIPTOGRAFADO<br>
+                ⬡ SESSÃO · MONITORADA<br>
+                ⬡ JARVIS · ONLINE
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        else:  # nome_conv
+            st.markdown("""
+            <div style="margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                  letter-spacing:4px;color:#7C3AED;margin-bottom:14px;">⬡ ACESSO CONVIDADO</div>
+              <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;
+                  color:#fff;line-height:1.1;margin-bottom:16px;">Qual é o<br>seu nome?</div>
+              <div style="background:rgba(107,33,168,.1);border:1px solid rgba(107,33,168,.2);
+                  border-radius:10px;padding:12px 16px;color:rgba(167,139,250,.8);font-size:13px;">
+                👤 Acesso em modo leitura.
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            nome = st.text_input("nm", placeholder="Seu nome",
+                label_visibility="collapsed", key="inp_nome")
+
+            entrar2 = st.button("Entrar →", use_container_width=True, key="btn_entrar2")
+
+            if entrar2 and nome:
+                st.session_state.logado = True
+                st.session_state.is_convidado = True
+                st.session_state.nome_convidado = nome
+                st.session_state.login_step = "senha"
+                st.rerun()
+
     st.stop()
+
 # DATA LOADING
 # ============================================================
 STATUS_OPCOES = ["Reuniao", "A Iniciar", "Em Andamento", "Projetos Futuros", "Concluido"]
