@@ -534,337 +534,266 @@ if "is_convidado" not in st.session_state:
 # ============================================================
 if not st.session_state.logado:
 
-    # Bruxo velho — cabelo e barba brancos, curvado, rugas, cajado mais trabalhado
-    LOGIN_HTML = """
+    # ══════════════════════════════════════════════════════════
+    # STAGE: senha — tela de login com robô bruxo humanóide
+    # ══════════════════════════════════════════════════════════
+    if st.session_state.login_stage == "senha":
+
+        LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }
-  #stage { width: 100%; height: 100%; position: relative; background: transparent; display: flex; align-items: center; justify-content: center; }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background: #F6F5FA; font-family:'Inter',sans-serif; overflow:hidden; }
+#stage { width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative; }
+canvas#pc { position:absolute; inset:0; pointer-events:none; }
 
-  /* Humanoid Old Wizard */
-  #humanoid {
-    position: relative;
-    z-index: 2;
-    width: min(260px, 75vw);
-    margin-top: 20px;
-    animation: float 5s ease-in-out infinite;
-    filter: drop-shadow(0 8px 32px rgba(107,33,168,0.25));
-  }
-  @keyframes float {
-    0%,100% { transform: translateY(0px); }
-    50%      { transform: translateY(-10px); }
-  }
+/* ── Robot Wizard ── */
+#robo {
+  position:relative; z-index:2;
+  width:min(220px,65vw);
+  animation:float 5s ease-in-out infinite;
+  filter:drop-shadow(0 8px 28px rgba(107,33,168,0.3));
+}
+@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
 
-  /* Head animations — slower, more weary */
-  .head-group { animation: headtilt 8s ease-in-out infinite; transform-origin: 110px 95px; }
-  @keyframes headtilt { 0%,100%{transform:rotate(0);} 40%{transform:rotate(-3deg);} 75%{transform:rotate(2deg);} }
+/* Head */
+.rw-head { animation:headtilt 7s ease-in-out infinite; transform-origin:110px 75px; }
+@keyframes headtilt { 0%,100%{transform:rotate(0);} 35%{transform:rotate(-3deg);} 70%{transform:rotate(3deg);} }
+/* Eyes */
+.rw-eye { animation:blink 5s infinite; }
+.rw-el { transform-origin:88px 68px; }
+.rw-er { transform-origin:132px 68px; }
+@keyframes blink { 0%,88%,100%{transform:scaleY(1);} 92%{transform:scaleY(0.05);} }
+/* EQ mouth */
+.rw-bar { animation:rweq 0.22s ease-in-out infinite alternate; transform-origin:center bottom; }
+.rb1{animation-delay:0s;}.rb2{animation-delay:.04s;}.rb3{animation-delay:.08s;}
+.rb4{animation-delay:.12s;}.rb5{animation-delay:.08s;}.rb6{animation-delay:.04s;}
+@keyframes rweq { from{transform:scaleY(0.15);} to{transform:scaleY(1.4);} }
+/* Robe */
+.rw-robe { animation:robesway 7s ease-in-out infinite; transform-origin:110px 200px; }
+@keyframes robesway { 0%,100%{transform:rotate(0);} 50%{transform:rotate(1.5deg);} }
+/* Staff arm */
+.rw-arm { animation:staffwave 4s ease-in-out infinite; transform-origin:150px 155px; }
+@keyframes staffwave { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-6deg);} }
+/* Orb */
+.rw-orb { animation:orbpulse 2s ease-in-out infinite; transform-origin:165px 58px; }
+@keyframes orbpulse { 0%,100%{transform:scale(1);opacity:0.85;} 50%{transform:scale(1.18);opacity:1;} }
+/* Stars on robe */
+.rw-star { animation:twinkle 2s ease-in-out infinite; }
+.rs1{animation-delay:0s;} .rs2{animation-delay:.5s;} .rs3{animation-delay:1s;}
+@keyframes twinkle { 0%,100%{opacity:0.3;transform:scale(0.7);} 50%{opacity:1;transform:scale(1.2);} }
+/* Arc chest */
+.rw-rotor { animation:spin 3s linear infinite; transform-origin:110px 195px; }
+@keyframes spin { to{transform:rotate(360deg);} }
+/* LED blink */
+.rw-led1 { animation:led1 2s infinite; }
+.rw-led2 { animation:led2 1.3s infinite; }
+@keyframes led1 { 0%,100%{opacity:.3;} 50%{opacity:1;} }
+@keyframes led2 { 0%,100%{opacity:.3;} 50%{opacity:1;} }
 
-  .eye { animation: blink 7s infinite; }
-  .eye-l { transform-origin: 88px 82px; }
-  .eye-r { transform-origin: 128px 82px; }
-  @keyframes blink { 0%,85%,100%{transform:scaleY(1);} 88%{transform:scaleY(0.06);} }
-
-  /* Robe sway — slower for old wizard */
-  .robe { animation: robesway 8s ease-in-out infinite; transform-origin: 110px 220px; }
-  @keyframes robesway { 0%,100%{transform:rotate(0);} 50%{transform:rotate(1.5deg);} }
-
-  /* Magic orb pulse */
-  .orb { animation: orbpulse 2.5s ease-in-out infinite; transform-origin: 168px 125px; }
-  @keyframes orbpulse { 0%,100%{transform:scale(1);opacity:0.85;} 50%{transform:scale(1.15);opacity:1;} }
-
-  /* Stars */
-  .star { animation: twinkle 2s ease-in-out infinite; }
-  .s1{animation-delay:0s;} .s2{animation-delay:.4s;} .s3{animation-delay:.8s;} .s4{animation-delay:1.2s;}
-  @keyframes twinkle { 0%,100%{opacity:0.3;transform:scale(0.8);} 50%{opacity:1;transform:scale(1.2);} }
-
-  /* Arm with staff — slower */
-  .arm-staff { animation: staffwave 5s ease-in-out infinite; transform-origin: 155px 175px; }
-  @keyframes staffwave { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-5deg);} }
-
-  /* Beard flow */
-  .beard { animation: beardway 6s ease-in-out infinite; transform-origin: 110px 130px; }
-  @keyframes beardway { 0%,100%{transform:skewX(0);} 50%{transform:skewX(1.5deg);} }
-
-  /* Particles */
-  .magic-particle { animation: magicfloat 3.5s ease-in-out infinite; }
-  .mp1{animation-delay:0s;} .mp2{animation-delay:.6s;} .mp3{animation-delay:1.2s;} .mp4{animation-delay:1.8s;}
-  @keyframes magicfloat { 0%{transform:translateY(0) scale(1);opacity:1;} 100%{transform:translateY(-35px) scale(0);opacity:0;} }
-
-  .hud {
-    position: absolute; bottom: 10px; left: 50%;
-    transform: translateX(-50%);
-    font-size: 9px; letter-spacing: 3px; color: rgba(107,33,168,0.6);
-    font-family: monospace; white-space: nowrap;
-    animation: pulse 2s ease-in-out infinite;
-    z-index: 3;
-  }
-  @keyframes pulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+.hud {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  font-size:9px; letter-spacing:3px; color:rgba(107,33,168,0.55);
+  font-family:monospace; white-space:nowrap;
+  animation:hudblink 2s ease-in-out infinite;
+  z-index:5;
+}
+@keyframes hudblink { 0%,100%{opacity:.5;} 50%{opacity:1;} }
 </style>
 </head>
 <body>
 <div id="stage">
-  <canvas id="cv"></canvas>
+<canvas id="pc"></canvas>
 
-  <svg id="humanoid" viewBox="0 0 220 420" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="gPurple2" cx="50%" cy="30%">
-        <stop offset="0%" stop-color="#9D7FEA"/>
-        <stop offset="100%" stop-color="#3B1278"/>
-      </radialGradient>
-      <radialGradient id="gRobe2" cx="50%" cy="20%">
-        <stop offset="0%" stop-color="#6D28D9"/>
-        <stop offset="100%" stop-color="#1E0856"/>
-      </radialGradient>
-      <radialGradient id="gSkin2" cx="50%" cy="40%">
-        <stop offset="0%" stop-color="#F5D9B0"/>
-        <stop offset="100%" stop-color="#C4956A"/>
-      </radialGradient>
-      <radialGradient id="gOrb2" cx="50%" cy="40%">
-        <stop offset="0%" stop-color="#34D399"/>
-        <stop offset="60%" stop-color="#059669"/>
-        <stop offset="100%" stop-color="#064E3B"/>
-      </radialGradient>
-      <linearGradient id="gStaff" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#7C5C2A"/>
-        <stop offset="50%" stop-color="#A0783A"/>
-        <stop offset="100%" stop-color="#5A3E18"/>
-      </linearGradient>
-      <filter id="glow2"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="softglow2"><feGaussianBlur stdDeviation="7"/></filter>
-    </defs>
+<svg id="robo" viewBox="0 0 220 400" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="gMet" cx="50%" cy="30%">
+    <stop offset="0%" stop-color="#D1D5DB"/>
+    <stop offset="100%" stop-color="#9CA3AF"/>
+  </radialGradient>
+  <radialGradient id="gVisor" cx="50%" cy="40%">
+    <stop offset="0%" stop-color="#1A1D2E"/>
+    <stop offset="100%" stop-color="#3B1278"/>
+  </radialGradient>
+  <radialGradient id="gRobe" cx="50%" cy="20%">
+    <stop offset="0%" stop-color="#6D28D9"/>
+    <stop offset="100%" stop-color="#1E0856"/>
+  </radialGradient>
+  <radialGradient id="gOrb" cx="50%" cy="35%">
+    <stop offset="0%" stop-color="#34D399"/>
+    <stop offset="100%" stop-color="#064E3B"/>
+  </radialGradient>
+  <radialGradient id="gArc" cx="50%" cy="35%">
+    <stop offset="0%" stop-color="#7C3AED"/>
+    <stop offset="100%" stop-color="#1E0856"/>
+  </radialGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="sglow"><feGaussianBlur stdDeviation="6"/></filter>
+  <linearGradient id="gStaff" x1="0" x2="0" y1="0" y2="1">
+    <stop offset="0%" stop-color="#8B6534"/>
+    <stop offset="100%" stop-color="#4A3010"/>
+  </linearGradient>
+</defs>
 
-    <!-- Shadow (offset right since wizard leans) -->
-    <ellipse cx="115" cy="413" rx="52" ry="5" fill="#3B1278" opacity="0.18" filter="url(#softglow2)"/>
+<!-- Shadow -->
+<ellipse cx="110" cy="395" rx="55" ry="5" fill="#3B1278" opacity="0.2" filter="url(#sglow)"/>
 
-    <!-- ══════════════ ROBE / CLOAK ══════════════ -->
-    <g class="robe">
-      <!-- Main robe — slightly asymmetric (leans on staff) -->
-      <path d="M58 185 Q44 215 32 305 Q26 360 38 390 L185 390 Q195 360 190 305 Q180 215 165 185 Z"
-            fill="url(#gRobe2)" opacity="0.97"/>
-      <!-- Inner robe highlight -->
-      <path d="M78 185 Q72 225 68 305 L152 305 Q148 225 142 185 Z"
-            fill="#7C3AED" opacity="0.22"/>
-      <!-- Robe hem -->
-      <path d="M32 390 Q58 400 115 397 Q172 400 185 390 L190 384 Q168 394 115 391 Q58 394 32 384 Z"
-            fill="#9D7FEA" opacity="0.45"/>
-      <!-- Moon on robe -->
-      <text x="80" y="290" font-size="18" text-anchor="middle" class="star s1" fill="#C4B5FD">☽</text>
-      <!-- Stars on robe -->
-      <text x="142" y="265" font-size="13" text-anchor="middle" class="star s2" fill="#DDD6FE">✦</text>
-      <text x="65" y="330" font-size="11" text-anchor="middle" class="star s3" fill="#C4B5FD">✦</text>
-      <text x="155" y="310" font-size="9"  text-anchor="middle" class="star s4" fill="#A78BFA">✦</text>
-    </g>
+<!-- ── ROBE ── -->
+<g class="rw-robe">
+  <path d="M52 168 Q38 210 28 300 Q22 350 34 378 L186 378 Q198 350 192 300 Q182 210 168 168 Z" fill="url(#gRobe)" opacity="0.96"/>
+  <path d="M72 168 Q66 215 62 295 L158 295 Q154 215 148 168 Z" fill="#7C3AED" opacity="0.2"/>
+  <path d="M28 378 Q56 390 110 387 Q164 390 186 378" fill="none" stroke="#9D7FEA" stroke-width="2" opacity="0.5"/>
+  <!-- Robe stars -->
+  <text x="72" y="278" font-size="16" text-anchor="middle" class="rw-star rs1" fill="#C4B5FD">☽</text>
+  <text x="148" y="255" font-size="12" text-anchor="middle" class="rw-star rs2" fill="#DDD6FE">✦</text>
+  <text x="60"  y="320" font-size="10" text-anchor="middle" class="rw-star rs3" fill="#C4B5FD">✦</text>
+  <text x="155" y="308" font-size="9"  text-anchor="middle" class="rw-star rs1" fill="#A78BFA">★</text>
+  <!-- ARC REACTOR on robe -->
+  <circle cx="110" cy="230" r="28" fill="#1A1D2E" opacity="0.5"/>
+  <circle cx="110" cy="230" r="22" fill="none" stroke="rgba(124,58,237,0.5)" stroke-width="1.5"/>
+  <circle cx="110" cy="230" r="14" fill="none" stroke="rgba(99,179,237,0.6)" stroke-width="1"/>
+  <circle cx="110" cy="230" r="8" fill="url(#gArc)" filter="url(#glow)"/>
+  <circle cx="110" cy="230" r="4" fill="white" opacity="0.9"/>
+  <g class="rw-rotor">
+    <line x1="110" y1="202" x2="110" y2="210" stroke="#7C3AED" stroke-width="1.8"/>
+    <line x1="110" y1="250" x2="110" y2="258" stroke="#7C3AED" stroke-width="1.8"/>
+    <line x1="82"  y1="230" x2="90"  y2="230" stroke="#7C3AED" stroke-width="1.8"/>
+    <line x1="130" y1="230" x2="138" y2="230" stroke="#7C3AED" stroke-width="1.8"/>
+  </g>
+  <!-- LEDs -->
+  <circle cx="85" cy="200" r="4" fill="#10B981" class="rw-led1" filter="url(#glow)"/>
+  <circle cx="135" cy="200" r="4" fill="#7C3AED" class="rw-led2" filter="url(#glow)"/>
+</g>
 
-    <!-- BODY under robe collar -->
-    <rect x="76" y="168" width="68" height="28" rx="6" fill="#4C1D95" opacity="0.85"/>
-    <!-- Collar trim -->
-    <path d="M76 168 Q110 178 144 168" stroke="#9D7FEA" stroke-width="2" fill="none" opacity="0.7"/>
+<!-- COLLAR -->
+<rect x="80" y="155" width="60" height="22" rx="5" fill="#4C1D95" opacity="0.9"/>
+<path d="M80 155 Q110 165 140 155" stroke="#9D7FEA" stroke-width="1.8" fill="none" opacity="0.7"/>
 
-    <!-- NECK -->
-    <rect x="100" y="142" width="22" height="20" rx="4" fill="#C4956A"/>
+<!-- NECK -->
+<rect x="98" y="138" width="24" height="18" rx="4" fill="url(#gMet)"/>
 
-    <!-- ══════════════ HEAD GROUP ══════════════ -->
-    <g class="head-group">
+<!-- ── HEAD ── -->
+<g class="rw-head">
+  <!-- Hat brim -->
+  <ellipse cx="110" cy="36" rx="48" ry="9" fill="#2D0A6E" transform="rotate(-2 110 36)"/>
+  <!-- Hat cone — tall pointy wizard -->
+  <path d="M109 2 L70 38 L150 38 Z" fill="url(#gVisor)" transform="rotate(-2 110 20)"/>
+  <!-- Hat highlight -->
+  <path d="M95 12 Q105 8 109 2" stroke="#7C3AED" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <!-- Hat band with metal buckle -->
+  <path d="M72 31 Q110 25 148 31" stroke="#6B21A8" stroke-width="3" fill="none" opacity="0.7"/>
+  <rect x="100" y="27" width="20" height="9" rx="2" fill="url(#gMet)"/>
+  <rect x="104" y="29" width="12" height="5" rx="1" fill="#7C3AED" opacity="0.8"/>
+  <!-- Hat star -->
+  <text x="106" y="20" font-size="11" text-anchor="middle" class="rw-star rs2" fill="#FDE68A">★</text>
 
-      <!-- HAT — tall, slightly tilted -->
-      <!-- Brim -->
-      <ellipse cx="110" cy="38" rx="50" ry="10" fill="#3B1278" transform="rotate(-3 110 38)"/>
-      <!-- Cone — tall and dramatic -->
-      <path d="M108 0 L68 40 L152 40 Z" fill="url(#gPurple2)" transform="rotate(-2 110 20)"/>
-      <!-- Hat wrinkle band -->
-      <path d="M70 33 Q110 27 150 33" stroke="#7C3AED" stroke-width="3" fill="none" opacity="0.6"/>
-      <!-- Hat band buckle -->
-      <rect x="101" y="29" width="18" height="9" rx="2" fill="#C4956A" opacity="0.8"/>
-      <rect x="105" y="31" width="10" height="5" rx="1" fill="#7C3AED" opacity="0.7"/>
-      <!-- Hat star -->
-      <text x="105" y="22" font-size="11" text-anchor="middle" class="star s4" fill="#FDE68A">★</text>
+  <!-- ROBOT FACE (visor panel) -->
+  <rect x="75" y="48" width="70" height="80" rx="12" fill="url(#gMet)"/>
+  <rect x="75" y="48" width="70" height="80" rx="12" fill="none" stroke="rgba(124,58,237,0.3)" stroke-width="1.5"/>
+  <!-- Visor screen -->
+  <rect x="82" y="56" width="56" height="50" rx="8" fill="#0A0C18"/>
+  <rect x="82" y="56" width="56" height="50" rx="8" fill="url(#gVisor)" opacity="0.3"/>
+  <rect x="82" y="56" width="56" height="50" rx="8" fill="none" stroke="rgba(124,58,237,0.4)" stroke-width="1"/>
+  <!-- Scan lines -->
+  <line x1="83" y1="68" x2="137" y2="68" stroke="#7C3AED" stroke-width="0.4" opacity="0.35"/>
+  <line x1="83" y1="78" x2="137" y2="78" stroke="#7C3AED" stroke-width="0.4" opacity="0.35"/>
+  <line x1="83" y1="88" x2="137" y2="88" stroke="#7C3AED" stroke-width="0.4" opacity="0.35"/>
+  <line x1="83" y1="98" x2="137" y2="98" stroke="#7C3AED" stroke-width="0.4" opacity="0.35"/>
+  <!-- Eyes -->
+  <g class="rw-eye rw-el">
+    <circle cx="97" cy="76" r="11" fill="#0D0F1C" stroke="rgba(167,139,250,0.4)" stroke-width="1"/>
+    <circle cx="97" cy="76" r="7"  fill="url(#gArc)" filter="url(#glow)"/>
+    <circle cx="100" cy="73" r="2.5" fill="white" opacity="0.8"/>
+  </g>
+  <g class="rw-eye rw-er">
+    <circle cx="123" cy="76" r="11" fill="#0D0F1C" stroke="rgba(167,139,250,0.4)" stroke-width="1"/>
+    <circle cx="123" cy="76" r="7"  fill="url(#gArc)" filter="url(#glow)"/>
+    <circle cx="126" cy="73" r="2.5" fill="white" opacity="0.8"/>
+  </g>
+  <!-- Visor corner accents -->
+  <path d="M86 60 L93 60" stroke="#7C3AED" stroke-width="1.5" opacity="0.6"/>
+  <path d="M86 60 L86 66" stroke="#7C3AED" stroke-width="1.5" opacity="0.6"/>
+  <path d="M134 60 L127 60" stroke="#A855F7" stroke-width="1.5" opacity="0.6"/>
+  <path d="M134 60 L134 66" stroke="#A855F7" stroke-width="1.5" opacity="0.6"/>
+  <!-- EQ mouth -->
+  <g transform="translate(90,108)">
+    <rect class="rw-bar rb1" x="0"  y="-4" width="5" height="8"  rx="2" fill="#7C3AED" opacity="0.8"/>
+    <rect class="rw-bar rb2" x="7"  y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
+    <rect class="rw-bar rb3" x="14" y="-8" width="5" height="16" rx="2" fill="#A855F7" opacity="0.8"/>
+    <rect class="rw-bar rb4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
+    <rect class="rw-bar rb5" x="28" y="-4" width="5" height="8"  rx="2" fill="#7C3AED" opacity="0.8"/>
+  </g>
+  <!-- Side panel vents -->
+  <rect x="75" y="76" width="5" height="2.5" rx="1" fill="rgba(167,139,250,0.4)"/>
+  <rect x="75" y="81" width="5" height="2.5" rx="1" fill="rgba(167,139,250,0.4)"/>
+  <rect x="75" y="86" width="5" height="2.5" rx="1" fill="rgba(167,139,250,0.4)"/>
+  <rect x="140" y="76" width="5" height="2.5" rx="1" fill="rgba(167,139,250,0.4)"/>
+  <rect x="140" y="81" width="5" height="2.5" rx="1" fill="rgba(167,139,250,0.4)"/>
+  <rect x="140" y="86" width="5" height="2.5" rx="1" fill="rgba(167,139,250,0.4)"/>
+  <!-- JARVIS label -->
+  <text x="110" y="126" text-anchor="middle" fill="rgba(167,139,250,0.7)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
+</g>
 
-      <!-- FACE — rounder, aged -->
-      <!-- Head shape slightly wider at jaw for jowls -->
-      <ellipse cx="110" cy="92" rx="38" ry="44" fill="url(#gSkin2)"/>
-      <!-- Jowls / cheek sag -->
-      <ellipse cx="78"  cy="108" rx="10" ry="8" fill="#C4956A" opacity="0.35"/>
-      <ellipse cx="142" cy="108" rx="10" ry="8" fill="#C4956A" opacity="0.35"/>
-      <!-- Age spots subtly -->
-      <circle cx="88" cy="82" r="2" fill="#B07A4A" opacity="0.2"/>
-      <circle cx="130" cy="78" r="1.5" fill="#B07A4A" opacity="0.2"/>
+<!-- ── LEFT ARM ── -->
+<path d="M68 168 Q50 180 44 215 Q40 238 48 248 Q56 253 62 243 Q65 224 68 205 L74 175 Z" fill="#4C1D95"/>
+<ellipse cx="46" cy="250" rx="10" ry="8" fill="#C4956A"/>
 
-      <!-- Wrinkles — forehead -->
-      <path d="M88 65 Q110 60 132 65" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.45"/>
-      <path d="M92 58 Q110 54 128 58" stroke="#B07A4A" stroke-width="0.6" fill="none" opacity="0.3"/>
-      <!-- Crow's feet left -->
-      <path d="M75 88 Q72 84 74 80" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.4"/>
-      <path d="M75 88 Q71 88 72 84" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.35"/>
-      <!-- Crow's feet right -->
-      <path d="M145 88 Q148 84 146 80" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.4"/>
-      <path d="M145 88 Q149 88 148 84" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.35"/>
-      <!-- Nasolabial lines -->
-      <path d="M85 100 Q82 112 86 118" stroke="#B07A4A" stroke-width="0.7" fill="none" opacity="0.35"/>
-      <path d="M135 100 Q138 112 134 118" stroke="#B07A4A" stroke-width="0.7" fill="none" opacity="0.35"/>
+<!-- ── RIGHT ARM with gnarled staff ── -->
+<g class="rw-arm">
+  <path d="M152 168 Q168 178 173 210 Q177 232 170 244 L163 232 Q161 212 157 195 L148 173 Z" fill="#4C1D95"/>
+  <ellipse cx="168" cy="246" rx="10" ry="8" fill="#C4956A"/>
+  <!-- Staff -->
+  <path d="M168 240 Q166 210 169 175 Q172 145 170 115 Q169 90 168 72"
+        stroke="url(#gStaff)" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+  <path d="M168 240 Q166 210 169 175 Q172 145 170 115 Q169 90 168 72"
+        stroke="#FDE68A" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.25"/>
+  <!-- Staff knots -->
+  <ellipse cx="170" cy="172" rx="5" ry="3.5" fill="#6B4A1A" opacity="0.8"/>
+  <ellipse cx="169" cy="138" rx="4"  rx="3" fill="#6B4A1A" opacity="0.6"/>
+  <!-- Staff curl tip -->
+  <path d="M168 72 Q162 60 155 55 Q148 50 152 44 Q157 38 164 42"
+        stroke="url(#gStaff)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <!-- ORB -->
+  <g class="rw-orb">
+    <ellipse cx="164" cy="40" rx="17" ry="17" fill="#10B981" opacity="0.2" filter="url(#sglow)"/>
+    <ellipse cx="164" cy="40" rx="13" ry="13" fill="url(#gOrb)" filter="url(#glow)"/>
+    <ellipse cx="164" cy="40" rx="7"  ry="7"  fill="#34D399" opacity="0.6"/>
+    <ellipse cx="160" cy="36" rx="4"  ry="4"  fill="white" opacity="0.65"/>
+    <circle cx="164" cy="40" r="17" fill="none" stroke="#10B981" stroke-width="0.7" opacity="0.4" stroke-dasharray="3 4"/>
+  </g>
+  <!-- Magic particles -->
+  <circle cx="178" cy="28" r="2.5" fill="#10B981" opacity="0.85"><animate attributeName="cy" values="28;15;28" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.85;0;0.85" dur="2s" repeatCount="indefinite"/></circle>
+  <circle cx="150" cy="24" r="2"   fill="#A855F7" opacity="0.85"><animate attributeName="cy" values="24;10;24" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.85;0;0.85" dur="2.5s" repeatCount="indefinite"/></circle>
+  <circle cx="182" cy="40" r="2"   fill="#FDE68A" opacity="0.85"><animate attributeName="cx" values="182;194;182" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.85;0;0.85" dur="1.8s" repeatCount="indefinite"/></circle>
+</g>
 
-      <!-- Thick bushy WHITE eyebrows — arched, bushy -->
-      <path d="M78 70 Q88 62 102 66" stroke="#E8E8E8" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-      <path d="M78 70 Q88 62 102 66" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
-      <path d="M118 66 Q132 62 142 70" stroke="#E8E8E8" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-      <path d="M118 66 Q132 62 142 70" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
-      <!-- Eyebrow wild tufts -->
-      <path d="M80 68 L76 63" stroke="#DEDEDE" stroke-width="2" stroke-linecap="round"/>
-      <path d="M140 68 L144 63" stroke="#DEDEDE" stroke-width="2" stroke-linecap="round"/>
+<!-- Pointy shoes -->
+<path d="M78 376 Q74 382 54 386 Q48 388 51 393 Q56 396 76 392 Q96 389 100 382 L100 376 Z" fill="#2D0A6E"/>
+<path d="M142 376 Q146 382 166 386 Q172 388 169 393 Q164 396 144 392 Q124 389 120 382 L120 376 Z" fill="#2D0A6E"/>
+</svg>
 
-      <!-- Left Eye — smaller, more hooded -->
-      <g class="eye eye-l">
-        <ellipse cx="88" cy="82" rx="10" ry="9" fill="white"/>
-        <!-- Hooded lid -->
-        <path d="M78 78 Q88 73 98 78" fill="#C4956A" opacity="0.5"/>
-        <ellipse cx="88" cy="83" rx="6" ry="6.5" fill="#3B1278"/>
-        <ellipse cx="88" cy="83" rx="3.5" ry="3.5" fill="#1A0A2E"/>
-        <ellipse cx="91" cy="80" rx="2" ry="2" fill="white" opacity="0.85"/>
-        <!-- Subtle purple iris glow -->
-        <ellipse cx="88" cy="83" rx="6" ry="6.5" fill="#7C3AED" opacity="0.25" filter="url(#glow2)"/>
-      </g>
-
-      <!-- Right Eye -->
-      <g class="eye eye-r">
-        <ellipse cx="132" cy="82" rx="10" ry="9" fill="white"/>
-        <path d="M122 78 Q132 73 142 78" fill="#C4956A" opacity="0.5"/>
-        <ellipse cx="132" cy="83" rx="6" ry="6.5" fill="#3B1278"/>
-        <ellipse cx="132" cy="83" rx="3.5" ry="3.5" fill="#1A0A2E"/>
-        <ellipse cx="135" cy="80" rx="2" ry="2" fill="white" opacity="0.85"/>
-        <ellipse cx="132" cy="83" rx="6" ry="6.5" fill="#7C3AED" opacity="0.25" filter="url(#glow2)"/>
-      </g>
-
-      <!-- Nose — larger, bulbous -->
-      <ellipse cx="110" cy="96" rx="7" ry="6" fill="#C4956A" opacity="0.65"/>
-      <ellipse cx="106" cy="98" rx="3" ry="2.5" fill="#B07A4A" opacity="0.3"/>
-      <ellipse cx="114" cy="98" rx="3" ry="2.5" fill="#B07A4A" opacity="0.3"/>
-
-      <!-- Smile — subtle, warm -->
-      <path d="M96 112 Q110 122 124 112" stroke="#92400E" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-      <!-- Lip lines -->
-      <path d="M102 113 Q110 118 118 113" stroke="#A0522D" stroke-width="1" fill="none" opacity="0.4"/>
-
-      <!-- Ears — larger with age -->
-      <ellipse cx="72" cy="90" rx="9" ry="12" fill="url(#gSkin2)"/>
-      <ellipse cx="72" cy="90" rx="5" ry="7" fill="#C4956A" opacity="0.4"/>
-      <ellipse cx="148" cy="90" rx="9" ry="12" fill="url(#gSkin2)"/>
-      <ellipse cx="148" cy="90" rx="5" ry="7" fill="#C4956A" opacity="0.4"/>
-
-      <!-- WHITE HAIR — flowing out from hat sides -->
-      <path d="M72 55 Q60 75 65 100 Q62 110 68 125" stroke="#E8E8E8" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M72 55 Q58 80 62 108 Q60 118 65 130" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
-      <path d="M148 55 Q160 75 155 100 Q158 110 152 125" stroke="#E8E8E8" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M148 55 Q162 80 158 108 Q160 118 155 130" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
-
-      <!-- LONG WHITE BEARD — flowing down, layered -->
-      <g class="beard">
-        <!-- Beard base wide -->
-        <path d="M80 125 Q75 155 72 185 Q70 210 78 230 Q95 255 110 260 Q125 255 142 230 Q150 210 148 185 Q145 155 140 125 Q125 132 110 133 Q95 132 80 125 Z"
-              fill="#E8E8E8"/>
-        <!-- Beard mid layer -->
-        <path d="M84 125 Q80 158 78 190 Q76 215 85 238 Q98 257 110 260 Q122 257 135 238 Q144 215 142 190 Q140 158 136 125 Q123 131 110 132 Q97 131 84 125 Z"
-              fill="#F0F0F0" opacity="0.8"/>
-        <!-- Beard highlight -->
-        <path d="M100 128 Q100 160 102 200 Q103 230 110 248" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
-        <path d="M120 128 Q119 165 118 205 Q117 232 110 248" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
-        <!-- Beard tip wisps -->
-        <path d="M100 248 Q105 265 108 272" stroke="#D0D0D0" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M110 255 Q110 270 110 278" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-        <path d="M120 248 Q115 265 112 272" stroke="#D0D0D0" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <!-- Moustache -->
-        <path d="M94 118 Q102 124 110 121 Q118 124 126 118" stroke="#D0D0D0" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-        <path d="M94 118 Q102 124 110 121 Q118 124 126 118" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.7"/>
-      </g>
-
-    </g>
-
-    <!-- ══════════════ LEFT ARM (holding robe, slightly bent) ══════════════ -->
-    <path d="M72 185 Q54 198 48 230 Q44 252 52 262 Q60 268 67 258 Q70 240 74 218 L80 192 Z"
-          fill="#4C1D95"/>
-    <!-- Left hand — aged -->
-    <ellipse cx="52" cy="264" rx="11" ry="9" fill="url(#gSkin2)"/>
-    <!-- Knuckle lines -->
-    <path d="M44 262 Q52 258 60 262" stroke="#C4956A" stroke-width="0.8" fill="none" opacity="0.5"/>
-
-    <!-- ══════════════ RIGHT ARM — holding staff ══════════════ -->
-    <g class="arm-staff">
-      <path d="M148 185 Q164 195 170 218 Q175 240 168 255 L160 242 Q158 220 154 200 L144 190 Z"
-            fill="#4C1D95"/>
-      <!-- Right hand -->
-      <ellipse cx="166" cy="257" rx="11" ry="9" fill="url(#gSkin2)"/>
-      <path d="M158 255 Q166 251 174 255" stroke="#C4956A" stroke-width="0.8" fill="none" opacity="0.5"/>
-
-      <!-- STAFF — gnarled, wooden -->
-      <path d="M166 248 Q164 220 168 180 Q171 145 170 115 Q169 95 168 80"
-            stroke="url(#gStaff)" stroke-width="6" fill="none" stroke-linecap="round"/>
-      <!-- Staff grain lines -->
-      <path d="M166 248 Q164 220 168 180 Q171 145 170 115 Q169 95 168 80"
-            stroke="#FDE68A" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.3"/>
-      <!-- Staff knot / knurl details -->
-      <ellipse cx="169" cy="175" rx="5" ry="4" fill="#7C5C2A" opacity="0.8"/>
-      <ellipse cx="170" cy="140" rx="4" ry="3" fill="#7C5C2A" opacity="0.6"/>
-      <!-- Staff gnarled tip curl -->
-      <path d="M168 80 Q162 68 155 62 Q148 56 152 50 Q157 44 165 48"
-            stroke="url(#gStaff)" stroke-width="5" fill="none" stroke-linecap="round"/>
-
-      <!-- ORB on staff top — glowing green -->
-      <g class="orb">
-        <ellipse cx="163" cy="47" rx="20" ry="20" fill="#10B981" opacity="0.25" filter="url(#softglow2)"/>
-        <ellipse cx="163" cy="47" rx="15" ry="15" fill="url(#gOrb2)" filter="url(#glow2)"/>
-        <ellipse cx="163" cy="47" rx="9" ry="9" fill="#34D399" opacity="0.55"/>
-        <ellipse cx="158" cy="42" rx="5" ry="5" fill="white" opacity="0.65"/>
-        <!-- Orbits around the orb -->
-        <circle cx="163" cy="47" r="19" fill="none" stroke="#10B981" stroke-width="0.7" opacity="0.4" stroke-dasharray="3 4"/>
-      </g>
-
-      <!-- Magic particles from orb -->
-      <circle class="magic-particle mp1" cx="178" cy="35" r="3"   fill="#10B981" opacity="0.85"/>
-      <circle class="magic-particle mp2" cx="148" cy="30" r="2"   fill="#A855F7" opacity="0.85"/>
-      <circle class="magic-particle mp3" cx="183" cy="47" r="2.5" fill="#FDE68A" opacity="0.85"/>
-      <circle class="magic-particle mp4" cx="152" cy="24" r="3"   fill="#34D399" opacity="0.85"/>
-      <!-- Extra sparkles -->
-      <text class="star s2" x="188" y="42" font-size="9" fill="#FDE68A">✦</text>
-      <text class="star s3" x="145" y="20" font-size="8" fill="#A78BFA">✦</text>
-    </g>
-
-    <!-- Feet / shoes — pointy wizard shoes -->
-    <path d="M82 388 Q78 395 58 400 Q52 402 55 407 Q60 410 80 406 Q100 403 105 395 L105 388 Z"
-          fill="#2D1654"/>
-    <path d="M138 388 Q142 395 162 400 Q168 402 165 407 Q160 410 140 406 Q120 403 115 395 L115 388 Z"
-          fill="#2D1654"/>
-    <!-- Shoe tips shine -->
-    <path d="M58 400 Q54 403 56 406" stroke="#4C1D95" stroke-width="1.5" fill="none" opacity="0.6"/>
-    <path d="M162 400 Q166 403 164 406" stroke="#4C1D95" stroke-width="1.5" fill="none" opacity="0.6"/>
-  </svg>
-
-  <div class="hud">&#128302; FEITICO ATIVO &middot; AGUARDANDO BRUXO &#128302;</div>
+<div class="hud">&#128302; J.A.R.V.I.S &middot; AGUARDANDO CREDENCIAL &#128302;</div>
 </div>
 
 <script>
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-function resize(){ cv.width=cv.offsetWidth; cv.height=cv.offsetHeight; }
-resize();
-window.addEventListener('resize', resize);
-const P = Array.from({length:30}, () => ({
-  x: Math.random()*cv.width, y: Math.random()*cv.height,
-  vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4,
-  r: Math.random()*2+0.5,
-  c: Math.random()>0.5 ? '#6B21A8' : '#10B981'
+const cv=document.getElementById('pc'),ctx=cv.getContext('2d');
+function resize(){cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;}
+resize(); window.addEventListener('resize',resize);
+const P=Array.from({length:28},()=>({
+  x:Math.random()*cv.width,y:Math.random()*cv.height,
+  vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,
+  r:Math.random()*1.8+.4,
+  c:Math.random()>.5?'#6B21A8':'#10B981'
 }));
 function tick(){
   ctx.clearRect(0,0,cv.width,cv.height);
-  P.forEach(p => {
-    p.x+=p.vx; p.y+=p.vy;
-    if(p.x<0||p.x>cv.width) p.vx*=-1;
-    if(p.y<0||p.y>cv.height) p.vy*=-1;
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=p.c; ctx.shadowBlur=8; ctx.shadowColor=p.c; ctx.fill();
-  });
+  P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>cv.width)p.vx*=-1;if(p.y<0||p.y>cv.height)p.vy*=-1;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.c;ctx.shadowBlur=7;ctx.shadowColor=p.c;ctx.fill();});
   requestAnimationFrame(tick);
 }
 tick();
@@ -873,26 +802,42 @@ tick();
 </html>
 """
 
-    if st.session_state.login_stage == "senha":
-        col_bot, col_gap, col_form = st.columns([1.1, 0.05, 0.85])
+        # Layout responsivo — sem colunas fixas
+        st.markdown("""
+        <style>
+        .login-wrap {
+          display:flex; flex-wrap:wrap; gap:32px;
+          align-items:center; justify-content:center;
+          min-height:75vh; padding:20px;
+        }
+        .login-bot  { flex:1 1 260px; max-width:380px; min-width:200px; }
+        .login-form { flex:1 1 280px; max-width:420px; }
+        @media(max-width:600px){
+          .login-bot { max-width:220px; }
+        }
+        </style>
+        <div class="login-wrap">
+          <div class="login-bot" id="bot-holder"></div>
+          <div class="login-form" id="form-holder"></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_bot, col_form = st.columns([1, 1])
 
         with col_bot:
-            components.html(LOGIN_HTML, height=620, scrolling=False)
+            components.html(LOGIN_HTML, height=500, scrolling=False)
 
         with col_form:
             st.markdown("""
-            <div style="padding:48px 0 28px 0;">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
-                  color:#6B21A8;margin-bottom:16px;">&#128302; SISTEMA ATIVO</div>
-              <div style="font-size:38px;margin-bottom:4px;">🧙‍♂️</div>
-              <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
-                  color:#6B21A8;line-height:1;margin-bottom:4px;">Bem-vindo,</div>
-              <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
-                  color:#10B981;line-height:1;margin-bottom:20px;">Sabino.</div>
+            <div style="padding:32px 0 20px 0;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;
+                  color:#6B21A8;margin-bottom:12px;">&#128302; SISTEMA ATIVO</div>
+              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+                  color:#6B21A8;line-height:1;margin-bottom:2px;">Bem-vindo,</div>
+              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+                  color:#10B981;line-height:1;margin-bottom:18px;">Sabino.</div>
               <p style="color:#5B4E72;font-size:14px;line-height:1.8;margin-bottom:0;">
-                O feitico aguarda.<br>
-                Insira sua credencial para<br>
-                acessar o hub operacional.
+                O feitico aguarda.<br>Insira sua credencial.
               </p>
             </div>
             """, unsafe_allow_html=True)
@@ -917,7 +862,7 @@ tick();
                     """, unsafe_allow_html=True)
 
             st.markdown("""
-            <div style="margin-top:28px;padding:16px;border:1px solid #DDD8F0;
+            <div style="margin-top:24px;padding:14px;border:1px solid #DDD8F0;
                 border-radius:10px;background:#EFECF8;">
               <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
                   color:#5B4E72;line-height:2.2;">
@@ -930,7 +875,9 @@ tick();
 
         st.stop()
 
-    # ── STAGE: face_check — robô abre o rosto, pergunta se é Gabriel ──
+    # ══════════════════════════════════════════════════════════
+    # STAGE: face_check — robô Tesla abre o rosto, pergunta
+    # ══════════════════════════════════════════════════════════
     elif st.session_state.login_stage == "face_check":
 
         ROBOT_OPEN_HTML = """
@@ -940,476 +887,375 @@ tick();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background: #F6F5FA; display:flex; align-items:center; justify-content:center; height:100vh; overflow:hidden; font-family:'Inter',sans-serif; }
-#scene { position:relative; width:340px; height:500px; }
+body { background:#F6F5FA; display:flex; align-items:center; justify-content:center;
+  min-height:100vh; overflow:hidden; font-family:'Inter',sans-serif; }
+canvas#pc2 { position:fixed; inset:0; pointer-events:none; }
+#scene { position:relative; width:300px; display:flex; flex-direction:column; align-items:center; }
 
-/* Particles */
-canvas#pc { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-
-/* Robot body */
-#robot { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:200px; }
-
-/* Face open animation */
-.face-shell {
-  position:absolute; top:0; left:50%; transform:translateX(-50%);
-  width:140px; height:140px;
-}
+.face-shell { position:relative; width:130px; height:130px; }
 .face-top {
-  position:absolute; top:0; left:0; right:0; height:70px;
-  background: linear-gradient(135deg,#E8EAEF,#C8CDD8);
-  border-radius:70px 70px 0 0;
-  border:2px solid #9CA3AF;
-  transform-origin: center bottom;
-  animation: openTop 1.2s 0.5s cubic-bezier(.4,0,.2,1) forwards;
-  z-index:3;
+  position:absolute; top:0; left:0; right:0; height:65px;
+  background:linear-gradient(135deg,#D1D5DB,#9CA3AF);
+  border-radius:65px 65px 0 0; border:2px solid #6B7280;
+  transform-origin:center bottom;
+  animation:openTop 1.1s 0.6s cubic-bezier(.4,0,.2,1) forwards; z-index:3;
 }
 .face-bottom {
-  position:absolute; bottom:0; left:0; right:0; height:70px;
-  background: linear-gradient(135deg,#C8CDD8,#E8EAEF);
-  border-radius:0 0 70px 70px;
-  border:2px solid #9CA3AF;
-  transform-origin: center top;
-  animation: openBottom 1.2s 0.5s cubic-bezier(.4,0,.2,1) forwards;
-  z-index:3;
+  position:absolute; bottom:0; left:0; right:0; height:65px;
+  background:linear-gradient(135deg,#9CA3AF,#D1D5DB);
+  border-radius:0 0 65px 65px; border:2px solid #6B7280;
+  transform-origin:center top;
+  animation:openBottom 1.1s 0.6s cubic-bezier(.4,0,.2,1) forwards; z-index:3;
 }
-@keyframes openTop    { to { transform: rotateX(-110deg); opacity:0.6; } }
-@keyframes openBottom { to { transform: rotateX(110deg);  opacity:0.6; } }
+@keyframes openTop    { to { transform:rotateX(-115deg); opacity:0.5; } }
+@keyframes openBottom { to { transform:rotateX(115deg);  opacity:0.5; } }
 
-/* Inner face revealed */
 .face-inner {
-  position:absolute; inset:6px;
-  border-radius:64px;
-  background: radial-gradient(circle at 50% 40%, #1A1D2E, #0A0C18);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:8px;
-  opacity:0; animation: revealFace 0.6s 1.4s ease forwards;
-  overflow:hidden;
+  position:absolute; inset:4px; border-radius:60px;
+  background:radial-gradient(circle at 50% 40%,#1A1D2E,#080A12);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  opacity:0; animation:revealFace 0.5s 1.5s ease forwards; overflow:hidden;
 }
 @keyframes revealFace { to { opacity:1; } }
-
-/* Eyes inside */
-.bot-eye {
-  width:28px; height:22px; border-radius:50%;
-  background: radial-gradient(circle at 40% 35%, #7C3AED, #3B0D8C);
-  box-shadow: 0 0 12px #7C3AED, 0 0 24px rgba(124,58,237,0.4);
-  animation: eyepulse 2s ease-in-out infinite 1.8s;
-}
-@keyframes eyepulse { 0%,100%{box-shadow:0 0 12px #7C3AED,0 0 24px rgba(124,58,237,0.4);} 50%{box-shadow:0 0 20px #A855F7,0 0 40px rgba(168,85,247,0.6);} }
-
-.eyes-row { display:flex; gap:22px; }
-
-/* Scan line sweeping */
 .scan-line {
   position:absolute; left:0; right:0; height:2px;
-  background: linear-gradient(90deg, transparent, #10B981, transparent);
-  animation: scan 1.8s linear infinite 1.6s;
-  box-shadow: 0 0 8px #10B981;
+  background:linear-gradient(90deg,transparent,#10B981,transparent);
+  box-shadow:0 0 8px #10B981; top:0;
+  animation:scanmove 1.6s linear infinite 1.7s;
 }
-@keyframes scan { 0%{top:10%;} 100%{top:90%;} }
-
-/* Equalizer mouth */
-.eq-row { display:flex; gap:3px; align-items:flex-end; height:20px; }
-.eq-bar {
+@keyframes scanmove { 0%{top:5%;} 100%{top:92%;} }
+.eyes-row { display:flex; gap:20px; }
+.beye {
+  width:24px; height:20px; border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#A855F7,#4C1D95);
+  box-shadow:0 0 10px #7C3AED;
+  animation:eyep 2s ease-in-out infinite 2s;
+}
+@keyframes eyep { 0%,100%{box-shadow:0 0 10px #7C3AED;} 50%{box-shadow:0 0 20px #A855F7,0 0 40px rgba(168,85,247,.5);} }
+.eq-row { display:flex; gap:3px; align-items:flex-end; height:18px; }
+.eq-b {
   width:5px; border-radius:2px;
-  background: linear-gradient(to top, #6B21A8, #A855F7);
-  animation: eq 0.25s ease-in-out infinite alternate;
+  background:linear-gradient(to top,#6B21A8,#A855F7);
+  animation:eqb 0.22s ease-in-out infinite alternate;
 }
-.eq-bar:nth-child(1){height:8px;  animation-delay:0s;}
-.eq-bar:nth-child(2){height:14px; animation-delay:.04s;}
-.eq-bar:nth-child(3){height:18px; animation-delay:.08s;}
-.eq-bar:nth-child(4){height:20px; animation-delay:.12s;}
-.eq-bar:nth-child(5){height:18px; animation-delay:.08s;}
-.eq-bar:nth-child(6){height:14px; animation-delay:.04s;}
-.eq-bar:nth-child(7){height:8px;  animation-delay:0s;}
-@keyframes eq { from{transform:scaleY(0.2);} to{transform:scaleY(1);} }
+.eq-b:nth-child(1){height:7px; animation-delay:0s;}
+.eq-b:nth-child(2){height:13px;animation-delay:.04s;}
+.eq-b:nth-child(3){height:18px;animation-delay:.08s;}
+.eq-b:nth-child(4){height:13px;animation-delay:.04s;}
+.eq-b:nth-child(5){height:7px; animation-delay:0s;}
+@keyframes eqb { from{transform:scaleY(.15);} to{transform:scaleY(1);} }
 
-/* Robot body/neck/shoulders */
+/* neck + body */
+.robot-neck { width:30px; height:14px; background:#C8CDD8; border-radius:3px 3px 0 0; margin:0 auto -1px; }
 .robot-body {
-  margin-top:148px;
-  background: linear-gradient(180deg,#E8EAEF,#D1D5DB);
-  border-radius:24px 24px 16px 16px;
-  border:2px solid #9CA3AF;
-  padding:16px 20px 20px;
-  position:relative;
+  background:linear-gradient(180deg,#E8EAEF,#D1D5DB);
+  border-radius:18px 18px 12px 12px; border:2px solid #9CA3AF;
+  padding:12px 18px 16px; width:150px;
 }
-.robot-neck {
-  width:36px; height:18px; margin:0 auto -2px;
-  background:#C8CDD8; border-radius:4px 4px 0 0;
-  border:2px solid #9CA3AF; border-bottom:none;
-}
-/* Arc reactor */
-.arc {
-  width:52px; height:52px; border-radius:50%;
-  background: radial-gradient(circle at 40% 35%, #E8EAEF, #C8CDD8);
-  border:2px solid #9CA3AF;
-  margin:0 auto 8px;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow: 0 0 16px rgba(107,33,168,0.2);
-}
-.arc-inner {
-  width:28px; height:28px; border-radius:50%;
-  background: radial-gradient(circle at 40% 35%, #7C3AED, #1E0856);
-  box-shadow: 0 0 12px #7C3AED;
-  animation: arcpulse 1.5s ease-in-out infinite;
-}
-@keyframes arcpulse { 0%,100%{box-shadow:0 0 12px #7C3AED;} 50%{box-shadow:0 0 24px #A855F7,0 0 48px rgba(107,33,168,0.4);} }
-.leds { display:flex; justify-content:space-between; }
-.led { width:8px; height:8px; border-radius:50%; }
-.led-g { background:#10B981; animation:ledpulse 2s infinite; box-shadow:0 0 6px #10B981; }
-.led-p { background:#7C3AED; animation:ledpulse 1.3s infinite; box-shadow:0 0 6px #7C3AED; }
-@keyframes ledpulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+.arc-wrap { width:44px; height:44px; border-radius:50%; background:radial-gradient(circle,#E8EAEF,#C8CDD8);
+  border:2px solid #9CA3AF; margin:0 auto 8px; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 14px rgba(107,33,168,.2); }
+.arc-inner { width:22px; height:22px; border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#7C3AED,#1E0856);
+  box-shadow:0 0 10px #7C3AED; animation:arcp 1.4s ease-in-out infinite; }
+@keyframes arcp { 0%,100%{box-shadow:0 0 10px #7C3AED;} 50%{box-shadow:0 0 22px #A855F7,0 0 44px rgba(107,33,168,.4);} }
+.leds-row { display:flex; justify-content:space-between; }
+.led { width:7px; height:7px; border-radius:50%; }
+.led-g { background:#10B981; animation:ledp 2s infinite; box-shadow:0 0 5px #10B981; }
+.led-p { background:#7C3AED; animation:ledp 1.3s infinite; box-shadow:0 0 5px #7C3AED; }
+@keyframes ledp { 0%,100%{opacity:.35;} 50%{opacity:1;} }
 
-/* Speech bubble */
+/* speech bubble */
 #bubble {
-  position:absolute; top:20px; right:-10px;
+  position:absolute; top:10px; right:-60px;
   background:#fff; border:2px solid #6B21A8;
   border-radius:16px 16px 16px 4px;
-  padding:14px 18px;
-  width:180px;
-  box-shadow:0 4px 20px rgba(107,33,168,0.15);
-  opacity:0; transform:scale(0.8) translateY(10px);
-  animation: popBubble 0.5s 1.8s cubic-bezier(.34,1.56,.64,1) forwards;
-  z-index:10;
+  padding:14px 16px; width:168px;
+  box-shadow:0 4px 20px rgba(107,33,168,.18);
+  opacity:0; transform:scale(0.8) translateY(8px);
+  animation:popbub 0.5s 1.9s cubic-bezier(.34,1.56,.64,1) forwards;
+  z-index:20;
 }
-@keyframes popBubble { to { opacity:1; transform:scale(1) translateY(0); } }
+@keyframes popbub { to { opacity:1; transform:scale(1) translateY(0); } }
 #bubble::before {
-  content:''; position:absolute; bottom:-10px; left:12px;
-  border:10px solid transparent;
-  border-top-color:#6B21A8; border-bottom:none;
+  content:''; position:absolute; bottom:-10px; left:14px;
+  border:10px solid transparent; border-top-color:#6B21A8; border-bottom:none;
 }
 #bubble::after {
-  content:''; position:absolute; bottom:-7px; left:13px;
-  border:9px solid transparent;
-  border-top-color:#fff; border-bottom:none;
+  content:''; position:absolute; bottom:-7px; left:15px;
+  border:9px solid transparent; border-top-color:#fff; border-bottom:none;
 }
-#bubble .btext {
-  font-size:13px; color:#1A1225; font-weight:600; line-height:1.5;
-  margin-bottom:10px;
-}
-#bubble .bbuts { display:flex; gap:8px; }
-.bbut {
-  flex:1; padding:6px 0; border-radius:8px; border:none;
-  font-size:12px; font-weight:700; cursor:pointer;
-  transition:all 0.15s;
-}
-.bbut-sim { background:#6B21A8; color:#fff; }
-.bbut-sim:hover { background:#4C1D95; transform:scale(1.05); }
-.bbut-nao { background:#F6F5FA; color:#6B21A8; border:1px solid #DDD8F0; }
-.bbut-nao:hover { background:#EFECF8; transform:scale(1.05); }
+.btext { font-size:13px; color:#1A1225; font-weight:600; line-height:1.5; margin-bottom:10px; }
+.bbuts { display:flex; gap:7px; }
+.bbut { flex:1; padding:7px 0; border-radius:8px; border:none; font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; }
+.bbut-s { background:#6B21A8; color:#fff; }
+.bbut-s:hover { background:#4C1D95; transform:scale(1.05); }
+.bbut-n { background:#F6F5FA; color:#6B21A8; border:1px solid #DDD8F0; }
+.bbut-n:hover { background:#EFECF8; transform:scale(1.05); }
 </style>
 </head>
 <body>
-<canvas id="pc"></canvas>
+<canvas id="pc2"></canvas>
 <div id="scene">
-  <!-- Speech bubble -->
-  <div id="bubble">
-    <div class="btext">Oi! 👋<br>É você, Gabriel?</div>
-    <div class="bbuts">
-      <button class="bbut bbut-sim" onclick="escolher('sim')">✅ Sim</button>
-      <button class="bbut bbut-nao" onclick="escolher('nao')">❌ Não</button>
-    </div>
-  </div>
-
-  <!-- Robot -->
-  <div id="robot">
+  <div style="position:relative;">
     <div class="face-shell">
-      <div class="face-top"></div>
-      <div class="face-bottom"></div>
+      <div class="face-top"></div><div class="face-bottom"></div>
       <div class="face-inner">
         <div class="scan-line"></div>
-        <div class="eyes-row">
-          <div class="bot-eye"></div>
-          <div class="bot-eye"></div>
-        </div>
+        <div class="eyes-row"><div class="beye"></div><div class="beye"></div></div>
         <div class="eq-row">
-          <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-          <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-          <div class="eq-bar"></div>
+          <div class="eq-b"></div><div class="eq-b"></div><div class="eq-b"></div>
+          <div class="eq-b"></div><div class="eq-b"></div>
         </div>
       </div>
     </div>
-    <div class="robot-neck"></div>
-    <div class="robot-body">
-      <div class="arc"><div class="arc-inner"></div></div>
-      <div class="leds">
-        <div class="led led-g"></div>
-        <div class="led led-p"></div>
-        <div class="led led-g"></div>
+    <div id="bubble">
+      <div class="btext">Oi! 👋<br>É você, Gabriel?</div>
+      <div class="bbuts">
+        <button class="bbut bbut-s" onclick="resp('sim')">✅ Sim</button>
+        <button class="bbut bbut-n" onclick="resp('nao')">❌ Não</button>
       </div>
+    </div>
+  </div>
+  <div class="robot-neck"></div>
+  <div class="robot-body">
+    <div class="arc-wrap"><div class="arc-inner"></div></div>
+    <div class="leds-row">
+      <div class="led led-g"></div><div class="led led-p"></div><div class="led led-g"></div>
     </div>
   </div>
 </div>
-
 <script>
-// Particles
-const cv=document.getElementById('pc'), ctx=cv.getContext('2d');
-cv.width=window.innerWidth; cv.height=window.innerHeight;
-const P=Array.from({length:25},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,
-  vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.5+.5,
+const cv=document.getElementById('pc2'),ctx=cv.getContext('2d');
+cv.width=window.innerWidth;cv.height=window.innerHeight;
+const P=Array.from({length:22},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,
+  vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.5+.4,
   c:Math.random()>.5?'#6B21A8':'#10B981'}));
-function tick(){ctx.clearRect(0,0,cv.width,cv.height);
+(function tick(){ctx.clearRect(0,0,cv.width,cv.height);
   P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;
     if(p.x<0||p.x>cv.width)p.vx*=-1;if(p.y<0||p.y>cv.height)p.vy*=-1;
     ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
     ctx.fillStyle=p.c;ctx.shadowBlur=6;ctx.shadowColor=p.c;ctx.fill();});
-  requestAnimationFrame(tick);}
-tick();
-
-function escolher(resp){
-  window.parent.postMessage({type:'face_answer', answer: resp}, '*');
-}
+  requestAnimationFrame(tick);})();
+function resp(r){ window.parent.postMessage({type:'face_answer',answer:r},'*'); }
 </script>
 </body>
 </html>
 """
         st.markdown("""
-        <div style="text-align:center;padding:30px 0 10px 0;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
-              color:#6B21A8;margin-bottom:8px;">🔐 SENHA VALIDADA</div>
-          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#1A1225;">
-            Identificação Biométrica</div>
-          <div style="font-size:13px;color:#5B4E72;margin-top:6px;">
-            Responda ao J.A.R.V.I.S para continuar</div>
+        <div style="text-align:center;padding:24px 0 8px 0;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:8px;">🔐 SENHA VALIDADA</div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#1A1225;">Identificação Biométrica</div>
+          <div style="font-size:13px;color:#5B4E72;margin-top:4px;">Responda ao J.A.R.V.I.S para continuar</div>
         </div>
         """, unsafe_allow_html=True)
 
-        col_r, col_c, col_l = st.columns([1, 1.4, 1])
+        col_l, col_c, col_r = st.columns([1, 1.2, 1])
         with col_c:
-            components.html(ROBOT_OPEN_HTML, height=500, scrolling=False)
+            components.html(ROBOT_OPEN_HTML, height=440, scrolling=False)
 
-        col_b1, col_b2, col_b3 = st.columns([1.5, 1, 1, 1.5] if False else [1,1,1])
-        with col_b1:
+        c1, c2, c3 = st.columns(3)
+        with c1:
             if st.button("✅  Sim, sou eu!", use_container_width=True, key="btn_sim"):
                 st.session_state.login_stage = "face_scan"
-                st.session_state.is_convidado = False
                 st.rerun()
-        with col_b2:
+        with c2:
             if st.button("❌  Não sou eu", use_container_width=True, key="btn_nao"):
                 st.session_state.logado = True
                 st.session_state.is_convidado = True
                 st.rerun()
+        with c3:
+            if st.button("← Voltar", use_container_width=True, key="btn_back_fc"):
+                st.session_state.login_stage = "senha"
+                st.rerun()
 
         st.stop()
 
-    # ── STAGE: face_scan — câmera + face-api.js ──
+    # ══════════════════════════════════════════════════════════
+    # STAGE: face_scan — câmera + face-api.js (CDN correto)
+    # ══════════════════════════════════════════════════════════
     elif st.session_state.login_stage == "face_scan":
-
-        # URL da foto de referência do Gabriel (perfil Claude.ai)
-        GABRIEL_PHOTO_URL = "https://lh3.googleusercontent.com/a/ACg8ocL-YourProfilePhotoID"
-        # ^ ATENÇÃO: substitua pela URL real da sua foto
 
         FACE_SCAN_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<!-- face-api.js com CDN estável -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#0A0C18; display:flex; flex-direction:column; align-items:center;
-  justify-content:center; min-height:100vh; font-family:'Inter',sans-serif; color:#fff; }
-#container { position:relative; width:320px; }
-#vid, #overlay { border-radius:16px; }
-#vid { width:320px; height:240px; object-fit:cover; display:block;
-  border:2px solid #6B21A8; box-shadow:0 0 24px rgba(107,33,168,0.4); }
-#overlay { position:absolute; top:0; left:0; pointer-events:none; }
-.scan-bar {
-  position:absolute; left:0; right:0; height:3px;
+  justify-content:center; min-height:100vh; font-family:'Inter',sans-serif; color:#fff; gap:12px; }
+#wrap { position:relative; width:min(320px,92vw); }
+#vid  { width:100%; border-radius:14px; display:block;
+  border:2px solid #6B21A8; box-shadow:0 0 20px rgba(107,33,168,.45); background:#111; }
+#ovl  { position:absolute; top:0; left:0; pointer-events:none; border-radius:14px; }
+.sbar {
+  position:absolute; left:0; right:0; height:2px;
   background:linear-gradient(90deg,transparent,#10B981,transparent);
-  box-shadow:0 0 10px #10B981; animation:scanbar 2s linear infinite; top:0;
+  box-shadow:0 0 8px #10B981; top:0;
+  animation:sbar 2s linear infinite;
 }
-@keyframes scanbar{0%{top:0;}100%{top:238px;}}
-#status {
-  margin:16px 0 8px; font-size:13px; letter-spacing:2px;
-  font-family:monospace; color:#10B981; text-align:center;
-  min-height:20px;
-}
-#msg { font-size:11px; color:#7C3AED; letter-spacing:1px; text-align:center; margin-bottom:12px; }
-.corner { position:absolute; width:20px; height:20px; border-color:#10B981; border-style:solid; }
-.tl{top:4px;left:4px;border-width:2px 0 0 2px;}
-.tr{top:4px;right:4px;border-width:2px 2px 0 0;}
+@keyframes sbar { 0%{top:0;} 100%{top:96%;} }
+.corner { position:absolute; width:18px; height:18px; border-color:#10B981; border-style:solid; }
+.tl{top:4px;left:4px;   border-width:2px 0 0 2px;}
+.tr{top:4px;right:4px;  border-width:2px 2px 0 0;}
 .bl{bottom:4px;left:4px;border-width:0 0 2px 2px;}
 .br{bottom:4px;right:4px;border-width:0 2px 2px 0;}
-#result { display:none; flex-direction:column; align-items:center; gap:12px; }
-#result-icon { font-size:56px; }
-#result-text { font-size:18px; font-weight:700; letter-spacing:1px; }
-.ring-anim {
-  width:120px; height:120px; border-radius:50%;
-  border:3px solid #10B981; box-shadow:0 0 20px #10B981;
-  animation:ringspin 1s linear infinite;
-}
-@keyframes ringspin{to{transform:rotate(360deg);box-shadow:0 0 30px #A855F7;}}
-#btn-guest {
-  display:none; margin-top:8px; padding:10px 24px;
-  background:#6B21A8; color:#fff; border:none; border-radius:10px;
+#status { font-size:12px; letter-spacing:2px; font-family:monospace; color:#10B981; text-align:center; }
+#msg    { font-size:11px; color:#A855F7; letter-spacing:1px; text-align:center; }
+#result { display:none; flex-direction:column; align-items:center; gap:10px; margin-top:8px; }
+#rico   { font-size:52px; }
+#rtxt   { font-size:17px; font-weight:700; letter-spacing:1px; }
+.btn {
+  padding:10px 22px; border-radius:10px; border:none;
   font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px;
+  display:none;
 }
-#btn-retry {
-  display:none; margin-top:8px; padding:10px 24px;
-  background:#1E0856; color:#A855F7; border:1px solid #6B21A8; border-radius:10px;
-  font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px;
-}
+#btn-g { background:#6B21A8; color:#fff; }
+#btn-r { background:#1A0840; color:#A855F7; border:1px solid #6B21A8; }
 </style>
 </head>
 <body>
-<div id="container">
+<div id="wrap">
   <video id="vid" autoplay muted playsinline></video>
-  <canvas id="overlay"></canvas>
-  <div class="scan-bar"></div>
-  <div class="corner tl"></div>
-  <div class="corner tr"></div>
-  <div class="corner bl"></div>
-  <div class="corner br"></div>
+  <canvas id="ovl"></canvas>
+  <div class="sbar"></div>
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
 </div>
 <div id="status">● CARREGANDO MODELOS...</div>
 <div id="msg">Aguarde o sistema biométrico</div>
-
 <div id="result">
-  <div id="result-icon"></div>
-  <div id="result-text"></div>
+  <div id="rico"></div>
+  <div id="rtxt"></div>
 </div>
-<button id="btn-guest" onclick="entrarConvidado()">Entrar como Convidado</button>
-<button id="btn-retry" onclick="location.reload()">Tentar Novamente</button>
+<button class="btn" id="btn-g" onclick="goGuest()">Entrar como Convidado</button>
+<button class="btn" id="btn-r" onclick="location.reload()">Tentar Novamente</button>
 
 <script>
-const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
-const GABRIEL_URL = 'https://avatars.githubusercontent.com/u/0'; // placeholder — troque pela URL real
-const STATUS = document.getElementById('status');
-const MSG    = document.getElementById('msg');
+// ── Foto de referência do Gabriel ──
+// Substitua pela URL pública real da sua foto
+const GABRIEL_URL = 'https://avatars.githubusercontent.com/sabino-gabriel';
+
+const MODEL_BASE = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+const ST = document.getElementById('status');
+const MSG= document.getElementById('msg');
 
 async function init(){
-  STATUS.textContent = '● CARREGANDO MODELOS...';
+  ST.textContent='● CARREGANDO MODELOS...';
   try {
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-    ]);
-    STATUS.textContent = '● MODELOS OK — ABRINDO CÂMERA';
-    startCamera();
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_BASE);
+    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_BASE);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_BASE);
+    ST.textContent='● MODELOS OK — ABRINDO CÂMERA';
+    startCam();
   } catch(e){
-    STATUS.textContent = '⚠ Erro ao carregar modelos';
-    MSG.textContent = e.message;
+    ST.textContent='⚠ Erro: '+e.message;
+    show('btn-g'); show('btn-r');
   }
 }
 
-let labeledDescriptors = null;
-async function loadReference(){
+async function startCam(){
+  const vid=document.getElementById('vid');
   try {
-    const img = await faceapi.fetchImage(GABRIEL_URL);
-    const det = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
-      .withFaceLandmarks(true).withFaceDescriptor();
-    if(!det){ MSG.textContent='Foto de referência sem rosto detectado'; return false; }
-    labeledDescriptors = new faceapi.LabeledFaceDescriptors('Gabriel',[det.descriptor]);
-    return true;
-  } catch(e){ MSG.textContent='Erro na foto de referência: '+e.message; return false; }
-}
-
-async function startCamera(){
-  const vid = document.getElementById('vid');
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:320,height:240}});
-    vid.srcObject = stream;
-    vid.onloadedmetadata = async () => {
-      STATUS.textContent = '● ANALISANDO ROSTO...';
-      MSG.textContent = 'Olhe para a câmera';
-      const refOk = await loadReference();
-      if(!refOk){ showFail(); return; }
-      setTimeout(()=>scan(vid), 1500);
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:320,height:240}});
+    vid.srcObject=s;
+    vid.onloadedmetadata=async()=>{
+      ST.textContent='● CARREGANDO REFERÊNCIA...';
+      const ref=await loadRef();
+      if(!ref){ showFail(); return; }
+      ST.textContent='● CENTRALIZE SEU ROSTO';
+      MSG.textContent='Olhe para a câmera';
+      setTimeout(()=>scan(vid,ref), 1800);
     };
   } catch(e){
-    STATUS.textContent = '⚠ Câmera bloqueada';
-    MSG.textContent = 'Permita o acesso à câmera';
-    document.getElementById('btn-guest').style.display='block';
+    ST.textContent='⚠ Câmera bloqueada';
+    MSG.textContent='Permita o acesso à câmera';
+    show('btn-g');
   }
 }
 
-async function scan(vid){
-  STATUS.textContent = '● ESCANEANDO...';
-  const canvas = document.getElementById('overlay');
-  const dims = {width:320, height:240};
-  faceapi.matchDimensions(canvas, dims);
+async function loadRef(){
+  try {
+    const img=await faceapi.fetchImage(GABRIEL_URL);
+    const d=await faceapi.detectSingleFace(img,new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks(true).withFaceDescriptor();
+    if(!d){ MSG.textContent='Foto de referência sem rosto'; return null; }
+    return new faceapi.LabeledFaceDescriptors('Gabriel',[d.descriptor]);
+  } catch(e){ MSG.textContent='Ref: '+e.message; return null; }
+}
 
-  const det = await faceapi.detectSingleFace(vid, new faceapi.TinyFaceDetectorOptions())
+async function scan(vid,ref){
+  ST.textContent='● ESCANEANDO...';
+  const cvs=document.getElementById('ovl');
+  const w=vid.videoWidth||320, h=vid.videoHeight||240;
+  cvs.width=w; cvs.height=h;
+  faceapi.matchDimensions(cvs,{width:w,height:h});
+  const det=await faceapi.detectSingleFace(vid,new faceapi.TinyFaceDetectorOptions())
     .withFaceLandmarks(true).withFaceDescriptor();
-
   if(!det){
-    STATUS.textContent = '● ROSTO NÃO DETECTADO';
-    MSG.textContent = 'Centralize o rosto e tente novamente';
-    document.getElementById('btn-retry').style.display='block';
-    document.getElementById('btn-guest').style.display='block';
-    return;
+    ST.textContent='● ROSTO NÃO DETECTADO';
+    MSG.textContent='Centralize o rosto e tente novamente';
+    show('btn-r'); show('btn-g'); return;
   }
-
-  faceapi.draw.drawDetections(canvas, faceapi.resizeResults(det, dims));
-
-  const matcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
-  const match   = matcher.findBestMatch(det.descriptor);
-
-  if(match.label === 'Gabriel'){
-    showSuccess();
-    setTimeout(()=>window.parent.postMessage({type:'face_result', result:'gabriel'}, '*'), 1800);
+  faceapi.draw.drawDetections(cvs,faceapi.resizeResults(det,{width:w,height:h}));
+  const m=new faceapi.FaceMatcher(ref,0.52).findBestMatch(det.descriptor);
+  if(m.label==='Gabriel'){
+    showResult('✅','<span style="color:#10B981">Olá, Gabriel! 🎉</span>');
+    ST.textContent='● IDENTIDADE CONFIRMADA';
+    setTimeout(()=>window.parent.postMessage({type:'face_result',result:'gabriel'},'*'),1600);
   } else {
-    showStranger();
-    setTimeout(()=>window.parent.postMessage({type:'face_result', result:'stranger'}, '*'), 2200);
+    showResult('🔒','<span style="color:#F87171">Rosto não reconhecido</span>');
+    ST.textContent='● ACESSO RESTRITO';
+    MSG.textContent='Entrando como Convidado...';
+    setTimeout(()=>window.parent.postMessage({type:'face_result',result:'stranger'},'*'),2000);
   }
 }
 
-function showSuccess(){
+function showResult(icon,txt){
   document.getElementById('result').style.display='flex';
-  document.getElementById('result-icon').textContent='✅';
-  document.getElementById('result-text').innerHTML='<span style="color:#10B981">Olá, Gabriel!</span>';
-  STATUS.textContent='● IDENTIDADE CONFIRMADA';
-}
-function showStranger(){
-  document.getElementById('result').style.display='flex';
-  document.getElementById('result-icon').textContent='🔒';
-  document.getElementById('result-text').innerHTML='<span style="color:#C92A2A">Rosto não reconhecido</span>';
-  STATUS.textContent='● ACESSO RESTRITO';
-  MSG.textContent='Entrando como Convidado...';
+  document.getElementById('rico').textContent=icon;
+  document.getElementById('rtxt').innerHTML=txt;
 }
 function showFail(){
-  document.getElementById('btn-guest').style.display='block';
-  document.getElementById('btn-retry').style.display='block';
+  ST.textContent='⚠ Falha ao carregar referência';
+  show('btn-g'); show('btn-r');
 }
-function entrarConvidado(){
-  window.parent.postMessage({type:'face_result', result:'guest'}, '*');
-}
+function show(id){ document.getElementById(id).style.display='inline-block'; }
+function goGuest(){ window.parent.postMessage({type:'face_result',result:'guest'},'*'); }
 
-window.addEventListener('load', init);
+window.addEventListener('load',init);
 </script>
 </body>
 </html>
 """
 
         st.markdown("""
-        <div style="text-align:center;padding:20px 0 8px 0;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
-              color:#6B21A8;margin-bottom:8px;">🎥 RECONHECIMENTO FACIAL</div>
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#1A1225;">
-            Olhe para a câmera</div>
-          <div style="font-size:13px;color:#5B4E72;margin-top:4px;">
-            O sistema vai verificar sua identidade automaticamente</div>
+        <div style="text-align:center;padding:16px 0 8px 0;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:6px;">🎥 RECONHECIMENTO FACIAL</div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#1A1225;">Olhe para a câmera</div>
+          <div style="font-size:12px;color:#5B4E72;margin-top:4px;">O sistema verifica sua identidade automaticamente</div>
         </div>
         """, unsafe_allow_html=True)
 
-        col_a, col_b, col_c = st.columns([1, 1.2, 1])
+        col_a, col_b, col_c = st.columns([1,1.3,1])
         with col_b:
             components.html(FACE_SCAN_HTML, height=420, scrolling=False)
 
-        st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
+        with c1:
+            if st.button("← Voltar", use_container_width=True, key="btn_back_fs"):
+                st.session_state.login_stage = "face_check"
+                st.rerun()
         with c2:
-            if st.button("👤  Entrar como Convidado", use_container_width=True, key="btn_guest_manual"):
+            if st.button("👤  Entrar como Convidado", use_container_width=True, key="btn_guest_m"):
                 st.session_state.logado = True
                 st.session_state.is_convidado = True
                 st.rerun()
-        with c1:
-            if st.button("← Voltar", use_container_width=True, key="btn_back"):
-                st.session_state.login_stage = "senha"
-                st.rerun()
 
-        # Recebe resultado via query param (workaround para postMessage)
+        # Recebe resultado via query param
         params = st.query_params
         if params.get("face_result") == "gabriel":
             st.session_state.logado = True
@@ -1423,8 +1269,6 @@ window.addEventListener('load', init);
             st.rerun()
 
         st.stop()
-
-
 
 # ============================================================
 # DATA LOADING
@@ -1592,6 +1436,20 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 # TAB 1 — CHAT IA
 # ─────────────────────────────────────────────
 with tab1:
+    if st.session_state.is_convidado:
+        st.markdown("""
+        <div style="text-align:center;padding:60px 20px;">
+          <div style="font-size:52px;margin-bottom:16px;">🔒</div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#6B21A8;margin-bottom:8px;">
+            Acesso Restrito</div>
+          <div style="font-size:14px;color:#5B4E72;line-height:1.8;">
+            O Chat IA está disponível apenas para Gabriel.<br>
+            Faça o reconhecimento facial para ter acesso completo.
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.stop()
+
     sugestoes = [
         ("🔴", "Qual projeto tem maior risco de atraso"),
         ("🎯", "Onde focar energia essa semana"),
@@ -2363,21 +2221,32 @@ Escopo: {p.get('Escopo','—')}"""
 # TAB 6 — NOTAS
 # ─────────────────────────────────────────────
 with tab6:
-    st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
-    &#9670; NOTAS ESTRATEGICAS
-    </div>
-    """, unsafe_allow_html=True)
+    if st.session_state.is_convidado:
+        st.markdown("""
+        <div style="text-align:center;padding:60px 20px;">
+          <div style="font-size:52px;margin-bottom:16px;">🔒</div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#6B21A8;margin-bottom:8px;">
+            Acesso Restrito</div>
+          <div style="font-size:14px;color:#5B4E72;">
+            Notas disponíveis apenas para Gabriel.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:16px;">
+        &#9670; NOTAS ESTRATEGICAS
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.text_area(
-        "Espaco livre para anotacoes, ideias e contexto",
-        height=500,
-        placeholder="Escreva suas anotacoes aqui...\n\nDicas, estrategias, insights, proximos passos...",
-        label_visibility="visible"
-    )
+        st.text_area(
+            "Espaco livre para anotacoes, ideias e contexto",
+            height=500,
+            placeholder="Escreva suas anotacoes aqui...\n\nDicas, estrategias, insights, proximos passos...",
+            label_visibility="visible"
+        )
 
-    st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:#9588AA;margin-top:8px;text-align:right;">
-    Notas sao locais e nao sao salvas entre sessoes
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:#9588AA;margin-top:8px;text-align:right;">
+        Notas sao locais e nao sao salvas entre sessoes
+        </div>
+        """, unsafe_allow_html=True)
