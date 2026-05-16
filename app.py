@@ -739,24 +739,31 @@ const p=Array.from({length:28},()=>({
 
     jarvis_html = jarvis_html.replace("SAUDACAO_PLACEHOLDER", saudacao)
 
-    col_face, col_form = st.columns([1.05, 0.95])
+    col_face, col_form = st.columns([1, 1])
 
     with col_face:
         components.html(jarvis_html, height=560, scrolling=False)
 
     with col_form:
         if st.session_state.login_step == "senha":
-            st.markdown(f"""
-            <div style="min-height:560px;display:flex;flex-direction:column;
-                justify-content:center;padding:0 32px 0 8px;gap:0;">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
-                  letter-spacing:4px;color:#7C3AED;margin-bottom:10px;">⬡ IDENTIFICAÇÃO</div>
-              <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;
-                  color:#fff;line-height:1;margin-bottom:2px;">GS</div>
-              <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
-                  color:#10B981;line-height:1;margin-bottom:28px;">Consulting</div>
-            </div>
-            """, unsafe_allow_html=True)
+            components.html(f"""<!DOCTYPE html><html><head>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box;}}
+html,body{{width:100%;height:100%;background:#060912;display:flex;
+  flex-direction:column;justify-content:center;
+  padding:0 28px 0 8px;font-family:'Inter',sans-serif;}}
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@800&family=JetBrains+Mono:wght@400;500&display=swap');
+.badge{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;
+  color:#7C3AED;margin-bottom:12px;}}
+.gs{{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;
+  color:#fff;line-height:.95;}}
+.con{{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+  color:#10B981;line-height:1;}}
+</style></head><body>
+<div class="badge">⬡ IDENTIFICAÇÃO</div>
+<div class="gs">GS</div>
+<div class="con">Consulting</div>
+</body></html>""", height=200, scrolling=False)
 
             senha = st.text_input("pw", type="password",
                 placeholder="••••••••", label_visibility="collapsed", key="inp_senha")
@@ -780,20 +787,23 @@ const p=Array.from({length:28},()=>({
             if st.session_state.pw_erro:
                 st.markdown("""
                 <div style="background:rgba(201,42,42,.08);border:1px solid rgba(201,42,42,.2);
-                    border-radius:10px;padding:10px 14px;color:#F87171;font-size:13px;margin-top:8px;">
+                    border-radius:10px;padding:10px 14px;color:#F87171;font-size:13px;margin-top:4px;">
                   ❌ Senha incorreta.
                 </div>""", unsafe_allow_html=True)
 
         else:
-            st.markdown("""
-            <div style="min-height:560px;display:flex;flex-direction:column;
-                justify-content:center;padding:0 32px 0 8px;">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
-                  letter-spacing:4px;color:#7C3AED;margin-bottom:14px;">⬡ ACESSO CONVIDADO</div>
-              <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;
-                  color:#fff;line-height:1.1;margin-bottom:20px;">Qual é o<br>seu nome?</div>
-            </div>
-            """, unsafe_allow_html=True)
+            components.html("""<!DOCTYPE html><html><head>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#060912;display:flex;
+  flex-direction:column;justify-content:center;padding:0 28px 0 8px;}
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@800&family=JetBrains+Mono:wght@400&display=swap');
+.badge{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#7C3AED;margin-bottom:12px;}
+.t{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#fff;line-height:1.1;}
+</style></head><body>
+<div class="badge">⬡ ACESSO CONVIDADO</div>
+<div class="t">Qual é o<br>seu nome?</div>
+</body></html>""", height=160, scrolling=False)
 
             nome = st.text_input("nm", placeholder="Seu nome",
                 label_visibility="collapsed", key="inp_nome")
@@ -1645,7 +1655,7 @@ with tab5:
     map.flyTo(e.popup.getLatLng(), 7, {{ animate: true, duration: 1.2 }});
   }});
 
-  // Sobrevoo automático entre cidades
+  // Sobrevoo automático em loop contínuo
   var _pts = [];
   map.eachLayer(function(l){{ if(l.getLatLng) _pts.push(l.getLatLng()); }});
   var _i=0;
