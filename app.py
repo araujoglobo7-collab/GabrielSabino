@@ -214,9 +214,14 @@ hr { border-color: var(--border) !important; }
 .chat-msg-ai   { display: flex; justify-content: flex-start; margin: 8px 0; }
 
 @media (max-width: 768px) {
-    .block-container { padding: 1rem 0.75rem 2rem !important; }
-    [data-testid="stMetricValue"] { font-size: 1.5rem !important; }
-    .stTabs [data-baseweb="tab"] { padding: 7px 10px !important; font-size: 11px !important; }
+    .block-container { padding: 0.75rem 0.5rem 2rem !important; }
+    [data-testid="stMetricValue"] { font-size: 1.4rem !important; }
+    .stTabs [data-baseweb="tab"] { padding: 6px 8px !important; font-size: 10px !important; }
+    section[data-testid="stSidebar"] { width: 100% !important; min-width: 100% !important; }
+    [data-testid="stSidebar"] { width: 100% !important; }
+    /* Stack columns on mobile */
+    [data-testid="stHorizontalBlock"] { flex-direction: column !important; }
+    [data-testid="column"] { width: 100% !important; min-width: 100% !important; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -983,13 +988,14 @@ if st.session_state.is_convidado:
 # ============================================================
 # TABS
 # ============================================================
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🤖 CHAT IA",
     "⚡ VISAO GERAL",
     "📋 KANBAN",
     "🗂️ DADOS",
     "🗺️ MAPEAMENTO GS",
-    "✍️ NOTAS"
+    "✍️ NOTAS",
+    "📅 CALENDARIO"
 ])
 
 # ─────────────────────────────────────────────
@@ -1831,3 +1837,402 @@ with tab6:
         Notas sao locais e nao sao salvas entre sessoes
         </div>
         """, unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# TAB 7 — CALENDÁRIO
+# ─────────────────────────────────────────────
+with tab7:
+    if df.empty:
+        st.warning("Sem dados carregados.")
+    else:
+        # Filtros
+        fc1, fc2, fc3 = st.columns(3)
+        with fc1:
+            filtro_nome_cal = st.text_input("🔍 Buscar projeto", placeholder="Nome...", key="cal_nome")
+        with fc2:
+            filtro_status_cal = st.multiselect("Status", STATUS_OPCOES, default=[], key="cal_status", placeholder="Todos")
+        with fc3:
+            filtro_mes_cal = st.selectbox("Mês", ["Todos"] + [
+                "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+            ], key="cal_mes")
+
+        df_cal = df.copy()
+        if filtro_nome_cal:
+            df_cal = df_cal[df_cal["Projeto"].str.contains(filtro_nome_cal, case=False, na=False)]
+        if filtro_status_cal:
+            df_cal = df_cal[df_cal["Status"].isin(filtro_status_cal)]
+        if filtro_mes_cal != "Todos":
+            mes_num = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                       "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].index(filtro_mes_cal) + 1
+            df_cal = df_cal[df_cal["Data Inicial"].dt.month == mes_num]
+
+        # Monta JSON dos projetos para o calendário
+        eventos = []
+        for _, row in df_cal.iterrows():
+            cor = STATUS_COLORS.get(row.get("Status",""), "#6B21A8")
+            eventos.append({
+                "nome": str(row["Projeto"])[:40],
+                "inicio": row["Data Inicial"].strftime("%Y-%m-%d"),
+                "fim": row["Prazo"].strftime("%Y-%m-%d"),
+                "status": str(row.get("Status","")),
+                "foco": str(row.get("Foco",""))[:30] if pd.notna(row.get("Foco")) else "",
+                "cor": cor,
+                "dias": int((row["Prazo"] - pd.Timestamp.now()).days)
+            })
+
+        import json as _json
+        eventos_json = _json.dumps(eventos, ensure_ascii=False)
+
+        CAL_HTML = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+*{{margin:0;padding:0;box-sizing:border-box;}}
+body{{background:#F6F5FA;font-family:'Inter',sans-serif;color:#1A1225;padding:0;}}
+
+/* ── Navegação do mês ── */
+.nav{{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;
+  background:#fff;
+  border:1px solid #DDD8F0;
+  border-radius:14px;
+  margin-bottom:16px;
+  box-shadow:0 1px 4px rgba(107,33,168,.06);
+}}
+.nav-title{{
+  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#6B21A8;
+}}
+.nav-btn{{
+  width:36px;height:36px;border-radius:50%;border:1px solid #DDD8F0;
+  background:#fff;cursor:pointer;font-size:16px;color:#6B21A8;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;
+}}
+.nav-btn:hover{{background:#6B21A8;color:#fff;border-color:#6B21A8;}}
+.nav-today{{
+  padding:7px 16px;border-radius:8px;border:1px solid #6B21A8;
+  background:transparent;color:#6B21A8;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s;
+}}
+.nav-today:hover{{background:#6B21A8;color:#fff;}}
+
+/* ── Grade do calendário ── */
+.cal-grid{{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:1px;
+  background:#DDD8F0;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid #DDD8F0;
+  box-shadow:0 2px 8px rgba(107,33,168,.07);
+}}
+
+/* Cabeçalho dos dias */
+.day-header{{
+  background:#EFECF8;
+  padding:10px 6px;
+  text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;font-weight:600;
+  letter-spacing:1.5px;
+  color:#6B21A8;
+  text-transform:uppercase;
+}}
+
+/* Célula do dia */
+.day-cell{{
+  background:#fff;
+  min-height:110px;
+  padding:6px;
+  position:relative;
+  transition:background .15s;
+  cursor:default;
+}}
+.day-cell:hover{{background:#FAFAFA;}}
+.day-cell.other-month{{background:#FAFAFA;}}
+.day-cell.today .day-num{{
+  background:#6B21A8;color:#fff;
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;
+}}
+.day-cell.has-event{{background:#FDFCFF;}}
+
+.day-num{{
+  font-size:13px;font-weight:600;color:#1A1225;
+  margin-bottom:4px;display:inline-block;
+  width:26px;height:26px;line-height:26px;text-align:center;
+}}
+.day-cell.other-month .day-num{{color:#C4BCDF;}}
+
+/* Evento no dia */
+.evt{{
+  border-radius:5px;
+  padding:3px 6px;
+  font-size:10px;font-weight:600;
+  margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  cursor:pointer;
+  transition:opacity .15s;
+  line-height:1.4;
+}}
+.evt:hover{{opacity:.8;}}
+.evt.start{{border-left:3px solid rgba(0,0,0,.2);}}
+.more-tag{{
+  font-size:10px;color:#9588AA;font-weight:500;
+  padding:1px 4px;cursor:pointer;
+}}
+.more-tag:hover{{color:#6B21A8;}}
+
+/* ── Tooltip / popup ── */
+#tooltip{{
+  position:fixed;
+  background:#1A1225;
+  border-radius:12px;
+  padding:14px 16px;
+  width:240px;
+  box-shadow:0 8px 32px rgba(0,0,0,.35);
+  z-index:9999;
+  display:none;
+  animation:fadeIn .15s ease;
+}}
+@keyframes fadeIn{{from{{opacity:0;transform:translateY(4px);}}to{{opacity:1;transform:translateY(0);}}}}
+#tooltip .tt-nome{{font-weight:700;font-size:14px;color:#fff;margin-bottom:8px;line-height:1.4;}}
+#tooltip .tt-row{{display:flex;gap:8px;align-items:center;margin-bottom:5px;font-size:12px;color:rgba(255,255,255,.65);}}
+#tooltip .tt-badge{{
+  display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  margin-bottom:8px;
+}}
+#tooltip .tt-close{{
+  position:absolute;top:10px;right:12px;
+  color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;
+}}
+#tooltip .tt-close:hover{{color:#fff;}}
+
+/* ── Legenda ── */
+.legend{{
+  display:flex;flex-wrap:wrap;gap:10px;
+  margin-top:14px;padding:12px 16px;
+  background:#fff;border:1px solid #DDD8F0;border-radius:10px;
+}}
+.leg-item{{display:flex;align-items:center;gap:6px;font-size:11px;color:#5B4E72;}}
+.leg-dot{{width:10px;height:10px;border-radius:50%;flex-shrink:0;}}
+
+/* Mobile */
+@media(max-width:600px){{
+  .day-cell{{min-height:70px;padding:4px;}}
+  .day-num{{font-size:11px;width:22px;height:22px;line-height:22px;}}
+  .evt{{font-size:9px;padding:2px 4px;}}
+  .nav-title{{font-size:16px;}}
+  #tooltip{{width:200px;}}
+}}
+</style>
+</head>
+<body>
+
+<!-- Navegação -->
+<div class="nav">
+  <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+  <div>
+    <div class="nav-title" id="nav-title"></div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="nav-today" onclick="goToday()">Hoje</button>
+    <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+  </div>
+</div>
+
+<!-- Grade -->
+<div class="cal-grid" id="cal-grid"></div>
+
+<!-- Legenda -->
+<div class="legend" id="legend"></div>
+
+<!-- Tooltip -->
+<div id="tooltip">
+  <span class="tt-close" onclick="hideTooltip()">✕</span>
+  <div class="tt-nome" id="tt-nome"></div>
+  <div class="tt-badge" id="tt-badge"></div>
+  <div class="tt-row">📅 <span id="tt-inicio"></span></div>
+  <div class="tt-row">⏰ <span id="tt-fim"></span></div>
+  <div class="tt-row" id="tt-foco-row">🎯 <span id="tt-foco"></span></div>
+  <div class="tt-row">⬡ <span id="tt-dias"></span></div>
+</div>
+
+<script>
+const EVENTOS = {eventos_json};
+const STATUS_COLORS = {_json.dumps(STATUS_COLORS)};
+const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+               'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+let hoje = new Date();
+let curYear = hoje.getFullYear();
+let curMonth = hoje.getMonth();
+
+function parseDate(s){{ return new Date(s + 'T00:00:00'); }}
+
+function sameDay(a,b){{
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}}
+
+function getEventsForDay(year, month, day){{
+  const d = new Date(year, month, day);
+  return EVENTOS.filter(e=>{{
+    const ini = parseDate(e.inicio);
+    const fim = parseDate(e.fim);
+    return d >= ini && d <= fim;
+  }});
+}}
+
+function renderCal(){{
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // Header
+  DIAS_SEMANA.forEach(d=>{{
+    const h = document.createElement('div');
+    h.className='day-header'; h.textContent=d;
+    grid.appendChild(h);
+  }});
+
+  document.getElementById('nav-title').textContent = MESES[curMonth] + ' ' + curYear;
+
+  const firstDay = new Date(curYear, curMonth, 1).getDay();
+  const daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+  const daysInPrev = new Date(curYear, curMonth, 0).getDate();
+
+  // Células
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+  for(let i=0; i<totalCells; i++){{
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+
+    let day, month, year, otherMonth=false;
+    if(i < firstDay){{
+      day = daysInPrev - firstDay + i + 1;
+      month = curMonth - 1; year = curYear;
+      if(month < 0){{ month=11; year--; }}
+      otherMonth = true;
+    }} else if(i >= firstDay + daysInMonth){{
+      day = i - firstDay - daysInMonth + 1;
+      month = curMonth + 1; year = curYear;
+      if(month > 11){{ month=0; year++; }}
+      otherMonth = true;
+    }} else {{
+      day = i - firstDay + 1;
+      month = curMonth; year = curYear;
+    }}
+
+    if(otherMonth) cell.classList.add('other-month');
+
+    const isToday = !otherMonth && sameDay(new Date(year,month,day), hoje);
+    if(isToday) cell.classList.add('today');
+
+    // Número do dia
+    const numDiv = document.createElement('div');
+    numDiv.className='day-num';
+    numDiv.textContent = day;
+    cell.appendChild(numDiv);
+
+    // Eventos do dia
+    const evts = getEventsForDay(year, month, day);
+    if(evts.length > 0) cell.classList.add('has-event');
+
+    const maxShow = 3;
+    evts.slice(0, maxShow).forEach(e=>{{
+      const div = document.createElement('div');
+      div.className='evt';
+      const isStart = sameDay(parseDate(e.inicio), new Date(year,month,day));
+      if(isStart) div.classList.add('start');
+      div.style.background = e.cor + '22';
+      div.style.color = e.cor;
+      div.style.borderLeft = isStart ? '3px solid '+e.cor : 'none';
+      div.title = e.nome;
+      div.textContent = (isStart ? '▶ ' : '  ') + e.nome;
+      div.onclick = (ev)=>{{ ev.stopPropagation(); showTooltip(e, ev); }};
+      cell.appendChild(div);
+    }});
+    if(evts.length > maxShow){{
+      const more = document.createElement('div');
+      more.className='more-tag';
+      more.textContent = '+' + (evts.length-maxShow) + ' mais';
+      cell.appendChild(more);
+    }}
+
+    grid.appendChild(cell);
+  }}
+
+  renderLegend();
+}}
+
+function renderLegend(){{
+  const leg = document.getElementById('legend');
+  leg.innerHTML = '';
+  const seen = {{}};
+  EVENTOS.forEach(e=>{{
+    if(!seen[e.status]){{
+      seen[e.status]=true;
+      const item = document.createElement('div');
+      item.className='leg-item';
+      item.innerHTML=`<div class="leg-dot" style="background:${{e.cor}}"></div><span>${{e.status}}</span>`;
+      leg.appendChild(item);
+    }}
+  }});
+}}
+
+function showTooltip(e, ev){{
+  const tt = document.getElementById('tooltip');
+  document.getElementById('tt-nome').textContent = e.nome;
+  const badge = document.getElementById('tt-badge');
+  badge.textContent = e.status;
+  badge.style.background = e.cor + '22';
+  badge.style.color = e.cor;
+  badge.style.border = '1px solid ' + e.cor + '55';
+  document.getElementById('tt-inicio').textContent = formatDate(e.inicio);
+  document.getElementById('tt-fim').textContent = formatDate(e.fim);
+  document.getElementById('tt-foco').textContent = e.foco || '—';
+  document.getElementById('tt-foco-row').style.display = e.foco ? 'flex' : 'none';
+  const d = e.dias;
+  const diasEl = document.getElementById('tt-dias');
+  diasEl.textContent = d < 0 ? Math.abs(d)+' dias atrasado' : d+' dias restantes';
+  diasEl.style.color = d < 0 ? '#F87171' : d < 7 ? '#F59E0B' : '#10B981';
+
+  tt.style.display='block';
+  const x = Math.min(ev.clientX + 12, window.innerWidth - 260);
+  const y = Math.min(ev.clientY + 12, window.innerHeight - 200);
+  tt.style.left = x+'px';
+  tt.style.top  = y+'px';
+}}
+
+function hideTooltip(){{ document.getElementById('tooltip').style.display='none'; }}
+document.addEventListener('click', hideTooltip);
+
+function formatDate(s){{
+  const [y,m,d] = s.split('-');
+  return d+'/'+m+'/'+y;
+}}
+
+function changeMonth(dir){{
+  curMonth += dir;
+  if(curMonth > 11){{ curMonth=0; curYear++; }}
+  if(curMonth < 0){{ curMonth=11; curYear--; }}
+  renderCal();
+}}
+function goToday(){{
+  curYear=hoje.getFullYear(); curMonth=hoje.getMonth(); renderCal();
+}}
+
+renderCal();
+</script>
+</body>
+</html>"""
+
+        components.html(CAL_HTML, height=820, scrolling=True)
