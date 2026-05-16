@@ -742,25 +742,19 @@ const p=Array.from({length:28},()=>({
     col_face, col_form = st.columns([1.05, 0.95])
 
     with col_face:
-        components.html(jarvis_html, height=660, scrolling=False)
+        components.html(jarvis_html, height=560, scrolling=False)
 
     with col_form:
-        st.markdown('''
-        <div style="min-height:660px;display:flex;flex-direction:column;
-            justify-content:center;padding:20px 32px 20px 8px;">
-        ''', unsafe_allow_html=True)
-
         if st.session_state.login_step == "senha":
             st.markdown(f"""
-            <div style="margin-bottom:28px;">
+            <div style="min-height:560px;display:flex;flex-direction:column;
+                justify-content:center;padding:0 32px 0 8px;gap:0;">
               <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
-                  letter-spacing:4px;color:#7C3AED;margin-bottom:14px;">⬡ IDENTIFICAÇÃO</div>
-              <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;
-                  color:#fff;line-height:1.05;">Hub</div>
-              <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;
-                  color:#10B981;line-height:1.05;margin-bottom:12px;">Operacional</div>
-              <div style="font-size:14px;color:rgba(255,255,255,.38);line-height:1.7;">
-                {saudacao}, digite sua senha.</div>
+                  letter-spacing:4px;color:#7C3AED;margin-bottom:10px;">⬡ IDENTIFICAÇÃO</div>
+              <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;
+                  color:#fff;line-height:1;margin-bottom:2px;">GS</div>
+              <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
+                  color:#10B981;line-height:1;margin-bottom:28px;">Consulting</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -786,21 +780,18 @@ const p=Array.from({length:28},()=>({
             if st.session_state.pw_erro:
                 st.markdown("""
                 <div style="background:rgba(201,42,42,.08);border:1px solid rgba(201,42,42,.2);
-                    border-radius:10px;padding:12px 16px;color:#F87171;font-size:13px;margin-top:8px;">
+                    border-radius:10px;padding:10px 14px;color:#F87171;font-size:13px;margin-top:8px;">
                   ❌ Senha incorreta.
                 </div>""", unsafe_allow_html=True)
 
         else:
             st.markdown("""
-            <div style="margin-bottom:24px;">
+            <div style="min-height:560px;display:flex;flex-direction:column;
+                justify-content:center;padding:0 32px 0 8px;">
               <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
                   letter-spacing:4px;color:#7C3AED;margin-bottom:14px;">⬡ ACESSO CONVIDADO</div>
               <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;
-                  color:#fff;line-height:1.1;margin-bottom:16px;">Qual é o<br>seu nome?</div>
-              <div style="background:rgba(107,33,168,.1);border:1px solid rgba(107,33,168,.2);
-                  border-radius:10px;padding:12px 16px;color:rgba(167,139,250,.8);font-size:13px;">
-                👤 Acesso em modo leitura.
-              </div>
+                  color:#fff;line-height:1.1;margin-bottom:20px;">Qual é o<br>seu nome?</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -814,8 +805,6 @@ const p=Array.from({length:28},()=>({
                 st.session_state.nome_convidado = nome
                 st.session_state.login_step = "senha"
                 st.rerun()
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
     st.stop()
 
