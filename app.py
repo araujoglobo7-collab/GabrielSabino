@@ -524,6 +524,7 @@ setTimeout(() => {
 # ============================================================
 # ============================================================
 # ============================================================
+# ============================================================
 # SESSION STATE
 # ============================================================
 if "logado" not in st.session_state:
@@ -546,13 +547,19 @@ if "pw_erro" not in st.session_state:
 # ============================================================
 if not st.session_state.logado:
 
+    hora_atual = datetime.now().hour
+    if hora_atual < 12:
+        saudacao = "Bom dia"
+    elif hora_atual < 18:
+        saudacao = "Boa tarde"
+    else:
+        saudacao = "Boa noite"
+
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
-
     [data-testid="stSidebar"],[data-testid="stHeader"],
     footer,[data-testid="stToolbar"]  { display:none !important; }
-
     html,body,.stApp,
     [data-testid="stAppViewContainer"],
     [data-testid="stMain"],
@@ -560,28 +567,11 @@ if not st.session_state.logado:
     .block-container                  { background:#060912 !important;
                                         padding:0 !important;
                                         max-width:100% !important; }
-
-    /* Coluna do form — fundo escuro e centralizado verticalmente */
-    [data-testid="column"]:last-child {
-        background:#060912 !important;
-        display:flex !important;
-        flex-direction:column !important;
-        justify-content:center !important;
-        min-height:100vh !important;
-        padding:40px 36px !important;
-    }
-    [data-testid="column"]:first-child {
-        background:#060912 !important;
-        padding:0 !important;
-    }
-
-    /* Label oculto */
-    .stTextInput label, .stTextInput > div > label { display:none !important; }
-
-    /* Input estilizado */
+    [data-testid="column"]            { padding:0 !important; }
+    .stTextInput label                { display:none !important; }
     .stTextInput input {
-        background: #0D0F1E !important;
-        border: 1.5px solid rgba(107,33,168,.5) !important;
+        background: #0D0F22 !important;
+        border: 1.5px solid rgba(107,33,168,.45) !important;
         border-radius: 12px !important;
         color: #fff !important;
         font-size: 16px !important;
@@ -594,157 +584,145 @@ if not st.session_state.logado:
         border-color: #7C3AED !important;
         box-shadow: 0 0 0 3px rgba(107,33,168,.2) !important;
         background: #11102A !important;
-        outline: none !important;
     }
     .stTextInput input::placeholder { color: rgba(255,255,255,.2) !important; }
-
-    /* Botão */
     .stButton > button {
         background: linear-gradient(135deg,#7C3AED,#4C1D95) !important;
-        color: #fff !important;
-        border: none !important;
+        color: #fff !important; border: none !important;
         border-radius: 12px !important;
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 700 !important;
-        font-size: 15px !important;
-        padding: 14px 24px !important;
-        width: 100% !important;
+        font-weight: 700 !important; font-size: 15px !important;
+        padding: 14px !important; width: 100% !important;
         box-shadow: 0 4px 18px rgba(107,33,168,.4) !important;
         transition: all .2s !important;
-        letter-spacing: .3px !important;
-        margin-top: 4px !important;
     }
     .stButton > button:hover {
         transform: translateY(-2px) !important;
         box-shadow: 0 8px 24px rgba(107,33,168,.6) !important;
     }
-    .stButton > button:active { transform: translateY(0) !important; }
-
-    /* Remove margin extra do stButton */
-    .stButton { margin-top: 0 !important; }
-
-    /* Esconde "Press Enter to apply" do Streamlit */
-    .stTextInput [data-baseweb="input"] + div { display:none !important; }
-
-    /* Gap entre elementos da coluna */
-    [data-testid="column"]:last-child > div { gap: 0 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-    # ── Robô HTML (visual puro) ──
-    ROBO_HTML = """<!DOCTYPE html><html><head>
+    jarvis_html = """<!DOCTYPE html>
+<html><head>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;background:#060912;overflow:hidden;}
-#pc{position:absolute;inset:0;pointer-events:none;}
-#w{display:flex;align-items:center;justify-content:center;height:100vh;}
-#robo{width:clamp(180px,28vw,280px);filter:drop-shadow(0 0 28px rgba(107,33,168,.6));animation:fl 5s ease-in-out infinite;}
-@keyframes fl{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
-.rh{animation:ht 7s ease-in-out infinite;transform-origin:100px 85px;}
-@keyframes ht{0%,100%{transform:rotate(0);}35%{transform:rotate(-3deg);}70%{transform:rotate(2.5deg);}}
-.re{animation:bl 5s infinite;}
-.el{transform-origin:80px 74px;}.er{transform-origin:120px 74px;}
-@keyframes bl{0%,88%,100%{transform:scaleY(1);}92%{transform:scaleY(.05);}}
-.rb{animation:eq .22s ease-in-out infinite alternate;transform-origin:center bottom;}
-.b1{animation-delay:0s;}.b2{animation-delay:.04s;}.b3{animation-delay:.08s;}
-.b4{animation-delay:.12s;}.b5{animation-delay:.08s;}.b6{animation-delay:.04s;}
-@keyframes eq{from{transform:scaleY(.15);}to{transform:scaleY(1.6);}}
-.al{animation:aL 5s ease-in-out infinite;transform-origin:26px 132px;}
-.ar{animation:aR 5s ease-in-out infinite;transform-origin:174px 132px;}
-@keyframes aL{0%,100%{transform:rotate(0);}50%{transform:rotate(-9deg);}}
-@keyframes aR{0%,100%{transform:rotate(0);}50%{transform:rotate(9deg);}}
-.ac{animation:ap 2s ease-in-out infinite;}
-@keyframes ap{0%,100%{opacity:.7;}50%{opacity:1;filter:drop-shadow(0 0 8px #A855F7);}}
-.ro{animation:sp 3s linear infinite;transform-origin:100px 182px;}
-@keyframes sp{to{transform:rotate(360deg);}}
-.l1{animation:p1 2s infinite;}.l2{animation:p2 1.4s infinite;}
-@keyframes p1{0%,100%{opacity:.2;}50%{opacity:1;}}
-@keyframes p2{0%,100%{opacity:.2;}50%{opacity:1;}}
+html,body{width:100%;height:100%;background:#060912;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+#pc{position:fixed;inset:0;pointer-events:none;}
+#scene{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100vh;}
+#face-wrap{position:relative;display:flex;flex-direction:column;align-items:center;}
+#face{width:clamp(200px,30vw,280px);filter:drop-shadow(0 0 36px rgba(107,33,168,.75));animation:float 4s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.fh{animation:ht 6s ease-in-out infinite;transform-origin:130px 130px;}
+@keyframes ht{0%,100%{transform:rotate(0);}30%{transform:rotate(-4deg);}70%{transform:rotate(3deg);}}
+.fe{animation:bl 4s infinite;}
+.fel{transform-origin:95px 115px;}.fer{transform-origin:165px 115px;}
+@keyframes bl{0%,85%,100%{transform:scaleY(1);}89%{transform:scaleY(.04);}}
+.fm{animation:tk .35s ease-in-out infinite alternate;transform-origin:130px 162px;}
+@keyframes tk{from{transform:scaleY(.08);}to{transform:scaleY(1);}}
+.fs{animation:sc 2s linear infinite;}
+@keyframes sc{0%{transform:translateY(-35px);opacity:0;}20%{opacity:1;}80%{opacity:1;}100%{transform:translateY(35px);opacity:0;}}
+#bub{
+  position:absolute;right:-210px;top:16px;
+  width:195px;background:#fff;
+  border:2px solid #6B21A8;
+  border-radius:18px 18px 18px 4px;
+  padding:16px 14px;
+  box-shadow:0 8px 32px rgba(107,33,168,.3);
+  animation:pop .6s 1s cubic-bezier(.34,1.56,.64,1) both;
+  z-index:10;
+}
+@keyframes pop{from{opacity:0;transform:scale(.7) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+#bub::before{content:'';position:absolute;left:-12px;top:22px;border:12px solid transparent;border-right-color:#6B21A8;border-left:none;}
+#bub::after{content:'';position:absolute;left:-9px;top:24px;border:10px solid transparent;border-right-color:#fff;border-left:none;}
+.btag{font-family:monospace;font-size:8px;letter-spacing:3px;color:#7C3AED;margin-bottom:7px;}
+.btxt{font-size:16px;font-weight:800;color:#1A1225;line-height:1.35;}
+.btxt span{color:#6B21A8;}
+.bsub{font-size:11px;color:#9588AA;margin-top:7px;line-height:1.5;}
 .hud{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-family:monospace;font-size:9px;letter-spacing:3px;color:rgba(107,33,168,.4);white-space:nowrap;animation:ph 2s ease-in-out infinite;}
 @keyframes ph{0%,100%{opacity:.3;}50%{opacity:.8;}}
+@media(max-width:680px){
+  #bub{right:auto;left:50%;transform:translateX(-50%) scale(.7);top:auto;bottom:-110px;}
+  #bub::before,#bub::after{display:none;}
+}
 </style></head><body>
 <canvas id="pc"></canvas>
-<div id="w">
-<svg id="robo" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <radialGradient id="gM" cx="50%" cy="30%"><stop offset="0%" stop-color="#C8CDD8"/><stop offset="100%" stop-color="#8B92A0"/></radialGradient>
-  <radialGradient id="gV" cx="50%" cy="40%"><stop offset="0%" stop-color="#0A0D1E"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
-  <radialGradient id="gB" cx="50%" cy="20%"><stop offset="0%" stop-color="#E5E7EB"/><stop offset="100%" stop-color="#C8CDD8"/></radialGradient>
-  <radialGradient id="gA" cx="50%" cy="35%"><stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
-  <filter id="gw"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <filter id="sw"><feGaussianBlur stdDeviation="8"/></filter>
-</defs>
-<ellipse cx="100" cy="357" rx="62" ry="5" fill="#6B21A8" opacity=".3" filter="url(#sw)"/>
-<g class="al"><rect x="10" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/><rect x="14" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/><circle cx="21" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/><circle cx="21" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/></g>
-<g class="ar"><rect x="168" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/><rect x="168" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/><circle cx="179" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/><circle cx="179" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/></g>
-<rect x="38" y="124" width="124" height="132" rx="18" fill="url(#gB)" stroke="rgba(107,33,168,.15)" stroke-width="1.5"/>
-<path d="M38 143 L68 124 L132 124 L162 143" fill="none" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
-<line x1="38" y1="162" x2="162" y2="162" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
-<line x1="38" y1="218" x2="162" y2="218" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
-<circle cx="100" cy="182" r="34" fill="rgba(8,10,20,.5)"/>
-<circle cx="100" cy="182" r="27" fill="none" stroke="rgba(124,58,237,.4)" stroke-width="1.5"/>
-<circle cx="100" cy="182" r="19" fill="none" stroke="rgba(99,179,237,.35)" stroke-width="1"/>
-<circle cx="100" cy="182" r="11" fill="url(#gA)" class="ac" filter="url(#gw)"/>
-<circle cx="100" cy="182" r="5" fill="white" opacity=".92"/>
-<g class="ro">
-  <line x1="100" y1="148" x2="100" y2="158" stroke="#7C3AED" stroke-width="2"/>
-  <line x1="100" y1="206" x2="100" y2="216" stroke="#7C3AED" stroke-width="2"/>
-  <line x1="66" y1="182" x2="76" y2="182" stroke="#7C3AED" stroke-width="2"/>
-  <line x1="124" y1="182" x2="134" y2="182" stroke="#7C3AED" stroke-width="2"/>
-  <line x1="76" y1="160" x2="82" y2="168" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-  <line x1="124" y1="160" x2="118" y2="168" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-  <line x1="76" y1="204" x2="82" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-  <line x1="124" y1="204" x2="118" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-</g>
-<circle cx="54" cy="144" r="4" fill="#10B981" class="l1" filter="url(#gw)"/>
-<circle cx="146" cy="144" r="4" fill="#7C3AED" class="l2" filter="url(#gw)"/>
-<circle cx="54" cy="156" r="3" fill="#7C3AED" class="l2"/>
-<rect x="82" y="112" width="36" height="16" rx="5" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
-<g class="rh">
-  <line x1="100" y1="16" x2="100" y2="40" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="100" cy="11" r="7" fill="url(#gA)" filter="url(#gw)"><animate attributeName="r" values="5;9;5" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".65;1;.65" dur="1.4s" repeatCount="indefinite"/></circle>
-  <rect x="52" y="40" width="96" height="76" rx="16" fill="url(#gM)"/>
-  <rect x="52" y="40" width="96" height="76" rx="16" fill="none" stroke="rgba(107,33,168,.25)" stroke-width="1.5"/>
-  <rect x="58" y="40" width="84" height="16" rx="8" fill="rgba(107,33,168,.3)"/>
-  <text x="100" y="53" text-anchor="middle" fill="rgba(200,180,255,.8)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
-  <rect x="60" y="60" width="80" height="46" rx="10" fill="#060912"/>
-  <rect x="60" y="60" width="80" height="46" rx="10" fill="url(#gV)" opacity=".5"/>
-  <rect x="60" y="60" width="80" height="46" rx="10" fill="none" stroke="rgba(107,33,168,.55)" stroke-width="1.5"/>
-  <line x1="61" y1="72" x2="139" y2="72" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-  <line x1="61" y1="82" x2="139" y2="82" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-  <line x1="61" y1="92" x2="139" y2="92" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-  <path d="M64 64 L71 64" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/><path d="M64 64 L64 70" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
-  <path d="M136 64 L129 64" stroke="#A855F7" stroke-width="1.5" opacity=".6"/><path d="M136 64 L136 70" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
-  <g class="re el"><circle cx="80" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/><circle cx="80" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/><circle cx="83" cy="75" r="3" fill="white" opacity=".85"/><circle cx="80" cy="78" r="4" fill="#060912" opacity=".55"/></g>
-  <g class="re er"><circle cx="120" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/><circle cx="120" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/><circle cx="123" cy="75" r="3" fill="white" opacity=".85"/><circle cx="120" cy="78" r="4" fill="#060912" opacity=".55"/></g>
-  <g transform="translate(76,106)">
-    <rect class="rb b1" x="0" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
-    <rect class="rb b2" x="7" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-    <rect class="rb b3" x="14" y="-9" width="5" height="18" rx="2" fill="#A855F7" opacity=".8"/>
-    <rect class="rb b4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-    <rect class="rb b5" x="28" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
-    <rect class="rb b6" x="35" y="-2" width="5" height="4" rx="2" fill="#A855F7" opacity=".5"/>
-  </g>
-  <rect x="53" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-  <rect x="53" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-  <rect x="142" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-  <rect x="142" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-</g>
-<rect x="52" y="256" width="40" height="52" rx="10" fill="url(#gM)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
-<rect x="108" y="256" width="40" height="52" rx="10" fill="url(#gM)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
-<rect x="48" y="302" width="50" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
-<rect x="102" y="302" width="50" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
-</svg>
+<div id="scene">
+  <div id="face-wrap">
+    <svg id="face" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="gh" cx="50%" cy="35%"><stop offset="0%" stop-color="#2A2D4A"/><stop offset="100%" stop-color="#0D0F1E"/></radialGradient>
+      <radialGradient id="gv" cx="50%" cy="40%"><stop offset="0%" stop-color="#0A0D20"/><stop offset="100%" stop-color="#050712"/></radialGradient>
+      <radialGradient id="ge" cx="40%" cy="35%"><stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
+      <radialGradient id="gm" cx="50%" cy="0%"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#4C1D95"/></radialGradient>
+      <filter id="fw"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="fsw"><feGaussianBlur stdDeviation="10"/></filter>
+    </defs>
+    <circle cx="130" cy="130" r="115" fill="#6B21A8" opacity=".07" filter="url(#fsw)"/>
+    <g class="fh">
+      <rect x="18" y="18" width="224" height="224" rx="42" fill="url(#gh)"/>
+      <rect x="18" y="18" width="224" height="224" rx="42" fill="none" stroke="rgba(107,33,168,.5)" stroke-width="2"/>
+      <rect x="18" y="18" width="224" height="38" rx="42" fill="rgba(107,33,168,.22)"/>
+      <rect x="18" y="44" width="224" height="12" fill="rgba(107,33,168,.12)"/>
+      <text x="130" y="41" text-anchor="middle" fill="rgba(167,139,250,.85)" font-size="10" font-weight="700" letter-spacing="4" font-family="monospace">J . A . R . V . I . S</text>
+      <rect x="32" y="68" width="196" height="136" rx="16" fill="url(#gv)"/>
+      <rect x="32" y="68" width="196" height="136" rx="16" fill="none" stroke="rgba(107,33,168,.6)" stroke-width="1.5"/>
+      <line x1="33" y1="93"  x2="227" y2="93"  stroke="#7C3AED" stroke-width=".5" opacity=".25"/>
+      <line x1="33" y1="113" x2="227" y2="113" stroke="#7C3AED" stroke-width=".5" opacity=".25"/>
+      <line x1="33" y1="133" x2="227" y2="133" stroke="#7C3AED" stroke-width=".5" opacity=".25"/>
+      <line x1="33" y1="153" x2="227" y2="153" stroke="#7C3AED" stroke-width=".5" opacity=".25"/>
+      <line x1="33" y1="173" x2="227" y2="173" stroke="#7C3AED" stroke-width=".5" opacity=".25"/>
+      <rect class="fs" x="33" y="110" width="194" height="2.5" rx="1" fill="#10B981" opacity=".55" filter="url(#fw)"/>
+      <path d="M36 72 L50 72" stroke="#A855F7" stroke-width="2" opacity=".8"/>
+      <path d="M36 72 L36 84" stroke="#A855F7" stroke-width="2" opacity=".8"/>
+      <path d="M224 72 L210 72" stroke="#10B981" stroke-width="2" opacity=".8"/>
+      <path d="M224 72 L224 84" stroke="#10B981" stroke-width="2" opacity=".8"/>
+      <path d="M36 200 L50 200" stroke="#A855F7" stroke-width="2" opacity=".8"/>
+      <path d="M36 200 L36 188" stroke="#A855F7" stroke-width="2" opacity=".8"/>
+      <path d="M224 200 L210 200" stroke="#10B981" stroke-width="2" opacity=".8"/>
+      <path d="M224 200 L224 188" stroke="#10B981" stroke-width="2" opacity=".8"/>
+      <g class="fe fel">
+        <circle cx="93" cy="113" r="26" fill="#060912" stroke="rgba(167,139,250,.3)" stroke-width="1.5"/>
+        <circle cx="93" cy="113" r="17" fill="url(#ge)" filter="url(#fw)"/>
+        <circle cx="93" cy="113" r="8"  fill="#080A18" opacity=".55"/>
+        <circle cx="100" cy="106" r="6" fill="white" opacity=".75"/>
+      </g>
+      <g class="fe fer">
+        <circle cx="167" cy="113" r="26" fill="#060912" stroke="rgba(167,139,250,.3)" stroke-width="1.5"/>
+        <circle cx="167" cy="113" r="17" fill="url(#ge)" filter="url(#fw)"/>
+        <circle cx="167" cy="113" r="8"  fill="#080A18" opacity=".55"/>
+        <circle cx="174" cy="106" r="6" fill="white" opacity=".75"/>
+      </g>
+      <g class="fm">
+        <rect x="86" y="156" width="88" height="26" rx="13" fill="url(#gm)" filter="url(#fw)"/>
+        <rect x="90" y="160" width="80" height="18" rx="9" fill="#060912" opacity=".35"/>
+        <rect x="94" y="161" width="14" height="14" rx="4" fill="rgba(255,255,255,.15)"/>
+        <rect x="112" y="161" width="14" height="14" rx="4" fill="rgba(255,255,255,.1)"/>
+        <rect x="130" y="161" width="14" height="14" rx="4" fill="rgba(255,255,255,.15)"/>
+        <rect x="148" y="161" width="14" height="14" rx="4" fill="rgba(255,255,255,.1)"/>
+      </g>
+      <circle cx="26" cy="98" r="5" fill="#10B981" filter="url(#fw)"><animate attributeName="opacity" values=".2;1;.2" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="234" cy="98" r="5" fill="#7C3AED" filter="url(#fw)"><animate attributeName="opacity" values=".2;1;.2" dur="1.5s" repeatCount="indefinite"/></circle>
+      <circle cx="26" cy="112" r="3" fill="#7C3AED"><animate attributeName="opacity" values=".8;.1;.8" dur=".8s" repeatCount="indefinite"/></circle>
+      <line x1="130" y1="18" x2="130" y2="3" stroke="#7C3AED" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="130" cy="-1" r="6" fill="#A855F7" filter="url(#fw)"><animate attributeName="r" values="4;9;4" dur="1.3s" repeatCount="indefinite"/><animate attributeName="opacity" values=".6;1;.6" dur="1.3s" repeatCount="indefinite"/></circle>
+    </g>
+    </svg>
+    <div id="bub">
+      <div class="btag">⬡ J.A.R.V.I.S ONLINE</div>
+      <div class="btxt">SAUDACAO_PLACEHOLDER!<br><span>Gabriel</span> 👋</div>
+      <div class="bsub">Digite sua senha para acessar o hub operacional.</div>
+    </div>
+  </div>
 </div>
 <div class="hud">⬡ J.A.R.V.I.S · HUB OPERACIONAL SABINO OS ⬡</div>
 <script>
 const pc=document.getElementById("pc"),ctx=pc.getContext("2d");
 function r(){pc.width=window.innerWidth;pc.height=window.innerHeight;}
 r();window.addEventListener("resize",r);
-const p=Array.from({length:30},()=>({
+const p=Array.from({length:28},()=>({
   x:Math.random()*pc.width,y:Math.random()*pc.height,
-  vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,
+  vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,
   r:Math.random()*1.8+.4,c:Math.random()>.5?"#6B21A8":"#10B981"
 }));
 (function loop(){
@@ -756,36 +734,41 @@ const p=Array.from({length:30},()=>({
     ctx.fillStyle=q.c;ctx.shadowBlur=7;ctx.shadowColor=q.c;ctx.fill();});
   requestAnimationFrame(loop);
 })();
-</script></body></html>"""
+</script>
+</body></html>"""
 
-    # Layout: robô (HTML visual) | form (Streamlit nativo)
-    col_robo, col_form = st.columns([1.1, 0.9])
+    jarvis_html = jarvis_html.replace("SAUDACAO_PLACEHOLDER", saudacao)
 
-    with col_robo:
-        components.html(ROBO_HTML, height=640, scrolling=False)
+    col_face, col_form = st.columns([1.05, 0.95])
+
+    with col_face:
+        components.html(jarvis_html, height=660, scrolling=False)
 
     with col_form:
+        st.markdown('''
+        <div style="min-height:660px;display:flex;flex-direction:column;
+            justify-content:center;padding:20px 32px 20px 8px;">
+        ''', unsafe_allow_html=True)
+
         if st.session_state.login_step == "senha":
-            st.markdown("""
-            <div style="margin-bottom:24px;">
+            st.markdown(f"""
+            <div style="margin-bottom:28px;">
               <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
                   letter-spacing:4px;color:#7C3AED;margin-bottom:14px;">⬡ IDENTIFICAÇÃO</div>
-              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+              <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;
                   color:#fff;line-height:1.05;">Hub</div>
-              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+              <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;
                   color:#10B981;line-height:1.05;margin-bottom:12px;">Operacional</div>
               <div style="font-size:14px;color:rgba(255,255,255,.38);line-height:1.7;">
-                Digite sua senha para entrar.</div>
+                {saudacao}, digite sua senha.</div>
             </div>
             """, unsafe_allow_html=True)
 
             senha = st.text_input("pw", type="password",
                 placeholder="••••••••", label_visibility="collapsed", key="inp_senha")
-
             entrar = st.button("Entrar →", use_container_width=True, key="btn_entrar")
 
-            # Enter também funciona (Streamlit processa ao digitar + Enter)
-            if entrar or (senha and st.session_state.get("_enter_pw")):
+            if entrar and senha:
                 if senha == "gr1723":
                     st.session_state.logado = True
                     st.session_state.is_convidado = False
@@ -807,7 +790,7 @@ const p=Array.from({length:30},()=>({
                   ❌ Senha incorreta.
                 </div>""", unsafe_allow_html=True)
 
-        else:  # nome_conv
+        else:
             st.markdown("""
             <div style="margin-bottom:24px;">
               <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
@@ -823,7 +806,6 @@ const p=Array.from({length:30},()=>({
 
             nome = st.text_input("nm", placeholder="Seu nome",
                 label_visibility="collapsed", key="inp_nome")
-
             entrar2 = st.button("Entrar →", use_container_width=True, key="btn_entrar2")
 
             if entrar2 and nome:
@@ -833,7 +815,10 @@ const p=Array.from({length:30},()=>({
                 st.session_state.login_step = "senha"
                 st.rerun()
 
+        st.markdown("</div>", unsafe_allow_html=True)
+
     st.stop()
+
 
 # DATA LOADING
 # ============================================================
@@ -1670,6 +1655,19 @@ with tab5:
   map.on('popupopen', function(e) {{
     map.flyTo(e.popup.getLatLng(), 7, {{ animate: true, duration: 1.2 }});
   }});
+
+  // Sobrevoo automático entre cidades
+  var _pts = [];
+  map.eachLayer(function(l){{ if(l.getLatLng) _pts.push(l.getLatLng()); }});
+  var _i=0;
+  function _fly(){{
+    if(_pts.length<2) return;
+    var pt=_pts[_i%_pts.length];
+    map.flyTo(pt, 6, {{animate:true,duration:3}});
+    _i++;
+    setTimeout(_fly, 5500);
+  }}
+  setTimeout(_fly, 3000);
 </script>
 </body>
 </html>
@@ -1839,23 +1837,21 @@ with tab6:
         """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
 # TAB 7 — CALENDÁRIO
 # ─────────────────────────────────────────────
 with tab7:
     if df.empty:
         st.warning("Sem dados carregados.")
     else:
-        # Filtros
         fc1, fc2, fc3 = st.columns(3)
         with fc1:
-            filtro_nome_cal = st.text_input("🔍 Buscar projeto", placeholder="Nome...", key="cal_nome")
+            filtro_nome_cal = st.text_input("🔍 Buscar", placeholder="Nome do projeto...", key="cal_nome")
         with fc2:
             filtro_status_cal = st.multiselect("Status", STATUS_OPCOES, default=[], key="cal_status", placeholder="Todos")
         with fc3:
-            filtro_mes_cal = st.selectbox("Mês", ["Todos"] + [
-                "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
-            ], key="cal_mes")
+            filtro_mes_cal = st.selectbox("Mês", ["Todos","Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"], key="cal_mes")
 
         df_cal = df.copy()
         if filtro_nome_cal:
@@ -1867,372 +1863,275 @@ with tab7:
                        "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].index(filtro_mes_cal) + 1
             df_cal = df_cal[df_cal["Data Inicial"].dt.month == mes_num]
 
-        # Monta JSON dos projetos para o calendário
+        import json as _json
         eventos = []
         for _, row in df_cal.iterrows():
             cor = STATUS_COLORS.get(row.get("Status",""), "#6B21A8")
             eventos.append({
-                "nome": str(row["Projeto"])[:40],
+                "nome": str(row["Projeto"])[:45],
                 "inicio": row["Data Inicial"].strftime("%Y-%m-%d"),
                 "fim": row["Prazo"].strftime("%Y-%m-%d"),
                 "status": str(row.get("Status","")),
-                "foco": str(row.get("Foco",""))[:30] if pd.notna(row.get("Foco")) else "",
+                "foco": str(row.get("Foco",""))[:40] if pd.notna(row.get("Foco")) else "",
                 "cor": cor,
                 "dias": int((row["Prazo"] - pd.Timestamp.now()).days)
             })
 
-        import json as _json
         eventos_json = _json.dumps(eventos, ensure_ascii=False)
+        status_colors_json = _json.dumps(STATUS_COLORS)
 
         CAL_HTML = f"""<!DOCTYPE html>
-<html>
-<head>
+<html><head>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box;}}
-body{{background:#F6F5FA;font-family:'Inter',sans-serif;color:#1A1225;padding:0;}}
+body{{background:#F6F5FA;font-family:'Inter',sans-serif;color:#1A1225;padding:0 0 20px;}}
 
-/* ── Navegação do mês ── */
+/* Nav */
 .nav{{
   display:flex;align-items:center;justify-content:space-between;
-  padding:16px 20px;
-  background:#fff;
-  border:1px solid #DDD8F0;
-  border-radius:14px;
-  margin-bottom:16px;
-  box-shadow:0 1px 4px rgba(107,33,168,.06);
+  padding:14px 20px;background:#fff;
+  border:1px solid #DDD8F0;border-radius:14px;
+  margin-bottom:14px;
+  box-shadow:0 1px 6px rgba(107,33,168,.07);
 }}
-.nav-title{{
-  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#6B21A8;
-}}
-.nav-btn{{
-  width:36px;height:36px;border-radius:50%;border:1px solid #DDD8F0;
-  background:#fff;cursor:pointer;font-size:16px;color:#6B21A8;
+.nav-title{{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#6B21A8;}}
+.nav-sub{{font-size:11px;color:#9588AA;font-family:'JetBrains Mono',monospace;letter-spacing:1px;}}
+.nav-right{{display:flex;gap:8px;align-items:center;}}
+.nbtn{{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid #DDD8F0;background:#fff;
+  cursor:pointer;font-size:18px;color:#6B21A8;
   display:flex;align-items:center;justify-content:center;
   transition:all .18s;
 }}
-.nav-btn:hover{{background:#6B21A8;color:#fff;border-color:#6B21A8;}}
-.nav-today{{
-  padding:7px 16px;border-radius:8px;border:1px solid #6B21A8;
-  background:transparent;color:#6B21A8;font-size:12px;font-weight:600;
-  cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s;
+.nbtn:hover{{background:#6B21A8;color:#fff;border-color:#6B21A8;}}
+.ntod{{
+  padding:7px 16px;border-radius:8px;
+  border:1px solid #6B21A8;background:transparent;
+  color:#6B21A8;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;
 }}
-.nav-today:hover{{background:#6B21A8;color:#fff;}}
+.ntod:hover{{background:#6B21A8;color:#fff;}}
 
-/* ── Grade do calendário ── */
-.cal-grid{{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:1px;
-  background:#DDD8F0;
-  border-radius:14px;
-  overflow:hidden;
+/* Grade */
+.grid{{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:1px;background:#E8E4F4;
+  border-radius:14px;overflow:hidden;
   border:1px solid #DDD8F0;
-  box-shadow:0 2px 8px rgba(107,33,168,.07);
+  box-shadow:0 2px 12px rgba(107,33,168,.08);
 }}
+.dh{{
+  background:#EFECF8;padding:10px 4px;text-align:center;
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  font-weight:600;letter-spacing:1.5px;color:#6B21A8;
+}}
+.dc{{
+  background:#fff;min-height:96px;padding:5px 4px;
+  transition:background .12s;position:relative;
+  overflow:hidden;
+}}
+.dc.om{{background:#FAFAFA;}}
+.dc.tod .dn{{
+  background:#6B21A8;color:#fff;border-radius:50%;
+  width:24px;height:24px;display:flex;align-items:center;
+  justify-content:center;font-weight:700;
+}}
+.dn{{font-size:12px;font-weight:600;color:#1A1225;display:inline-flex;
+    width:24px;height:24px;align-items:center;justify-content:center;
+    margin-bottom:3px;}}
+.dc.om .dn{{color:#C4BCDF;}}
 
-/* Cabeçalho dos dias */
-.day-header{{
-  background:#EFECF8;
-  padding:10px 6px;
-  text-align:center;
-  font-family:'JetBrains Mono',monospace;
-  font-size:10px;font-weight:600;
-  letter-spacing:1.5px;
-  color:#6B21A8;
-  text-transform:uppercase;
-}}
-
-/* Célula do dia */
-.day-cell{{
-  background:#fff;
-  min-height:110px;
-  padding:6px;
-  position:relative;
-  transition:background .15s;
-  cursor:default;
-}}
-.day-cell:hover{{background:#FAFAFA;}}
-.day-cell.other-month{{background:#FAFAFA;}}
-.day-cell.today .day-num{{
-  background:#6B21A8;color:#fff;
-  width:26px;height:26px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;
-}}
-.day-cell.has-event{{background:#FDFCFF;}}
-
-.day-num{{
-  font-size:13px;font-weight:600;color:#1A1225;
-  margin-bottom:4px;display:inline-block;
-  width:26px;height:26px;line-height:26px;text-align:center;
-}}
-.day-cell.other-month .day-num{{color:#C4BCDF;}}
-
-/* Evento no dia */
-.evt{{
-  border-radius:5px;
-  padding:3px 6px;
-  font-size:10px;font-weight:600;
+/* Evento — só nome, sem poluição */
+.ev{{
+  border-radius:4px;padding:2px 6px 2px 8px;
+  font-size:11px;font-weight:600;
   margin-bottom:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  cursor:pointer;
-  transition:opacity .15s;
-  line-height:1.4;
+  cursor:pointer;transition:opacity .15s, filter .15s;
+  line-height:1.5;
+  position:relative;
 }}
-.evt:hover{{opacity:.8;}}
-.evt.start{{border-left:3px solid rgba(0,0,0,.2);}}
-.more-tag{{
-  font-size:10px;color:#9588AA;font-weight:500;
-  padding:1px 4px;cursor:pointer;
-}}
-.more-tag:hover{{color:#6B21A8;}}
+.ev:hover{{opacity:.85;filter:brightness(1.05);}}
+.ev.is-start{{border-left:3px solid rgba(0,0,0,.2)!important;}}
+.more{{font-size:10px;color:#9588AA;font-weight:500;padding:1px 4px;cursor:pointer;}}
+.more:hover{{color:#6B21A8;}}
 
-/* ── Tooltip / popup ── */
-#tooltip{{
+/* Tooltip card — cinza limpo */
+#tt{{
   position:fixed;
-  background:#1A1225;
-  border-radius:12px;
-  padding:14px 16px;
-  width:240px;
-  box-shadow:0 8px 32px rgba(0,0,0,.35);
+  background:#1C1828;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:16px 18px;
+  width:248px;
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
   z-index:9999;
   display:none;
-  animation:fadeIn .15s ease;
+  pointer-events:none;
 }}
-@keyframes fadeIn{{from{{opacity:0;transform:translateY(4px);}}to{{opacity:1;transform:translateY(0);}}}}
-#tooltip .tt-nome{{font-weight:700;font-size:14px;color:#fff;margin-bottom:8px;line-height:1.4;}}
-#tooltip .tt-row{{display:flex;gap:8px;align-items:center;margin-bottom:5px;font-size:12px;color:rgba(255,255,255,.65);}}
-#tooltip .tt-badge{{
-  display:inline-block;padding:2px 8px;border-radius:20px;
-  font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;
-  margin-bottom:8px;
+#tt.show{{display:block;animation:ttIn .15s ease;}}
+@keyframes ttIn{{from{{opacity:0;transform:translateY(6px);}}to{{opacity:1;transform:translateY(0);}}}}
+.tt-nome{{font-weight:700;font-size:14px;color:#fff;margin-bottom:10px;line-height:1.4;}}
+.tt-badge{{
+  display:inline-flex;align-items:center;padding:3px 10px;
+  border-radius:20px;font-size:10px;font-weight:700;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.5px;
+  margin-bottom:10px;
 }}
-#tooltip .tt-close{{
-  position:absolute;top:10px;right:12px;
-  color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;
+.tt-row{{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:12px;color:rgba(255,255,255,.6);
+  margin-bottom:6px;line-height:1.4;
 }}
-#tooltip .tt-close:hover{{color:#fff;}}
+.tt-row .lbl{{color:rgba(255,255,255,.35);font-size:10px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.5px;
+  min-width:40px;margin-top:1px;}}
+.tt-row .val{{color:rgba(255,255,255,.85);font-size:12px;}}
+.tt-dias{{
+  margin-top:8px;padding:8px 10px;border-radius:8px;
+  background:rgba(255,255,255,.05);
+  font-size:12px;font-weight:600;text-align:center;
+}}
 
-/* ── Legenda ── */
-.legend{{
-  display:flex;flex-wrap:wrap;gap:10px;
+/* Legenda */
+.leg{{
+  display:flex;flex-wrap:wrap;gap:8px;
   margin-top:14px;padding:12px 16px;
   background:#fff;border:1px solid #DDD8F0;border-radius:10px;
 }}
-.leg-item{{display:flex;align-items:center;gap:6px;font-size:11px;color:#5B4E72;}}
-.leg-dot{{width:10px;height:10px;border-radius:50%;flex-shrink:0;}}
+.li{{display:flex;align-items:center;gap:6px;font-size:11px;color:#5B4E72;}}
+.ld{{width:10px;height:10px;border-radius:3px;flex-shrink:0;}}
 
-/* Mobile */
 @media(max-width:600px){{
-  .day-cell{{min-height:70px;padding:4px;}}
-  .day-num{{font-size:11px;width:22px;height:22px;line-height:22px;}}
-  .evt{{font-size:9px;padding:2px 4px;}}
-  .nav-title{{font-size:16px;}}
-  #tooltip{{width:200px;}}
+  .dc{{min-height:64px;padding:3px 2px;}}
+  .dn{{font-size:10px;width:20px;height:20px;}}
+  .ev{{font-size:9px;padding:1px 4px;}}
+  .nav-title{{font-size:18px;}}
+  #tt{{width:200px;font-size:11px;}}
 }}
-</style>
-</head>
-<body>
+</style></head><body>
 
-<!-- Navegação -->
 <div class="nav">
-  <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
   <div>
     <div class="nav-title" id="nav-title"></div>
+    <div class="nav-sub" id="nav-sub"></div>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;">
-    <button class="nav-today" onclick="goToday()">Hoje</button>
-    <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+  <div class="nav-right">
+    <button class="ntod" onclick="goToday()">Hoje</button>
+    <button class="nbtn" onclick="chM(-1)">&#8249;</button>
+    <button class="nbtn" onclick="chM(1)">&#8250;</button>
   </div>
 </div>
 
-<!-- Grade -->
-<div class="cal-grid" id="cal-grid"></div>
-
-<!-- Legenda -->
-<div class="legend" id="legend"></div>
-
-<!-- Tooltip -->
-<div id="tooltip">
-  <span class="tt-close" onclick="hideTooltip()">✕</span>
-  <div class="tt-nome" id="tt-nome"></div>
-  <div class="tt-badge" id="tt-badge"></div>
-  <div class="tt-row">📅 <span id="tt-inicio"></span></div>
-  <div class="tt-row">⏰ <span id="tt-fim"></span></div>
-  <div class="tt-row" id="tt-foco-row">🎯 <span id="tt-foco"></span></div>
-  <div class="tt-row">⬡ <span id="tt-dias"></span></div>
-</div>
+<div class="grid" id="grid"></div>
+<div class="leg" id="leg"></div>
+<div id="tt"></div>
 
 <script>
-const EVENTOS = {eventos_json};
-const STATUS_COLORS = {_json.dumps(STATUS_COLORS)};
-const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-               'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const EVS={eventos_json};
+const SC={status_colors_json};
+const DS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-let hoje = new Date();
-let curYear = hoje.getFullYear();
-let curMonth = hoje.getMonth();
+const hoje=new Date();
+let Y=hoje.getFullYear(), M=hoje.getMonth();
 
-function parseDate(s){{ return new Date(s + 'T00:00:00'); }}
+function pd(s){{return new Date(s+'T00:00:00');}}
+function sd(a,b){{return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}}
 
-function sameDay(a,b){{
-  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+function evDay(y,m,d){{
+  const dt=new Date(y,m,d);
+  return EVS.filter(e=>{{const i=pd(e.inicio),f=pd(e.fim);return dt>=i&&dt<=f;}});
 }}
 
-function getEventsForDay(year, month, day){{
-  const d = new Date(year, month, day);
-  return EVENTOS.filter(e=>{{
-    const ini = parseDate(e.inicio);
-    const fim = parseDate(e.fim);
-    return d >= ini && d <= fim;
-  }});
-}}
+function render(){{
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  DS.forEach(d=>{{const h=document.createElement('div');h.className='dh';h.textContent=d;g.appendChild(h);}});
+  document.getElementById('nav-title').textContent=MS[M]+' '+Y;
+  const cnt=evDay(Y,M,1).length + evDay(Y,M,15).length;
+  document.getElementById('nav-sub').textContent=EVS.length+' projetos no portfólio';
 
-function renderCal(){{
-  const grid = document.getElementById('cal-grid');
-  grid.innerHTML = '';
+  const fd=new Date(Y,M,1).getDay();
+  const dim=new Date(Y,M+1,0).getDate();
+  const dip=new Date(Y,M,0).getDate();
+  const tot=Math.ceil((fd+dim)/7)*7;
 
-  // Header
-  DIAS_SEMANA.forEach(d=>{{
-    const h = document.createElement('div');
-    h.className='day-header'; h.textContent=d;
-    grid.appendChild(h);
-  }});
-
-  document.getElementById('nav-title').textContent = MESES[curMonth] + ' ' + curYear;
-
-  const firstDay = new Date(curYear, curMonth, 1).getDay();
-  const daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
-  const daysInPrev = new Date(curYear, curMonth, 0).getDate();
-
-  // Células
-  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
-
-  for(let i=0; i<totalCells; i++){{
-    const cell = document.createElement('div');
-    cell.className = 'day-cell';
-
-    let day, month, year, otherMonth=false;
-    if(i < firstDay){{
-      day = daysInPrev - firstDay + i + 1;
-      month = curMonth - 1; year = curYear;
-      if(month < 0){{ month=11; year--; }}
-      otherMonth = true;
-    }} else if(i >= firstDay + daysInMonth){{
-      day = i - firstDay - daysInMonth + 1;
-      month = curMonth + 1; year = curYear;
-      if(month > 11){{ month=0; year++; }}
-      otherMonth = true;
-    }} else {{
-      day = i - firstDay + 1;
-      month = curMonth; year = curYear;
+  for(let i=0;i<tot;i++){{
+    const cell=document.createElement('div');
+    cell.className='dc';
+    let day,mo=M,yr=Y,om=false;
+    if(i<fd){{day=dip-fd+i+1;mo=M-1;yr=Y;if(mo<0){{mo=11;yr--;}}om=true;}}
+    else if(i>=fd+dim){{day=i-fd-dim+1;mo=M+1;yr=Y;if(mo>11){{mo=0;yr++;}}om=true;}}
+    else{{day=i-fd+1;}}
+    if(om)cell.classList.add('om');
+    const isT=!om&&sd(new Date(yr,mo,day),hoje);
+    if(isT)cell.classList.add('tod');
+    const dn=document.createElement('div');dn.className='dn';dn.textContent=day;cell.appendChild(dn);
+    if(!om){{
+      const evs=evDay(yr,mo,day);
+      if(evs.length)cell.style.background='#FDFCFF';
+      evs.slice(0,3).forEach(e=>{{
+        const div=document.createElement('div');
+        div.className='ev'+(sd(pd(e.inicio),new Date(yr,mo,day))?' is-start':'');
+        div.style.background=e.cor+'20';
+        div.style.color=e.cor;
+        div.style.borderLeft=sd(pd(e.inicio),new Date(yr,mo,day))?'3px solid '+e.cor:'3px solid transparent';
+        div.textContent=e.nome;
+        div.onmouseenter=function(ev){{showTT(e,ev);}};
+        div.onmouseleave=hideTT;
+        cell.appendChild(div);
+      }});
+      if(evs.length>3){{const m=document.createElement('div');m.className='more';m.textContent='+' +(evs.length-3)+' mais';cell.appendChild(m);}}
     }}
-
-    if(otherMonth) cell.classList.add('other-month');
-
-    const isToday = !otherMonth && sameDay(new Date(year,month,day), hoje);
-    if(isToday) cell.classList.add('today');
-
-    // Número do dia
-    const numDiv = document.createElement('div');
-    numDiv.className='day-num';
-    numDiv.textContent = day;
-    cell.appendChild(numDiv);
-
-    // Eventos do dia
-    const evts = getEventsForDay(year, month, day);
-    if(evts.length > 0) cell.classList.add('has-event');
-
-    const maxShow = 3;
-    evts.slice(0, maxShow).forEach(e=>{{
-      const div = document.createElement('div');
-      div.className='evt';
-      const isStart = sameDay(parseDate(e.inicio), new Date(year,month,day));
-      if(isStart) div.classList.add('start');
-      div.style.background = e.cor + '22';
-      div.style.color = e.cor;
-      div.style.borderLeft = isStart ? '3px solid '+e.cor : 'none';
-      div.title = e.nome;
-      div.textContent = (isStart ? '▶ ' : '  ') + e.nome;
-      div.onclick = (ev)=>{{ ev.stopPropagation(); showTooltip(e, ev); }};
-      cell.appendChild(div);
-    }});
-    if(evts.length > maxShow){{
-      const more = document.createElement('div');
-      more.className='more-tag';
-      more.textContent = '+' + (evts.length-maxShow) + ' mais';
-      cell.appendChild(more);
-    }}
-
-    grid.appendChild(cell);
+    g.appendChild(cell);
   }}
-
-  renderLegend();
+  renderLeg();
 }}
 
-function renderLegend(){{
-  const leg = document.getElementById('legend');
-  leg.innerHTML = '';
-  const seen = {{}};
-  EVENTOS.forEach(e=>{{
-    if(!seen[e.status]){{
-      seen[e.status]=true;
-      const item = document.createElement('div');
-      item.className='leg-item';
-      item.innerHTML=`<div class="leg-dot" style="background:${{e.cor}}"></div><span>${{e.status}}</span>`;
-      leg.appendChild(item);
-    }}
-  }});
+function renderLeg(){{
+  const l=document.getElementById('leg');l.innerHTML='';
+  const seen={{}};
+  EVS.forEach(e=>{{if(!seen[e.status]){{seen[e.status]=1;
+    const item=document.createElement('div');item.className='li';
+    item.innerHTML=`<div class="ld" style="background:${{e.cor}}"></div><span>${{e.status}}</span>`;
+    l.appendChild(item);}}}});
 }}
 
-function showTooltip(e, ev){{
-  const tt = document.getElementById('tooltip');
-  document.getElementById('tt-nome').textContent = e.nome;
-  const badge = document.getElementById('tt-badge');
-  badge.textContent = e.status;
-  badge.style.background = e.cor + '22';
-  badge.style.color = e.cor;
-  badge.style.border = '1px solid ' + e.cor + '55';
-  document.getElementById('tt-inicio').textContent = formatDate(e.inicio);
-  document.getElementById('tt-fim').textContent = formatDate(e.fim);
-  document.getElementById('tt-foco').textContent = e.foco || '—';
-  document.getElementById('tt-foco-row').style.display = e.foco ? 'flex' : 'none';
-  const d = e.dias;
-  const diasEl = document.getElementById('tt-dias');
-  diasEl.textContent = d < 0 ? Math.abs(d)+' dias atrasado' : d+' dias restantes';
-  diasEl.style.color = d < 0 ? '#F87171' : d < 7 ? '#F59E0B' : '#10B981';
-
-  tt.style.display='block';
-  const x = Math.min(ev.clientX + 12, window.innerWidth - 260);
-  const y = Math.min(ev.clientY + 12, window.innerHeight - 200);
-  tt.style.left = x+'px';
-  tt.style.top  = y+'px';
+function showTT(e,ev){{
+  const tt=document.getElementById('tt');
+  const d=e.dias;
+  const dc=d<0?'#F87171':d<7?'#F59E0B':'#10B981';
+  const dtxt=d<0?Math.abs(d)+' dias em atraso':d===0?'Vence hoje':d+' dias restantes';
+  tt.innerHTML=`
+    <div class="tt-nome">${{e.nome}}</div>
+    <span class="tt-badge" style="background:${{e.cor}}22;color:${{e.cor}};border:1px solid ${{e.cor}}44">${{e.status}}</span>
+    <div class="tt-row"><span class="lbl">INÍCIO</span><span class="val">${{fmtD(e.inicio)}}</span></div>
+    <div class="tt-row"><span class="lbl">PRAZO</span><span class="val">${{fmtD(e.fim)}}</span></div>
+    ${{e.foco?`<div class="tt-row"><span class="lbl">FOCO</span><span class="val">${{e.foco}}</span></div>`:''}}
+    <div class="tt-dias" style="color:${{dc}}">${{dtxt}}</div>
+  `;
+  tt.classList.add('show');
+  positionTT(ev);
 }}
 
-function hideTooltip(){{ document.getElementById('tooltip').style.display='none'; }}
-document.addEventListener('click', hideTooltip);
-
-function formatDate(s){{
-  const [y,m,d] = s.split('-');
-  return d+'/'+m+'/'+y;
+function positionTT(ev){{
+  const tt=document.getElementById('tt');
+  const x=Math.min(ev.clientX+14, window.innerWidth-262);
+  const y=Math.min(ev.clientY+14, window.innerHeight-240);
+  tt.style.left=x+'px'; tt.style.top=y+'px';
 }}
 
-function changeMonth(dir){{
-  curMonth += dir;
-  if(curMonth > 11){{ curMonth=0; curYear++; }}
-  if(curMonth < 0){{ curMonth=11; curYear--; }}
-  renderCal();
-}}
-function goToday(){{
-  curYear=hoje.getFullYear(); curMonth=hoje.getMonth(); renderCal();
-}}
+function hideTT(){{document.getElementById('tt').classList.remove('show');}}
+function fmtD(s){{const[y,m,d]=s.split('-');return d+'/'+m+'/'+y;}}
+function chM(dir){{M+=dir;if(M>11){{M=0;Y++;}}if(M<0){{M=11;Y--;}}render();}}
+function goToday(){{Y=hoje.getFullYear();M=hoje.getMonth();render();}}
 
-renderCal();
-</script>
-</body>
-</html>"""
+render();
+</script></body></html>"""
 
-        components.html(CAL_HTML, height=820, scrolling=True)
+        components.html(CAL_HTML, height=840, scrolling=True)
