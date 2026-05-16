@@ -517,7 +517,6 @@ setTimeout(() => {
 
 # ============================================================
 # ============================================================
-# ============================================================
 # SESSION STATE
 # ============================================================
 if "logado" not in st.session_state:
@@ -538,85 +537,110 @@ if "login_step" not in st.session_state:
 # ============================================================
 if not st.session_state.logado:
 
+    # ── CSS global da tela de login ──────────────────────────
     st.markdown("""
     <style>
-    [data-testid="stSidebar"]      { display:none !important; }
-    [data-testid="stHeader"]       { display:none !important; }
-    .block-container               { padding:0 !important; max-width:100% !important; }
-    footer                         { display:none !important; }
-    /* Esconde label dos inputs */
-    .stTextInput label             { display:none !important; }
-    /* Botão estilizado */
-    .stButton > button {
-        background: linear-gradient(135deg,#6B21A8,#4C1D95) !important;
-        color:#fff !important; border:none !important;
-        border-radius:10px !important; font-weight:700 !important;
-        font-size:14px !important; padding:12px !important;
-        box-shadow:0 4px 14px rgba(107,33,168,.4) !important;
-        transition:all .18s !important;
-    }
-    .stButton > button:hover {
-        transform:translateY(-2px) !important;
-        box-shadow:0 6px 20px rgba(107,33,168,.55) !important;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@700;800&display=swap');
+
+    [data-testid="stSidebar"],
+    [data-testid="stHeader"],
+    footer,
+    [data-testid="stToolbar"]         { display:none !important; }
+
+    html, body, .stApp               { background:#060912 !important; }
+    .block-container                 { padding:0 !important; max-width:100% !important; }
+    [data-testid="stAppViewContainer"]{ background:#060912 !important; }
+
+    /* Columns sem padding extra */
+    [data-testid="column"]           { padding:0 !important; }
+
+    /* Input escuro */
+    .stTextInput label               { display:none !important; }
     .stTextInput input {
-        background:rgba(255,255,255,.06) !important;
-        border:1px solid rgba(107,33,168,.35) !important;
-        border-radius:10px !important;
-        color:#fff !important;
-        font-size:15px !important;
-        padding:12px 14px !important;
+        background: rgba(255,255,255,.06) !important;
+        border: 1px solid rgba(107,33,168,.4) !important;
+        border-radius: 12px !important;
+        color: #fff !important;
+        font-size: 15px !important;
+        font-family: 'Inter', sans-serif !important;
+        padding: 14px 16px !important;
+        transition: border-color .2s, box-shadow .2s !important;
     }
     .stTextInput input:focus {
-        border-color:rgba(107,33,168,.8) !important;
-        box-shadow:0 0 0 3px rgba(107,33,168,.2) !important;
+        border-color: rgba(107,33,168,.85) !important;
+        box-shadow: 0 0 0 3px rgba(107,33,168,.22) !important;
+        background: rgba(107,33,168,.08) !important;
     }
-    .stTextInput input::placeholder { color:rgba(255,255,255,.3) !important; }
+    .stTextInput input::placeholder  { color: rgba(255,255,255,.25) !important; }
+
+    /* Botão roxo gradiente */
+    .stButton > button {
+        background: linear-gradient(135deg,#7C3AED,#4C1D95) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        padding: 14px !important;
+        letter-spacing: .3px !important;
+        box-shadow: 0 4px 18px rgba(107,33,168,.45) !important;
+        transition: all .2s !important;
+        width: 100% !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 24px rgba(107,33,168,.6) !important;
+        background: linear-gradient(135deg,#8B46F7,#5B27A8) !important;
+    }
+    .stButton > button:active {
+        transform: translateY(0) !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    ROBOT_HTML = """
-<!DOCTYPE html><html><head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    # ── Robô (HTML puro, visual) ──────────────────────────────
+    ROBOT_HTML = """<!DOCTYPE html><html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;background:#060912;overflow:hidden;}
 #pc{position:fixed;inset:0;pointer-events:none;}
-#wrap{display:flex;align-items:center;justify-content:center;height:100vh;}
+#w{display:flex;align-items:center;justify-content:center;height:100vh;}
 #robo{
-  width:clamp(160px,28vw,260px);
-  filter:drop-shadow(0 0 24px rgba(107,33,168,.55));
+  width:clamp(160px,30vw,270px);
+  filter:drop-shadow(0 0 30px rgba(107,33,168,.6));
   animation:float 5s ease-in-out infinite;
 }
-@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
-.rhead{animation:htilt 7s ease-in-out infinite;transform-origin:100px 85px;}
-@keyframes htilt{0%,100%{transform:rotate(0);}35%{transform:rotate(-3deg);}70%{transform:rotate(2.5deg);}}
-.reye{animation:blink 5s infinite;}
-.rel{transform-origin:80px 74px;}.rer{transform-origin:120px 74px;}
-@keyframes blink{0%,88%,100%{transform:scaleY(1);}92%{transform:scaleY(.05);}}
-.rbar{animation:req .22s ease-in-out infinite alternate;transform-origin:center bottom;}
-.rb1{animation-delay:0s;}.rb2{animation-delay:.04s;}.rb3{animation-delay:.08s;}
-.rb4{animation-delay:.12s;}.rb5{animation-delay:.08s;}.rb6{animation-delay:.04s;}
-@keyframes req{from{transform:scaleY(.15);}to{transform:scaleY(1.5);}}
-.rarm-l{animation:aL 5s ease-in-out infinite;transform-origin:26px 132px;}
-.rarm-r{animation:aR 5s ease-in-out infinite;transform-origin:174px 132px;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-15px);}}
+.rh{animation:ht 7s ease-in-out infinite;transform-origin:100px 85px;}
+@keyframes ht{0%,100%{transform:rotate(0);}35%{transform:rotate(-3deg);}70%{transform:rotate(2.5deg);}}
+.re{animation:bl 5s infinite;}
+.el{transform-origin:80px 74px;}.er{transform-origin:120px 74px;}
+@keyframes bl{0%,88%,100%{transform:scaleY(1);}92%{transform:scaleY(.05);}}
+.rb{animation:eq .22s ease-in-out infinite alternate;transform-origin:center bottom;}
+.b1{animation-delay:0s;}.b2{animation-delay:.04s;}.b3{animation-delay:.08s;}
+.b4{animation-delay:.12s;}.b5{animation-delay:.08s;}.b6{animation-delay:.04s;}
+@keyframes eq{from{transform:scaleY(.15);}to{transform:scaleY(1.6);}}
+.al{animation:aL 5s ease-in-out infinite;transform-origin:26px 132px;}
+.ar{animation:aR 5s ease-in-out infinite;transform-origin:174px 132px;}
 @keyframes aL{0%,100%{transform:rotate(0);}50%{transform:rotate(-9deg);}}
 @keyframes aR{0%,100%{transform:rotate(0);}50%{transform:rotate(9deg);}}
-.rarc{animation:arcP 2s ease-in-out infinite;}
-@keyframes arcP{0%,100%{opacity:.7;}50%{opacity:1;filter:drop-shadow(0 0 6px #7C3AED);}}
-.rrotor{animation:spin 3s linear infinite;transform-origin:100px 182px;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.rled1{animation:l1 2s infinite;}.rled2{animation:l2 1.4s infinite;}
-@keyframes l1{0%,100%{opacity:.25;}50%{opacity:1;}}
-@keyframes l2{0%,100%{opacity:.25;}50%{opacity:1;}}
+.ac{animation:ap 2s ease-in-out infinite;}
+@keyframes ap{0%,100%{opacity:.7;}50%{opacity:1;filter:drop-shadow(0 0 8px #A855F7);}}
+.ro{animation:sp 3s linear infinite;transform-origin:100px 182px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.l1{animation:p1 2s infinite;}.l2{animation:p2 1.4s infinite;}
+@keyframes p1{0%,100%{opacity:.2;}50%{opacity:1;}}
+@keyframes p2{0%,100%{opacity:.2;}50%{opacity:1;}}
 .hud{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
   font-family:monospace;font-size:9px;letter-spacing:3px;
-  color:rgba(107,33,168,.5);white-space:nowrap;
-  animation:hp 2s ease-in-out infinite;}
-@keyframes hp{0%,100%{opacity:.35;}50%{opacity:.85;}}
+  color:rgba(107,33,168,.45);white-space:nowrap;
+  animation:ph 2s ease-in-out infinite;}
+@keyframes ph{0%,100%{opacity:.3;}50%{opacity:.8;}}
 </style></head><body>
 <canvas id="pc"></canvas>
-<div id="wrap">
+<div id="w">
 <svg id="robo" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <radialGradient id="gM" cx="50%" cy="30%"><stop offset="0%" stop-color="#C8CDD8"/><stop offset="100%" stop-color="#8B92A0"/></radialGradient>
@@ -626,19 +650,9 @@ html,body{width:100%;height:100%;background:#060912;overflow:hidden;}
   <filter id="gw"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <filter id="sw"><feGaussianBlur stdDeviation="8"/></filter>
 </defs>
-<ellipse cx="100" cy="357" rx="62" ry="5" fill="#6B21A8" opacity=".25" filter="url(#sw)"/>
-<g class="rarm-l">
-  <rect x="10" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
-  <rect x="14" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/>
-  <circle cx="21" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
-  <circle cx="21" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/>
-</g>
-<g class="rarm-r">
-  <rect x="168" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
-  <rect x="168" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/>
-  <circle cx="179" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
-  <circle cx="179" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/>
-</g>
+<ellipse cx="100" cy="357" rx="62" ry="5" fill="#6B21A8" opacity=".3" filter="url(#sw)"/>
+<g class="al"><rect x="10" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/><rect x="14" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/><circle cx="21" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/><circle cx="21" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/></g>
+<g class="ar"><rect x="168" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/><rect x="168" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/><circle cx="179" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/><circle cx="179" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/></g>
 <rect x="38" y="124" width="124" height="132" rx="18" fill="url(#gB)" stroke="rgba(107,33,168,.15)" stroke-width="1.5"/>
 <path d="M38 143 L68 124 L132 124 L162 143" fill="none" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
 <line x1="38" y1="162" x2="162" y2="162" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
@@ -646,9 +660,9 @@ html,body{width:100%;height:100%;background:#060912;overflow:hidden;}
 <circle cx="100" cy="182" r="34" fill="rgba(8,10,20,.5)"/>
 <circle cx="100" cy="182" r="27" fill="none" stroke="rgba(124,58,237,.4)" stroke-width="1.5"/>
 <circle cx="100" cy="182" r="19" fill="none" stroke="rgba(99,179,237,.35)" stroke-width="1"/>
-<circle cx="100" cy="182" r="11" fill="url(#gA)" class="rarc" filter="url(#gw)"/>
+<circle cx="100" cy="182" r="11" fill="url(#gA)" class="ac" filter="url(#gw)"/>
 <circle cx="100" cy="182" r="5" fill="white" opacity=".92"/>
-<g class="rrotor">
+<g class="ro">
   <line x1="100" y1="148" x2="100" y2="158" stroke="#7C3AED" stroke-width="2"/>
   <line x1="100" y1="206" x2="100" y2="216" stroke="#7C3AED" stroke-width="2"/>
   <line x1="66" y1="182" x2="76" y2="182" stroke="#7C3AED" stroke-width="2"/>
@@ -658,49 +672,34 @@ html,body{width:100%;height:100%;background:#060912;overflow:hidden;}
   <line x1="76" y1="204" x2="82" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
   <line x1="124" y1="204" x2="118" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
 </g>
-<circle cx="54" cy="144" r="4" fill="#10B981" class="rled1" filter="url(#gw)"/>
-<circle cx="146" cy="144" r="4" fill="#7C3AED" class="rled2" filter="url(#gw)"/>
-<circle cx="54" cy="156" r="3" fill="#7C3AED" class="rled2"/>
+<circle cx="54" cy="144" r="4" fill="#10B981" class="l1" filter="url(#gw)"/>
+<circle cx="146" cy="144" r="4" fill="#7C3AED" class="l2" filter="url(#gw)"/>
+<circle cx="54" cy="156" r="3" fill="#7C3AED" class="l2"/>
 <rect x="82" y="112" width="36" height="16" rx="5" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
-<g class="rhead">
+<g class="rh">
   <line x1="100" y1="16" x2="100" y2="40" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="100" cy="11" r="7" fill="url(#gA)" filter="url(#gw)">
-    <animate attributeName="r" values="5;9;5" dur="1.4s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values=".65;1;.65" dur="1.4s" repeatCount="indefinite"/>
-  </circle>
+  <circle cx="100" cy="11" r="7" fill="url(#gA)" filter="url(#gw)"><animate attributeName="r" values="5;9;5" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".65;1;.65" dur="1.4s" repeatCount="indefinite"/></circle>
   <rect x="52" y="40" width="96" height="76" rx="16" fill="url(#gM)"/>
   <rect x="52" y="40" width="96" height="76" rx="16" fill="none" stroke="rgba(107,33,168,.25)" stroke-width="1.5"/>
-  <rect x="58" y="40" width="84" height="16" rx="8" fill="rgba(107,33,168,.28)"/>
-  <text x="100" y="53" text-anchor="middle" fill="rgba(200,180,255,.75)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
+  <rect x="58" y="40" width="84" height="16" rx="8" fill="rgba(107,33,168,.3)"/>
+  <text x="100" y="53" text-anchor="middle" fill="rgba(200,180,255,.8)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
   <rect x="60" y="60" width="80" height="46" rx="10" fill="#060912"/>
   <rect x="60" y="60" width="80" height="46" rx="10" fill="url(#gV)" opacity=".5"/>
-  <rect x="60" y="60" width="80" height="46" rx="10" fill="none" stroke="rgba(107,33,168,.5)" stroke-width="1.5"/>
+  <rect x="60" y="60" width="80" height="46" rx="10" fill="none" stroke="rgba(107,33,168,.55)" stroke-width="1.5"/>
   <line x1="61" y1="72" x2="139" y2="72" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
   <line x1="61" y1="82" x2="139" y2="82" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
   <line x1="61" y1="92" x2="139" y2="92" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-  <path d="M64 64 L71 64" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
-  <path d="M64 64 L64 70" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
-  <path d="M136 64 L129 64" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
-  <path d="M136 64 L136 70" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
-  <g class="reye rel">
-    <circle cx="80" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/>
-    <circle cx="80" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/>
-    <circle cx="83" cy="75" r="3" fill="white" opacity=".85"/>
-    <circle cx="80" cy="78" r="4" fill="#060912" opacity=".55"/>
-  </g>
-  <g class="reye rer">
-    <circle cx="120" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/>
-    <circle cx="120" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/>
-    <circle cx="123" cy="75" r="3" fill="white" opacity=".85"/>
-    <circle cx="120" cy="78" r="4" fill="#060912" opacity=".55"/>
-  </g>
+  <path d="M64 64 L71 64" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/><path d="M64 64 L64 70" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
+  <path d="M136 64 L129 64" stroke="#A855F7" stroke-width="1.5" opacity=".6"/><path d="M136 64 L136 70" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
+  <g class="re el"><circle cx="80" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/><circle cx="80" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/><circle cx="83" cy="75" r="3" fill="white" opacity=".85"/><circle cx="80" cy="78" r="4" fill="#060912" opacity=".55"/></g>
+  <g class="re er"><circle cx="120" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/><circle cx="120" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/><circle cx="123" cy="75" r="3" fill="white" opacity=".85"/><circle cx="120" cy="78" r="4" fill="#060912" opacity=".55"/></g>
   <g transform="translate(76,106)">
-    <rect class="rbar rb1" x="0" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
-    <rect class="rbar rb2" x="7" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-    <rect class="rbar rb3" x="14" y="-9" width="5" height="18" rx="2" fill="#A855F7" opacity=".8"/>
-    <rect class="rbar rb4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-    <rect class="rbar rb5" x="28" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
-    <rect class="rbar rb6" x="35" y="-2" width="5" height="4" rx="2" fill="#A855F7" opacity=".5"/>
+    <rect class="rb b1" x="0" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
+    <rect class="rb b2" x="7" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
+    <rect class="rb b3" x="14" y="-9" width="5" height="18" rx="2" fill="#A855F7" opacity=".8"/>
+    <rect class="rb b4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
+    <rect class="rb b5" x="28" y="-4" width="5" height="8" rx="2" fill="#7C3AED" opacity=".8"/>
+    <rect class="rb b6" x="35" y="-2" width="5" height="4" rx="2" fill="#A855F7" opacity=".5"/>
   </g>
   <rect x="53" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
   <rect x="53" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
@@ -716,51 +715,57 @@ html,body{width:100%;height:100%;background:#060912;overflow:hidden;}
 <div class="hud">⬡ J.A.R.V.I.S · HUB OPERACIONAL SABINO OS ⬡</div>
 <script>
 const pc=document.getElementById("pc"),ctx=pc.getContext("2d");
-function rsz(){pc.width=window.innerWidth;pc.height=window.innerHeight;}
-rsz();window.addEventListener("resize",rsz);
-const pts=Array.from({length:28},()=>({
+function r(){pc.width=window.innerWidth;pc.height=window.innerHeight;}
+r();window.addEventListener("resize",r);
+const p=Array.from({length:30},()=>({
   x:Math.random()*pc.width,y:Math.random()*pc.height,
   vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,
   r:Math.random()*1.8+.4,c:Math.random()>.5?"#6B21A8":"#10B981"
 }));
 (function loop(){
   ctx.clearRect(0,0,pc.width,pc.height);
-  pts.forEach(p=>{
-    p.x+=p.vx;p.y+=p.vy;
-    if(p.x<0||p.x>pc.width)p.vx*=-1;
-    if(p.y<0||p.y>pc.height)p.vy*=-1;
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=p.c;ctx.shadowBlur=6;ctx.shadowColor=p.c;ctx.fill();
-  });
+  p.forEach(q=>{q.x+=q.vx;q.y+=q.vy;
+    if(q.x<0||q.x>pc.width)q.vx*=-1;
+    if(q.y<0||q.y>pc.height)q.vy*=-1;
+    ctx.beginPath();ctx.arc(q.x,q.y,q.r,0,Math.PI*2);
+    ctx.fillStyle=q.c;ctx.shadowBlur=7;ctx.shadowColor=q.c;ctx.fill();});
   requestAnimationFrame(loop);
 })();
-</script>
-</body></html>
-"""
+</script></body></html>"""
 
-    # Layout: robô à esquerda (HTML), form à direita (Streamlit nativo)
-    col_bot, col_form = st.columns([1, 1])
+    # ── Layout ────────────────────────────────────────────────
+    col_robo, col_form = st.columns([1.1, 0.9])
 
-    with col_bot:
-        components.html(ROBOT_HTML, height=560, scrolling=False)
+    with col_robo:
+        components.html(ROBOT_HTML, height=620, scrolling=False)
 
     with col_form:
+        # Fundo escuro cobrindo a coluna do form
         st.markdown("""
-        <div style="display:flex;flex-direction:column;justify-content:center;
-            min-height:540px;padding:20px 10px;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
-              letter-spacing:4px;color:#7C3AED;margin-bottom:12px;">⬡ J.A.R.V.I.S</div>
-          <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:4px;">
-            Hub Operacional</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:28px;">
-            Digite sua senha para entrar</div>
-        </div>
+        <div style="
+          background:#060912;
+          min-height:620px;
+          display:flex; flex-direction:column; justify-content:center;
+          padding:40px 32px;
+        ">
         """, unsafe_allow_html=True)
 
         if st.session_state.login_step == "senha":
-            senha = st.text_input("s", type="password",
-                placeholder="••••••••", label_visibility="collapsed",
-                key="inp_senha")
+            st.markdown("""
+            <div style="margin-bottom:32px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                  letter-spacing:4px;color:#7C3AED;margin-bottom:14px;">⬡ IDENTIFICAÇÃO</div>
+              <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;
+                  color:#fff;line-height:1.1;margin-bottom:6px;">Hub</div>
+              <div style="font-family:'Syne',sans-serif;font-size:38px;font-weight:800;
+                  color:#10B981;line-height:1.1;margin-bottom:16px;">Operacional</div>
+              <div style="font-size:14px;color:rgba(255,255,255,.45);line-height:1.7;">
+                Digite sua senha para entrar.</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            senha = st.text_input("pw", type="password",
+                placeholder="••••••••", label_visibility="collapsed", key="inp_senha")
             entrar = st.button("Entrar →", use_container_width=True, key="btn_entrar")
 
             if entrar and senha:
@@ -774,19 +779,41 @@ const pts=Array.from({length:28},()=>({
                     st.rerun()
                 else:
                     st.markdown("""
-                    <div style="background:rgba(201,42,42,.08);border:1px solid rgba(201,42,42,.25);
-                        border-radius:8px;padding:10px 14px;color:#F87171;font-size:13px;margin-top:8px;">
-                      ❌ Senha incorreta
+                    <div style="background:rgba(201,42,42,.08);border:1px solid rgba(201,42,42,.2);
+                        border-radius:10px;padding:12px 16px;color:#F87171;
+                        font-size:13px;margin-top:10px;">
+                      ❌ Senha incorreta. Tente novamente.
                     </div>""", unsafe_allow_html=True)
+
+            st.markdown("""
+            <div style="margin-top:28px;padding:16px 18px;
+                background:rgba(107,33,168,.07);
+                border:1px solid rgba(107,33,168,.18);
+                border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                  letter-spacing:2px;color:rgba(167,139,250,.5);line-height:2.4;">
+                ⬡ ACESSO · CRIPTOGRAFADO<br>
+                ⬡ SESSÃO · MONITORADA<br>
+                ⬡ JARVIS · ONLINE
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         else:  # nome_conv
             st.markdown("""
-            <div style="background:rgba(107,33,168,.1);border:1px solid rgba(107,33,168,.25);
-                border-radius:8px;padding:10px 14px;color:#A78BFA;font-size:13px;margin-bottom:12px;">
-              👤 Acesso de convidado — qual é o seu nome?
-            </div>""", unsafe_allow_html=True)
+            <div style="margin-bottom:28px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                  letter-spacing:4px;color:#7C3AED;margin-bottom:14px;">⬡ ACESSO CONVIDADO</div>
+              <div style="font-family:'Syne',sans-serif;font-size:30px;font-weight:800;
+                  color:#fff;line-height:1.1;margin-bottom:16px;">Qual é o<br>seu nome?</div>
+              <div style="background:rgba(107,33,168,.1);border:1px solid rgba(107,33,168,.25);
+                  border-radius:10px;padding:12px 16px;color:#A78BFA;font-size:13px;">
+                👤 Você terá acesso em modo leitura.
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-            nome = st.text_input("n", placeholder="Seu nome",
+            nome = st.text_input("nm", placeholder="Seu nome",
                 label_visibility="collapsed", key="inp_nome")
             entrar2 = st.button("Entrar →", use_container_width=True, key="btn_entrar2")
 
@@ -797,7 +824,10 @@ const pts=Array.from({length:28},()=>({
                 st.session_state.login_step = "senha"
                 st.rerun()
 
+        st.markdown("</div>", unsafe_allow_html=True)
+
     st.stop()
+
 
 # ============================================================
 # DATA LOADING
