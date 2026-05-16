@@ -1627,7 +1627,7 @@ with tab5:
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   body {{ margin: 0; padding: 0; background: #F6F5FA; }}
-  #map {{ width: 100%; height: 520px; border-radius: 16px; }}
+  #map {{ width: 100%; height: 580px; border-radius: 16px; }}
   .leaflet-popup-content-wrapper {{ border-radius: 10px; font-family: 'Inter', sans-serif; }}
   .info-box {{
     position: absolute; bottom: 20px; left: 20px; z-index: 1000;
@@ -1655,24 +1655,34 @@ with tab5:
     map.flyTo(e.popup.getLatLng(), 7, {{ animate: true, duration: 1.2 }});
   }});
 
-  // Sobrevoo automático em loop contínuo
-  var _pts = [];
-  map.eachLayer(function(l){{ if(l.getLatLng) _pts.push(l.getLatLng()); }});
-  var _i=0;
-  function _fly(){{
-    if(_pts.length<2) return;
-    var pt=_pts[_i%_pts.length];
-    map.flyTo(pt, 6, {{animate:true,duration:3}});
-    _i++;
-    setTimeout(_fly, 5500);
+  // Sobrevoo em drone — baixo e rente às cidades, loop infinito
+  var _flyPts = {json.dumps([{"lat": m["lat"], "lon": m["lon"], "nome": m["nome"]} for m in map_data])};
+  var _fi = 0;
+  function _flyLoop() {{
+    if(_flyPts.length < 1) return;
+    var pt = _flyPts[_fi % _flyPts.length];
+    // Zoom 9-11 = bem rente, como drone passando pela cidade
+    var z = 9 + Math.floor(Math.random() * 3);
+    map.flyTo([pt.lat, pt.lon], z, {{
+      animate: true,
+      duration: 4.5,
+      easeLinearity: 0.1
+    }});
+    _fi++;
+    // Próximo voo após pousar + pausa dramática
+    setTimeout(_flyLoop, 7000);
   }}
-  setTimeout(_fly, 3000);
+  // Começa com visão geral do Brasil, depois mergulha
+  setTimeout(function() {{
+    map.flyTo([-14.235, -51.925], 4, {{animate:true, duration:2}});
+    setTimeout(_flyLoop, 3500);
+  }}, 1500);
 </script>
 </body>
 </html>
                 """
 
-                components.html(mapa_html, height=540)
+                components.html(mapa_html, height=600)
 
             with col_info:
                 estados_disponiveis = sorted(resumo_estados["UF"].tolist())
