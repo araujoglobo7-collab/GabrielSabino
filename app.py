@@ -518,6 +518,7 @@ setTimeout(() => {
 # ============================================================
 # ============================================================
 # ============================================================
+# ============================================================
 # SESSION STATE
 # ============================================================
 if "logado" not in st.session_state:
@@ -528,42 +529,22 @@ if "df_projetos" not in st.session_state:
     st.session_state.df_projetos = None
 if "is_convidado" not in st.session_state:
     st.session_state.is_convidado = False
-if "quem_login" not in st.session_state:
-    st.session_state.quem_login = None   # "gabriel" | "convidado"
+if "nome_convidado" not in st.session_state:
+    st.session_state.nome_convidado = ""
 
 # ============================================================
 # LOGIN
 # ============================================================
 if not st.session_state.logado:
 
-    # Processa resposta vinda do iframe via query param
-    qp = st.query_params
-    if qp.get("login") == "gabriel":
-        st.session_state.logado = True
-        st.session_state.is_convidado = False
-        st.query_params.clear()
-        st.rerun()
-    elif qp.get("login") == "convidado":
-        st.session_state.logado = True
-        st.session_state.is_convidado = True
-        st.query_params.clear()
-        st.rerun()
-
-    # Botões Streamlit ocultos acionados pelo JS via click simulado
-    col_sim, col_nao = st.columns(2)
-    with col_sim:
-        gabriel_btn = st.button("gabriel_hidden", key="btn_gabriel_hidden")
-    with col_nao:
-        nao_btn = st.button("nao_hidden", key="btn_nao_hidden")
-
-    if gabriel_btn:
-        st.session_state.logado = True
-        st.session_state.is_convidado = False
-        st.rerun()
-    if nao_btn:
-        st.session_state.logado = True
-        st.session_state.is_convidado = True
-        st.rerun()
+    # Esconde sidebar e header no login
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"] { display:none !important; }
+    [data-testid="stHeader"]  { display:none !important; }
+    .block-container { padding:0 !important; }
+    </style>
+    """, unsafe_allow_html=True)
 
     LOGIN_HTML = """
 <!DOCTYPE html>
@@ -571,476 +552,461 @@ if not st.session_state.logado:
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html, body {
-  width:100%; height:100%; overflow:hidden;
-  background: #080B18;
-  font-family: 'Inter', sans-serif;
-  color: #fff;
-}
+html, body { width:100%; height:100%; overflow:hidden; background:#060912; font-family:'Inter',sans-serif; color:#fff; }
 
-/* Particles */
 #pc { position:fixed; inset:0; pointer-events:none; z-index:0; }
 
-/* Main layout */
+/* Layout */
 #wrap {
-  position: relative; z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 24px 16px;
-  gap: 48px;
-  flex-wrap: wrap;
+  position:relative; z-index:1;
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; padding:20px;
+  gap:clamp(24px,4vw,60px);
+  flex-wrap:wrap;
 }
 
-/* ── ROBOT ── */
-#robot-wrap {
-  position: relative;
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* ═══ ROBOT ═══ */
+#robo-col {
+  flex:0 0 auto;
+  display:flex; flex-direction:column; align-items:center;
+  gap:0;
 }
-
-#robot {
-  width: clamp(160px, 22vw, 240px);
-  filter: drop-shadow(0 0 20px rgba(107,33,168,0.4));
-  animation: float 5s ease-in-out infinite;
+#robo {
+  width:clamp(180px,26vw,280px);
+  filter:drop-shadow(0 0 28px rgba(107,33,168,.55));
+  animation:float 5s ease-in-out infinite;
 }
 @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
 
-/* Head animations */
-.rhead { animation: headtilt 7s ease-in-out infinite; transform-origin: 100px 90px; }
-@keyframes headtilt { 0%,100%{transform:rotate(0);} 35%{transform:rotate(-3deg);} 70%{transform:rotate(2.5deg);} }
-
-/* Eye blink */
-.reye { animation: blink 5s infinite; }
-.rel  { transform-origin: 78px 76px; }
-.rer  { transform-origin: 122px 76px; }
-@keyframes blink { 0%,88%,100%{transform:scaleY(1);} 92%{transform:scaleY(0.05);} }
-
-/* EQ mouth */
-.rbar { animation: req .22s ease-in-out infinite alternate; transform-origin: center bottom; }
-.rb1{animation-delay:0s;} .rb2{animation-delay:.04s;} .rb3{animation-delay:.08s;}
-.rb4{animation-delay:.12s;} .rb5{animation-delay:.08s;} .rb6{animation-delay:.04s;}
+/* Animations */
+.rhead { animation:htilt 7s ease-in-out infinite; transform-origin:100px 85px; }
+@keyframes htilt { 0%,100%{transform:rotate(0);} 35%{transform:rotate(-3deg);} 70%{transform:rotate(2.5deg);} }
+.reye { animation:blink 5s infinite; }
+.rel { transform-origin:80px 74px; } .rer { transform-origin:120px 74px; }
+@keyframes blink { 0%,88%,100%{transform:scaleY(1);} 92%{transform:scaleY(.05);} }
+.rbar { animation:req .22s ease-in-out infinite alternate; transform-origin:center bottom; }
+.rb1{animation-delay:0s;}.rb2{animation-delay:.04s;}.rb3{animation-delay:.08s;}.rb4{animation-delay:.12s;}.rb5{animation-delay:.08s;}.rb6{animation-delay:.04s;}
 @keyframes req { from{transform:scaleY(.15);} to{transform:scaleY(1.5);} }
-
-/* Arc reactor pulse */
-.rarc { animation: arcpulse 2s ease-in-out infinite; }
-@keyframes arcpulse { 0%,100%{opacity:.7;} 50%{opacity:1; filter:drop-shadow(0 0 6px #7C3AED);} }
-
-/* Arm swing */
-.rarm-l { animation: armL 5s ease-in-out infinite; transform-origin: 30px 135px; }
-.rarm-r { animation: armR 5s ease-in-out infinite; transform-origin: 170px 135px; }
-@keyframes armL { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-8deg);} }
-@keyframes armR { 0%,100%{transform:rotate(0);} 50%{transform:rotate(8deg);} }
-
-/* LED blink */
-.rled1 { animation: led1 2s infinite; }
-.rled2 { animation: led2 1.4s infinite; }
-@keyframes led1 { 0%,100%{opacity:.3;} 50%{opacity:1;} }
-@keyframes led2 { 0%,100%{opacity:.3;} 50%{opacity:1;} }
-
-/* Rotor */
-.rrotor { animation: spin 3s linear infinite; transform-origin: 100px 185px; }
+.rarm-l { animation:aL 5s ease-in-out infinite; transform-origin:26px 132px; }
+.rarm-r { animation:aR 5s ease-in-out infinite; transform-origin:174px 132px; }
+@keyframes aL { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-9deg);} }
+@keyframes aR { 0%,100%{transform:rotate(0);} 50%{transform:rotate(9deg);} }
+.rarc { animation:arcP 2s ease-in-out infinite; }
+@keyframes arcP { 0%,100%{opacity:.7;} 50%{opacity:1;filter:drop-shadow(0 0 6px #7C3AED);} }
+.rrotor { animation:spin 3s linear infinite; transform-origin:100px 182px; }
 @keyframes spin { to{transform:rotate(360deg);} }
+.rled1{animation:l1 2s infinite;} .rled2{animation:l2 1.4s infinite;}
+@keyframes l1{0%,100%{opacity:.25;}50%{opacity:1;}} @keyframes l2{0%,100%{opacity:.25;}50%{opacity:1;}}
 
-/* ── SPEECH BUBBLE ── */
-#bubble {
-  position: absolute;
-  top: 10px;
-  right: -220px;
-  width: 200px;
-  background: #fff;
-  border: 2px solid #6B21A8;
-  border-radius: 18px 18px 18px 4px;
-  padding: 18px 16px 14px;
-  box-shadow: 0 8px 32px rgba(107,33,168,.25), 0 2px 8px rgba(0,0,0,.15);
-  opacity: 0;
-  transform: scale(0.85) translateY(8px);
-  animation: popbub 0.5s 0.8s cubic-bezier(.34,1.56,.64,1) forwards;
-  z-index: 20;
-}
-@keyframes popbub { to { opacity:1; transform:scale(1) translateY(0); } }
-
-/* tail */
-#bubble::before {
-  content:''; position:absolute; left:-12px; top:20px;
-  border:12px solid transparent;
-  border-right-color:#6B21A8;
-  border-left:none;
-}
-#bubble::after {
-  content:''; position:absolute; left:-9px; top:22px;
-  border:10px solid transparent;
-  border-right-color:#fff;
-  border-left:none;
+/* ═══ CHAT PANEL ═══ */
+#chat-col {
+  flex:0 0 auto;
+  width:clamp(280px,36vw,400px);
+  display:flex; flex-direction:column; gap:16px;
 }
 
-.b-label {
-  font-family:'JetBrains Mono',monospace;
-  font-size:8px; letter-spacing:3px; color:#7C3AED;
-  margin-bottom:8px; text-transform:uppercase;
-}
-.b-text {
-  font-size:15px; font-weight:700; color:#1A1225;
-  line-height:1.4; margin-bottom:14px;
-}
-.b-name {
-  color:#6B21A8;
-}
-.b-btns {
-  display: flex; gap:8px;
-}
-.bbtn {
-  flex:1; padding:9px 4px;
-  border-radius:10px; border:none;
-  font-size:13px; font-weight:700;
-  cursor:pointer; transition:all .18s;
-  font-family:'Inter',sans-serif;
-}
-.bbtn-sim {
-  background: linear-gradient(135deg,#6B21A8,#4C1D95);
-  color:#fff;
-  box-shadow: 0 4px 12px rgba(107,33,168,.35);
-}
-.bbtn-sim:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(107,33,168,.5); }
-.bbtn-nao {
-  background: #F3F0FF;
-  color:#6B21A8;
-  border:1px solid #DDD8F0;
-}
-.bbtn-nao:hover { background:#EDE9FE; transform:translateY(-2px); }
-
-/* ── RIGHT PANEL ── */
-#panel {
-  flex: 0 0 auto;
-  width: clamp(260px, 30vw, 340px);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.p-badge {
-  display:inline-block;
-  font-family:'JetBrains Mono',monospace;
-  font-size:9px; letter-spacing:4px; color:#7C3AED;
-  background:rgba(107,33,168,.1);
-  border:1px solid rgba(107,33,168,.25);
-  padding:5px 12px; border-radius:20px;
-  margin-bottom:4px;
-}
-.p-title {
-  font-size: clamp(28px,4vw,42px);
-  font-weight:800; line-height:1.1; color:#fff;
-}
-.p-title span { color:#10B981; }
-.p-sub {
-  font-size:14px; color:rgba(255,255,255,.55); line-height:1.7;
-}
-.p-card {
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:14px;
-  padding:16px 18px;
-}
-.p-card-label {
-  font-family:'JetBrains Mono',monospace;
-  font-size:9px; letter-spacing:2px; color:#7C3AED;
-  margin-bottom:10px;
-}
-.p-steps {
-  display:flex; flex-direction:column; gap:10px;
-}
-.p-step {
+/* Robot header in chat */
+.chat-header {
   display:flex; align-items:center; gap:12px;
+  padding:14px 16px;
+  background:rgba(107,33,168,.12);
+  border:1px solid rgba(107,33,168,.25);
+  border-radius:14px;
 }
-.p-step-dot {
-  width:28px; height:28px; border-radius:50%;
-  background:rgba(107,33,168,.2);
-  border:1px solid rgba(107,33,168,.4);
+.chat-avatar {
+  width:40px; height:40px; border-radius:50%;
+  background:linear-gradient(135deg,#6B21A8,#4C1D95);
   display:flex; align-items:center; justify-content:center;
-  font-size:13px; flex-shrink:0;
+  font-size:20px; flex-shrink:0;
+  box-shadow:0 0 12px rgba(107,33,168,.5);
 }
-.p-step-txt { font-size:13px; color:rgba(255,255,255,.7); }
-.p-step-txt strong { color:#fff; }
+.chat-hname { font-weight:700; font-size:14px; color:#fff; }
+.chat-hstatus { font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:2px; color:#10B981; margin-top:2px; }
 
-/* HUD bottom */
+/* Messages area */
+#msgs {
+  display:flex; flex-direction:column; gap:10px;
+  max-height:320px; overflow-y:auto;
+  padding:4px 2px;
+}
+#msgs::-webkit-scrollbar{width:3px;}
+#msgs::-webkit-scrollbar-track{background:transparent;}
+#msgs::-webkit-scrollbar-thumb{background:rgba(107,33,168,.4);border-radius:3px;}
+
+/* Bot message */
+.msg-bot {
+  display:flex; align-items:flex-start; gap:10px; max-width:88%;
+  animation:msgIn .3s ease;
+}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.bot-bubble {
+  background:#13101E;
+  border:1px solid rgba(107,33,168,.3);
+  border-radius:4px 14px 14px 14px;
+  padding:12px 14px;
+  font-size:14px; line-height:1.6; color:#E9E0FF;
+}
+.bot-bubble strong { color:#A78BFA; }
+
+/* Input area */
+.input-wrap {
+  background:#13101E;
+  border:1px solid rgba(107,33,168,.3);
+  border-radius:14px;
+  padding:14px;
+  display:flex; flex-direction:column; gap:10px;
+  transition:border-color .2s;
+}
+.input-wrap:focus-within { border-color:rgba(107,33,168,.7); }
+.input-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:2px; color:rgba(167,139,250,.6);
+}
+.input-field {
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(107,33,168,.25);
+  border-radius:8px;
+  padding:10px 12px;
+  color:#fff; font-size:14px; font-family:'Inter',sans-serif;
+  outline:none; transition:border-color .2s;
+  width:100%;
+}
+.input-field::placeholder { color:rgba(255,255,255,.25); }
+.input-field:focus { border-color:rgba(107,33,168,.7); background:rgba(107,33,168,.05); }
+.btn-send {
+  background:linear-gradient(135deg,#6B21A8,#4C1D95);
+  color:#fff; border:none; border-radius:10px;
+  padding:11px; font-size:13px; font-weight:700;
+  cursor:pointer; transition:all .18s; width:100%;
+  letter-spacing:.5px;
+  box-shadow:0 4px 14px rgba(107,33,168,.35);
+}
+.btn-send:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(107,33,168,.5); }
+.btn-send:active { transform:translateY(0); }
+
+/* Error shake */
+@keyframes shake {
+  0%,100%{transform:translateX(0);}
+  20%,60%{transform:translateX(-6px);}
+  40%,80%{transform:translateX(6px);}
+}
+.shake { animation:shake .35s ease; }
+
+/* HUD */
 .hud {
   position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
   font-family:'JetBrains Mono',monospace; font-size:9px;
-  letter-spacing:3px; color:rgba(107,33,168,.5);
-  white-space:nowrap; animation:hudb 2s ease-in-out infinite; z-index:5;
+  letter-spacing:3px; color:rgba(107,33,168,.45); white-space:nowrap;
+  animation:hP 2s ease-in-out infinite; z-index:5;
 }
-@keyframes hudb { 0%,100%{opacity:.4;} 50%{opacity:.9;} }
+@keyframes hP{0%,100%{opacity:.35;}50%{opacity:.85;}}
 
 /* Responsive */
 @media(max-width:640px){
-  #bubble { right:auto; left:50%; transform:translateX(-50%) scale(0.85) translateY(8px); top:auto; bottom:-130px; border-radius:4px 18px 18px 18px; }
-  #bubble::before, #bubble::after { display:none; }
-  @keyframes popbub { to { opacity:1; transform:translateX(-50%) scale(1) translateY(0); } }
-  #panel { width:100%; }
+  #wrap{flex-direction:column; gap:16px; padding:16px;}
+  #robo{width:clamp(120px,45vw,180px);}
+  #chat-col{width:100%;}
+  #msgs{max-height:220px;}
 }
 </style>
 </head>
 <body>
 <canvas id="pc"></canvas>
-
 <div id="wrap">
 
-  <!-- ── ROBOT ── -->
-  <div id="robot-wrap">
-
-    <!-- Speech bubble -->
-    <div id="bubble">
-      <div class="b-label">⬡ J.A.R.V.I.S</div>
-      <div class="b-text">Olá! Você é<br><span class="b-name">Gabriel Sabino</span>?</div>
-      <div class="b-btns">
-        <button class="bbtn bbtn-sim" onclick="resp('sim')">✅ Sim</button>
-        <button class="bbtn bbtn-nao" onclick="resp('nao')">❌ Não</button>
-      </div>
-    </div>
-
-    <svg id="robot" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg">
+  <!-- ROBOT -->
+  <div id="robo-col">
+    <svg id="robo" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <radialGradient id="gMet" cx="50%" cy="30%">
-        <stop offset="0%" stop-color="#C8CDD8"/><stop offset="100%" stop-color="#8B92A0"/>
-      </radialGradient>
-      <radialGradient id="gVisor" cx="50%" cy="40%">
-        <stop offset="0%" stop-color="#1A1D2E"/><stop offset="100%" stop-color="#2D1278"/>
-      </radialGradient>
-      <radialGradient id="gChest" cx="50%" cy="20%">
-        <stop offset="0%" stop-color="#D1D5DB"/><stop offset="100%" stop-color="#9CA3AF"/>
-      </radialGradient>
-      <radialGradient id="gArc" cx="50%" cy="35%">
-        <stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#1E0856"/>
-      </radialGradient>
-      <linearGradient id="gBody" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#E5E7EB"/><stop offset="100%" stop-color="#C8CDD8"/>
-      </linearGradient>
-      <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/>
-        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <filter id="sglow"><feGaussianBlur stdDeviation="8"/></filter>
+      <radialGradient id="gM" cx="50%" cy="30%"><stop offset="0%" stop-color="#C8CDD8"/><stop offset="100%" stop-color="#8B92A0"/></radialGradient>
+      <radialGradient id="gV" cx="50%" cy="40%"><stop offset="0%" stop-color="#0A0D1E"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
+      <radialGradient id="gB" cx="50%" cy="20%"><stop offset="0%" stop-color="#E5E7EB"/><stop offset="100%" stop-color="#C8CDD8"/></radialGradient>
+      <radialGradient id="gA" cx="50%" cy="35%"><stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
+      <filter id="gw"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="sw"><feGaussianBlur stdDeviation="8"/></filter>
     </defs>
-
     <!-- Shadow -->
-    <ellipse cx="100" cy="356" rx="65" ry="6" fill="#6B21A8" opacity="0.25" filter="url(#sglow)"/>
-
-    <!-- ── LEFT ARM ── -->
+    <ellipse cx="100" cy="357" rx="62" ry="5" fill="#6B21A8" opacity=".25" filter="url(#sw)"/>
+    <!-- LEFT ARM -->
     <g class="rarm-l">
-      <rect x="14" y="132" width="22" height="90" rx="11" fill="url(#gMet)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
-      <rect x="18" y="132" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/>
-      <circle cx="25" cy="228" r="12" fill="url(#gMet)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
-      <circle cx="25" cy="228" r="5" fill="rgba(107,33,168,.5)"/>
+      <rect x="10" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
+      <rect x="14" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/>
+      <circle cx="21" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
+      <circle cx="21" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/>
     </g>
-
-    <!-- ── RIGHT ARM ── -->
+    <!-- RIGHT ARM -->
     <g class="rarm-r">
-      <rect x="164" y="132" width="22" height="90" rx="11" fill="url(#gMet)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
-      <rect x="168" y="132" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/>
-      <circle cx="175" cy="228" r="12" fill="url(#gMet)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
-      <circle cx="175" cy="228" r="5" fill="rgba(107,33,168,.5)"/>
+      <rect x="168" y="128" width="22" height="92" rx="11" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
+      <rect x="168" y="128" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/>
+      <circle cx="179" cy="226" r="13" fill="url(#gM)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
+      <circle cx="179" cy="226" r="5.5" fill="rgba(107,33,168,.45)"/>
     </g>
-
-    <!-- ── BODY ── -->
-    <rect x="40" y="128" width="120" height="130" rx="18" fill="url(#gBody)" stroke="rgba(107,33,168,.15)" stroke-width="1.5"/>
-    <!-- Shoulder trim -->
-    <path d="M40 145 L70 128 L130 128 L160 145" fill="none" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
-    <!-- Chest lines -->
-    <line x1="40" y1="165" x2="160" y2="165" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
-    <line x1="40" y1="220" x2="160" y2="220" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
-
+    <!-- BODY -->
+    <rect x="38" y="124" width="124" height="132" rx="18" fill="url(#gB)" stroke="rgba(107,33,168,.15)" stroke-width="1.5"/>
+    <path d="M38 143 L68 124 L132 124 L162 143" fill="none" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
+    <line x1="38" y1="162" x2="162" y2="162" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
+    <line x1="38" y1="218" x2="162" y2="218" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
     <!-- ARC REACTOR -->
-    <circle cx="100" cy="185" r="32" fill="rgba(10,12,24,.4)"/>
-    <circle cx="100" cy="185" r="26" fill="none" stroke="rgba(124,58,237,.4)" stroke-width="1.5"/>
-    <circle cx="100" cy="185" r="18" fill="none" stroke="rgba(99,179,237,.4)" stroke-width="1"/>
-    <circle cx="100" cy="185" r="10" fill="url(#gArc)" class="rarc" filter="url(#glow)"/>
-    <circle cx="100" cy="185" r="5"  fill="white" opacity=".9"/>
-    <!-- Rotor -->
+    <circle cx="100" cy="182" r="34" fill="rgba(8,10,20,.5)"/>
+    <circle cx="100" cy="182" r="27" fill="none" stroke="rgba(124,58,237,.4)" stroke-width="1.5"/>
+    <circle cx="100" cy="182" r="19" fill="none" stroke="rgba(99,179,237,.35)" stroke-width="1"/>
+    <circle cx="100" cy="182" r="11" fill="url(#gA)" class="rarc" filter="url(#gw)"/>
+    <circle cx="100" cy="182" r="5"  fill="white" opacity=".92"/>
     <g class="rrotor">
-      <line x1="100" y1="153" x2="100" y2="162" stroke="#7C3AED" stroke-width="2"/>
-      <line x1="100" y1="208" x2="100" y2="217" stroke="#7C3AED" stroke-width="2"/>
-      <line x1="68"  y1="185" x2="77"  y2="185" stroke="#7C3AED" stroke-width="2"/>
-      <line x1="123" y1="185" x2="132" y2="185" stroke="#7C3AED" stroke-width="2"/>
-      <line x1="77"  y1="163" x2="83"  y2="170" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-      <line x1="123" y1="163" x2="117" y2="170" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-      <line x1="77"  y1="207" x2="83"  y2="200" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
-      <line x1="123" y1="207" x2="117" y2="200" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+      <line x1="100" y1="148" x2="100" y2="158" stroke="#7C3AED" stroke-width="2"/>
+      <line x1="100" y1="206" x2="100" y2="216" stroke="#7C3AED" stroke-width="2"/>
+      <line x1="66"  y1="182" x2="76"  y2="182" stroke="#7C3AED" stroke-width="2"/>
+      <line x1="124" y1="182" x2="134" y2="182" stroke="#7C3AED" stroke-width="2"/>
+      <line x1="76"  y1="160" x2="82"  y2="168" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+      <line x1="124" y1="160" x2="118" y2="168" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+      <line x1="76"  y1="204" x2="82"  y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+      <line x1="124" y1="204" x2="118" y2="196" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
     </g>
-    <!-- Side LEDs -->
-    <circle cx="56" cy="148" r="4" fill="#10B981" class="rled1" filter="url(#glow)"/>
-    <circle cx="144" cy="148" r="4" fill="#7C3AED" class="rled2" filter="url(#glow)"/>
-    <circle cx="56" cy="160" r="3" fill="#7C3AED" class="rled2"/>
-
-    <!-- ── NECK ── -->
-    <rect x="84" y="115" width="32" height="16" rx="5" fill="url(#gMet)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
-
-    <!-- ── HEAD ── -->
+    <!-- LEDs -->
+    <circle cx="54" cy="144" r="4" fill="#10B981" class="rled1" filter="url(#gw)"/>
+    <circle cx="146" cy="144" r="4" fill="#7C3AED" class="rled2" filter="url(#gw)"/>
+    <circle cx="54"  cy="156" r="3" fill="#7C3AED" class="rled2"/>
+    <!-- NECK -->
+    <rect x="82" y="112" width="36" height="16" rx="5" fill="url(#gM)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
+    <!-- HEAD -->
     <g class="rhead">
       <!-- Antenna -->
-      <line x1="100" y1="18" x2="100" y2="42" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="100" cy="13" r="7" fill="url(#gArc)" filter="url(#glow)">
+      <line x1="100" y1="16" x2="100" y2="40" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="100" cy="11" r="7" fill="url(#gA)" filter="url(#gw)">
         <animate attributeName="r" values="5;9;5" dur="1.4s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values=".7;1;.7" dur="1.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".65;1;.65" dur="1.4s" repeatCount="indefinite"/>
       </circle>
-
-      <!-- Head shell -->
-      <rect x="54" y="42" width="92" height="76" rx="16" fill="url(#gMet)"/>
-      <rect x="54" y="42" width="92" height="76" rx="16" fill="none" stroke="rgba(107,33,168,.25)" stroke-width="1.5"/>
+      <!-- Shell -->
+      <rect x="52" y="40" width="96" height="76" rx="16" fill="url(#gM)"/>
+      <rect x="52" y="40" width="96" height="76" rx="16" fill="none" stroke="rgba(107,33,168,.25)" stroke-width="1.5"/>
       <!-- Top band -->
-      <rect x="60" y="42" width="80" height="16" rx="8" fill="rgba(107,33,168,.3)"/>
-      <text x="100" y="55" text-anchor="middle" fill="rgba(200,180,255,.8)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
-
+      <rect x="58" y="40" width="84" height="16" rx="8" fill="rgba(107,33,168,.28)"/>
+      <text x="100" y="53" text-anchor="middle" fill="rgba(200,180,255,.75)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
       <!-- Visor -->
-      <rect x="62" y="62" width="76" height="46" rx="10" fill="#080A12"/>
-      <rect x="62" y="62" width="76" height="46" rx="10" fill="url(#gVisor)" opacity=".4"/>
-      <rect x="62" y="62" width="76" height="46" rx="10" fill="none" stroke="rgba(107,33,168,.45)" stroke-width="1.5"/>
-      <!-- Scan lines -->
-      <line x1="63" y1="74" x2="137" y2="74" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-      <line x1="63" y1="84" x2="137" y2="84" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
-      <line x1="63" y1="94" x2="137" y2="94" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+      <rect x="60" y="60" width="80" height="46" rx="10" fill="#060912"/>
+      <rect x="60" y="60" width="80" height="46" rx="10" fill="url(#gV)" opacity=".5"/>
+      <rect x="60" y="60" width="80" height="46" rx="10" fill="none" stroke="rgba(107,33,168,.5)" stroke-width="1.5"/>
+      <line x1="61" y1="72" x2="139" y2="72" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+      <line x1="61" y1="82" x2="139" y2="82" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+      <line x1="61" y1="92" x2="139" y2="92" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
       <!-- Corner accents -->
-      <path d="M66 66 L73 66" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
-      <path d="M66 66 L66 72" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
-      <path d="M134 66 L127 66" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
-      <path d="M134 66 L134 72" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
-
+      <path d="M64 64 L71 64" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
+      <path d="M64 64 L64 70" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
+      <path d="M136 64 L129 64" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
+      <path d="M136 64 L136 70" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
       <!-- LEFT EYE -->
       <g class="reye rel">
-        <circle cx="84" cy="80" r="12" fill="#080A12" stroke="rgba(167,139,250,.35)" stroke-width="1"/>
-        <circle cx="84" cy="80" r="8"  fill="url(#gArc)" filter="url(#glow)"/>
-        <circle cx="87" cy="77" r="3"  fill="white" opacity=".85"/>
-        <circle cx="84" cy="80" r="3.5" fill="#0A0C18" opacity=".6"/>
+        <circle cx="80" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/>
+        <circle cx="80" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/>
+        <circle cx="83" cy="75" r="3"   fill="white" opacity=".85"/>
+        <circle cx="80" cy="78" r="4"   fill="#060912" opacity=".55"/>
       </g>
       <!-- RIGHT EYE -->
       <g class="reye rer">
-        <circle cx="116" cy="80" r="12" fill="#080A12" stroke="rgba(167,139,250,.35)" stroke-width="1"/>
-        <circle cx="116" cy="80" r="8"  fill="url(#gArc)" filter="url(#glow)"/>
-        <circle cx="119" cy="77" r="3"  fill="white" opacity=".85"/>
-        <circle cx="116" cy="80" r="3.5" fill="#0A0C18" opacity=".6"/>
+        <circle cx="120" cy="78" r="13" fill="#060912" stroke="rgba(167,139,250,.35)" stroke-width="1"/>
+        <circle cx="120" cy="78" r="8.5" fill="url(#gA)" filter="url(#gw)"/>
+        <circle cx="123" cy="75" r="3"   fill="white" opacity=".85"/>
+        <circle cx="120" cy="78" r="4"   fill="#060912" opacity=".55"/>
       </g>
-
       <!-- EQ Mouth -->
-      <g transform="translate(79,107)">
+      <g transform="translate(76,106)">
         <rect class="rbar rb1" x="0"  y="-4" width="5" height="8"  rx="2" fill="#7C3AED" opacity=".8"/>
         <rect class="rbar rb2" x="7"  y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-        <rect class="rbar rb3" x="14" y="-8" width="5" height="16" rx="2" fill="#A855F7" opacity=".8"/>
+        <rect class="rbar rb3" x="14" y="-9" width="5" height="18" rx="2" fill="#A855F7" opacity=".8"/>
         <rect class="rbar rb4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
         <rect class="rbar rb5" x="28" y="-4" width="5" height="8"  rx="2" fill="#7C3AED" opacity=".8"/>
-        <rect class="rbar rb6" x="35" y="-2" width="5" height="4"  rx="2" fill="#A855F7" opacity=".6"/>
+        <rect class="rbar rb6" x="35" y="-2" width="5" height="4"  rx="2" fill="#A855F7" opacity=".5"/>
       </g>
       <!-- Side vents -->
-      <rect x="55" y="74" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-      <rect x="55" y="80" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-      <rect x="55" y="86" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-      <rect x="140" y="74" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-      <rect x="140" y="80" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-      <rect x="140" y="86" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="53" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="53" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="53" y="84" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="142" y="72" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="142" y="78" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="142" y="84" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
     </g>
-
     <!-- LEGS -->
-    <rect x="55"  y="258" width="38" height="50" rx="10" fill="url(#gMet)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
-    <rect x="107" y="258" width="38" height="50" rx="10" fill="url(#gMet)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
-    <rect x="50"  y="304" width="48" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
-    <rect x="102" y="304" width="48" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
+    <rect x="52"  y="256" width="40" height="52" rx="10" fill="url(#gM)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
+    <rect x="108" y="256" width="40" height="52" rx="10" fill="url(#gM)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
+    <rect x="48"  y="302" width="50" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
+    <rect x="102" y="302" width="50" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
     </svg>
-  </div><!-- #robot-wrap -->
+  </div>
 
-  <!-- ── RIGHT PANEL ── -->
-  <div id="panel">
-    <div>
-      <div class="p-badge">⬡ SISTEMA ATIVO</div>
-      <div class="p-title">Hub<br><span>Operacional</span></div>
-      <div class="p-sub" style="margin-top:10px;">
-        J.A.R.V.I.S precisa confirmar<br>sua identidade para liberar o acesso.
+  <!-- CHAT -->
+  <div id="chat-col">
+    <div class="chat-header">
+      <div class="chat-avatar">🤖</div>
+      <div>
+        <div class="chat-hname">J.A.R.V.I.S</div>
+        <div class="chat-hstatus">● ONLINE — IDENTIFICAÇÃO</div>
       </div>
     </div>
 
-    <div class="p-card">
-      <div class="p-card-label">PROTOCOLO DE ACESSO</div>
-      <div class="p-steps">
-        <div class="p-step">
-          <div class="p-step-dot">🤖</div>
-          <div class="p-step-txt"><strong>J.A.R.V.I.S pergunta</strong> quem é você</div>
-        </div>
-        <div class="p-step">
-          <div class="p-step-dot">✅</div>
-          <div class="p-step-txt"><strong>Sim</strong> — acesso completo como Gabriel</div>
-        </div>
-        <div class="p-step">
-          <div class="p-step-dot">👤</div>
-          <div class="p-step-txt"><strong>Não</strong> — acesso como convidado (leitura)</div>
+    <div id="msgs">
+      <div class="msg-bot">
+        <div class="bot-bubble">
+          Oi! 👋 Eu sou o <strong>J.A.R.V.I.S</strong>, assistente do hub operacional.<br><br>
+          Você é <strong>Gabriel Sabino</strong>? Digite sua senha para confirmar. Se for convidado, informe seu nome e senha de convidado.
         </div>
       </div>
     </div>
 
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(107,33,168,.55);line-height:2.2;">
-      ⬡ GRIMORIUM · AES-256<br>
-      ⬡ SESSÃO · MONITORADA<br>
-      ⬡ ACESSO · REGISTRADO
+    <!-- Input dinâmico -->
+    <div class="input-wrap" id="input-area">
+      <div class="input-label" id="inp-label">SENHA</div>
+      <input class="input-field" id="inp-nome" type="text"
+        placeholder="Seu nome..." style="display:none"
+        onkeydown="if(event.key==='Enter') enviar()"/>
+      <input class="input-field" id="inp-senha" type="password"
+        placeholder="••••••••"
+        onkeydown="if(event.key==='Enter') enviar()"/>
+      <button class="btn-send" id="btn-send" onclick="enviar()">Confirmar →</button>
     </div>
   </div>
 
-</div><!-- #wrap -->
+</div>
 
-<div class="hud">⬡ J.A.R.V.I.S · IDENTIFICAÇÃO BIOMÉTRICA ⬡</div>
+<div class="hud">⬡ J.A.R.V.I.S · HUB OPERACIONAL SABINO OS ⬡</div>
 
 <script>
-// ── Particles ──
-const pc=document.getElementById('pc'), pctx=pc.getContext('2d');
-function resPC(){ pc.width=window.innerWidth; pc.height=window.innerHeight; }
-resPC(); window.addEventListener('resize',resPC);
+// Particles
+const pc=document.getElementById('pc'), ctx=pc.getContext('2d');
+function rsz(){ pc.width=window.innerWidth; pc.height=window.innerHeight; }
+rsz(); window.addEventListener('resize',rsz);
 const pts=Array.from({length:32},()=>({
   x:Math.random()*pc.width, y:Math.random()*pc.height,
   vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
-  r:Math.random()*1.8+.4,
-  c:Math.random()>.5?'#6B21A8':'#10B981'
+  r:Math.random()*1.8+.4, c:Math.random()>.5?'#6B21A8':'#10B981'
 }));
 (function loop(){
-  pctx.clearRect(0,0,pc.width,pc.height);
+  ctx.clearRect(0,0,pc.width,pc.height);
   pts.forEach(p=>{
     p.x+=p.vx; p.y+=p.vy;
-    if(p.x<0||p.x>pc.width) p.vx*=-1;
-    if(p.y<0||p.y>pc.height) p.vy*=-1;
-    pctx.beginPath(); pctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    pctx.fillStyle=p.c; pctx.shadowBlur=6; pctx.shadowColor=p.c; pctx.fill();
+    if(p.x<0||p.x>pc.width)p.vx*=-1;
+    if(p.y<0||p.y>pc.height)p.vy*=-1;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.c; ctx.shadowBlur=6; ctx.shadowColor=p.c; ctx.fill();
   });
   requestAnimationFrame(loop);
 })();
 
-// ── Button response ──
-function resp(r) {
-  // Tenta clicar no botão Streamlit correspondente
-  const label = r === 'sim' ? 'gabriel_hidden' : 'nao_hidden';
-  const btns = window.parent.document.querySelectorAll('button');
-  let found = false;
-  btns.forEach(b => {
-    if (b.innerText.trim() === label) {
-      b.click(); found = true;
-    }
-  });
-  // Fallback: query param
-  if (!found) {
-    const val = r === 'sim' ? 'gabriel' : 'convidado';
-    window.parent.location.href = window.parent.location.href.split('?')[0] + '?login=' + val;
+// Chat logic
+let stage = 'senha_gabriel'; // 'senha_gabriel' | 'nome_convidado' | 'senha_convidado'
+let nomeConv = '';
+
+const msgs      = document.getElementById('msgs');
+const inpNome   = document.getElementById('inp-nome');
+const inpSenha  = document.getElementById('inp-senha');
+const inpLabel  = document.getElementById('inp-label');
+const btnSend   = document.getElementById('btn-send');
+
+function addMsg(txt, delay=0){
+  setTimeout(()=>{
+    const d=document.createElement('div');
+    d.className='msg-bot';
+    d.innerHTML=`<div class="bot-bubble">${txt}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop=msgs.scrollHeight;
+  }, delay);
+}
+
+function shake(){
+  const w=document.getElementById('input-area');
+  w.classList.remove('shake');
+  void w.offsetWidth;
+  w.classList.add('shake');
+}
+
+function setMode(mode){
+  if(mode==='nome'){
+    inpLabel.textContent='SEU NOME';
+    inpNome.style.display='block';
+    inpSenha.style.display='none';
+    inpNome.value=''; inpNome.focus();
+    btnSend.textContent='Próximo →';
+  } else {
+    inpLabel.textContent='SENHA';
+    inpNome.style.display='none';
+    inpSenha.style.display='block';
+    inpSenha.value=''; inpSenha.focus();
+    btnSend.textContent='Confirmar →';
   }
 }
+
+function enviar(){
+  if(stage==='senha_gabriel'){
+    const s=inpSenha.value.trim();
+    inpSenha.value='';
+    if(s==='gr1723'){
+      addMsg('✅ <strong>Identidade confirmada, Gabriel!</strong><br>Bem-vindo de volta. Liberando acesso completo... 🚀');
+      setTimeout(()=>login('gabriel',''), 1400);
+    } else if(s==='gsr17'){
+      // senha de convidado na primeira tentativa — pede nome
+      stage='nome_convidado';
+      addMsg('👤 Senha de convidado detectada. Qual é o seu nome?', 200);
+      setMode('nome');
+    } else if(s!==''){
+      addMsg('❌ Senha incorreta. Tente novamente ou use a senha de convidado.');
+      shake();
+      inpSenha.focus();
+    }
+  } else if(stage==='nome_convidado'){
+    const n=inpNome.value.trim();
+    if(n.length<2){ shake(); inpNome.focus(); return; }
+    nomeConv=n;
+    stage='senha_convidado';
+    addMsg(`Olá, <strong>${n}</strong>! Agora informe a senha de convidado.`, 200);
+    setMode('senha');
+  } else if(stage==='senha_convidado'){
+    const s=inpSenha.value.trim();
+    inpSenha.value='';
+    if(s==='gsr17'){
+      addMsg(`✅ Acesso de convidado confirmado, <strong>${nomeConv}</strong>!<br>Bem-vindo ao hub. Acesso em modo leitura. 👤`);
+      setTimeout(()=>login('convidado', nomeConv), 1400);
+    } else if(s!==''){
+      addMsg('❌ Senha de convidado incorreta. Tente novamente.');
+      shake();
+      inpSenha.focus();
+    }
+  }
+}
+
+function login(tipo, nome){
+  // Envia via postMessage para o pai (Streamlit)
+  try {
+    window.parent.postMessage({type:'sabino_login', user:tipo, nome:nome}, '*');
+  } catch(e){}
+  // Fallback: query param
+  let url=window.parent.location.href.split('?')[0];
+  window.parent.location.href=url+'?login='+tipo+'&nome='+encodeURIComponent(nome);
+}
+
+// Auto-focus
+setTimeout(()=>inpSenha.focus(), 600);
 </script>
 </body>
 </html>
 """
 
-    # Esconde os botões Streamlit com CSS
-    st.markdown("""
-    <style>
-    [data-testid="stHorizontalBlock"] { display:none !important; }
-    </style>
-    """, unsafe_allow_html=True)
+    # Processa retorno via query param
+    qp = st.query_params
+    if qp.get("login") == "gabriel":
+        st.session_state.logado = True
+        st.session_state.is_convidado = False
+        st.session_state.nome_convidado = "Gabriel"
+        st.query_params.clear()
+        st.rerun()
+    elif qp.get("login") == "convidado":
+        st.session_state.logado = True
+        st.session_state.is_convidado = True
+        st.session_state.nome_convidado = qp.get("nome","Convidado")
+        st.query_params.clear()
+        st.rerun()
 
-    components.html(LOGIN_HTML, height=620, scrolling=False)
+    components.html(LOGIN_HTML, height=700, scrolling=False)
     st.stop()
 
 # ============================================================
@@ -1118,7 +1084,8 @@ with st.sidebar:
         st.success("Sincronizado!")
         st.rerun()
 
-    st.link_button("Editar Planilha", URL_DB, use_container_width=True)
+    if not st.session_state.is_convidado:
+        st.link_button("Editar Planilha", URL_DB, use_container_width=True)
 
     st.divider()
 
@@ -1149,7 +1116,7 @@ with st.sidebar:
     if st.button("Sair", use_container_width=True):
         st.session_state.logado = False
         st.session_state.is_convidado = False
-        st.session_state.login_stage = "senha"
+        st.session_state.nome_convidado = ""
         st.session_state.df_projetos = None
         st.rerun()
 
@@ -1157,8 +1124,8 @@ with st.sidebar:
 # HEADER
 # ============================================================
 now = datetime.now()
-usuario_nome = "CONVIDADO" if st.session_state.is_convidado else "GABRIEL SABINO"
-usuario_cor  = "#7C3AED"   if st.session_state.is_convidado else "#6B21A8"
+usuario_nome = st.session_state.nome_convidado.upper() if st.session_state.is_convidado else "GABRIEL SABINO"
+usuario_cor  = "#7C3AED" if st.session_state.is_convidado else "#6B21A8"
 st.markdown(f"""
 <div style="display:flex;justify-content:space-between;align-items:center;
     padding:16px 24px;border:1px solid #E2E4EA;border-radius:14px;
@@ -1206,182 +1173,203 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 ])
 
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
 # TAB 1 — CHAT IA
 # ─────────────────────────────────────────────
 with tab1:
+    # Convidado: vê histórico mas não envia
     if st.session_state.is_convidado:
         st.markdown("""
-        <div style="text-align:center;padding:60px 20px;">
-          <div style="font-size:52px;margin-bottom:16px;">🔒</div>
-          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#6B21A8;margin-bottom:8px;">
-            Acesso Restrito</div>
-          <div style="font-size:14px;color:#5B4E72;line-height:1.8;">
-            O Chat IA está disponível apenas para Gabriel.<br>
-            Faça o reconhecimento facial para ter acesso completo.
-          </div>
+        <div style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);
+            border-radius:12px;padding:12px 18px;margin-bottom:16px;
+            display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">🔒</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C3AED;">
+            MODO LEITURA — envio de mensagens disponível apenas para Gabriel</span>
         </div>
         """, unsafe_allow_html=True)
-        st.stop()
-
-    sugestoes = [
-        ("🔴", "Qual projeto tem maior risco de atraso"),
-        ("🎯", "Onde focar energia essa semana"),
-        ("📊", "Diagnostico geral do portfolio"),
-        ("⚡", "Quais projetos posso acelerar"),
-        ("🔍", "Identifique gargalos"),
-        ("📅", "O que vence nos proximos 30 dias"),
-    ]
-
-    pergunta_sugerida = None
-
-    col_chat, col_sugest = st.columns([2.5, 1])
-
-    with col_sugest:
-        st.markdown("""
-        <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:16px;padding:20px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #DDD8F0;">
-            <div style="width:48px;height:48px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
-                border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
-                box-shadow:0 4px 12px rgba(107,33,168,0.3);">🤖</div>
-            <div>
-              <div style="font-weight:700;font-size:14px;color:#1A1225;">J.A.R.V.I.S</div>
-              <div style="font-size:11px;color:#6B21A8;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
-            </div>
-          </div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:12px;">
-            PERGUNTAS RAPIDAS
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        for emoji, s in sugestoes:
-            if st.button(f"{emoji}  {s}", key=f"sug_{s[:10]}", use_container_width=True):
-                pergunta_sugerida = s
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🗑️  Limpar conversa", use_container_width=True, key="limpar_chat"):
-            st.session_state.chat_history = []
-            st.rerun()
-
-    with col_chat:
-        st.markdown("""
-        <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
-            padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
-          <div style="font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🤖</div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">J.A.R.V.I.S</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.8);">Consultor estrategico do seu portfolio</div>
-          </div>
-          <div style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;">
-            <span style="font-size:11px;color:#fff;font-family:'JetBrains Mono',monospace;">● ATIVO</span>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
         if not st.session_state.chat_history:
+            st.info("Nenhuma conversa ainda.")
+        else:
+            for msg in st.session_state.chat_history:
+                if msg["role"] == "user":
+                    st.markdown(f"""
+                    <div style="display:flex;justify-content:flex-end;margin:10px 0;gap:8px;">
+                      <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
+                          border-radius:14px 14px 4px 14px;padding:10px 16px;max-width:75%;font-size:14px;">
+                        {msg["content"]}
+                      </div>
+                    </div>""", unsafe_allow_html=True)
+                else:
+                    content = msg["content"].replace(chr(10), "<br>")
+                    st.markdown(f"""
+                    <div style="display:flex;gap:10px;margin:10px 0;">
+                      <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:4px 14px 14px 14px;
+                          padding:12px 16px;max-width:85%;font-size:14px;color:#1A1225;line-height:1.7;">
+                        {content}
+                      </div>
+                    </div>""", unsafe_allow_html=True)
+
+    else:
+        sugestoes = [
+            ("🔴", "Qual projeto tem maior risco de atraso"),
+            ("🎯", "Onde focar energia essa semana"),
+            ("📊", "Diagnostico geral do portfolio"),
+            ("⚡", "Quais projetos posso acelerar"),
+            ("🔍", "Identifique gargalos"),
+            ("📅", "O que vence nos proximos 30 dias"),
+        ]
+
+        pergunta_sugerida = None
+
+        col_chat, col_sugest = st.columns([2.5, 1])
+
+        with col_sugest:
             st.markdown("""
-            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
-              <div style="width:44px;height:44px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
-                  border-radius:50%;display:flex;align-items:center;justify-content:center;
-                  font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(107,33,168,0.3);">🤖</div>
-              <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:4px 16px 16px 16px;
-                  padding:16px 20px;max-width:90%;box-shadow:0 2px 8px rgba(107,33,168,0.07);">
-                <div style="font-weight:700;color:#6B21A8;margin-bottom:8px;font-size:15px;">🔮 Salve, Bruxo! 🧙‍♂️</div>
-                <div style="font-size:14px;color:#1A1225;line-height:1.7;">
-                  Sistema ativo e pronto. Tenho acesso completo ao seu portfolio —
-                  prazos, clientes, escopo, tudo.<br><br>
-                  Me diz o que precisa, Bruxo. Use os botoes ao lado ou
-                  manda sua pergunta aqui embaixo. 🔥
+            <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:16px;padding:20px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #DDD8F0;">
+                <div style="width:48px;height:48px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+                    border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
+                    box-shadow:0 4px 12px rgba(107,33,168,0.3);">🤖</div>
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:#1A1225;">J.A.R.V.I.S</div>
+                  <div style="font-size:11px;color:#6B21A8;font-family:'JetBrains Mono',monospace;">● ONLINE</div>
                 </div>
+              </div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:12px;">
+                PERGUNTAS RAPIDAS
               </div>
             </div>
             """, unsafe_allow_html=True)
 
-        for msg in st.session_state.chat_history:
-            if msg["role"] == "user":
-                st.markdown(f"""
-                <div style="display:flex;justify-content:flex-end;margin:12px 0;gap:8px;">
-                  <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
-                      border-radius:16px 16px 4px 16px;padding:12px 18px;max-width:75%;
-                      font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(107,33,168,0.25);">
-                    {msg['content']}
-                  </div>
-                  <div style="width:36px;height:36px;background:#DDD8F0;border-radius:50%;
-                      display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🧙‍♂️</div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                content = msg['content'].replace(chr(10), '<br>')
-                st.markdown(f"""
-                <div style="display:flex;align-items:flex-start;gap:12px;margin:12px 0;">
+            for emoji, s in sugestoes:
+                if st.button(f"{emoji}  {s}", key=f"sug_{s[:10]}", use_container_width=True):
+                    pergunta_sugerida = s
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🗑️  Limpar conversa", use_container_width=True, key="limpar_chat"):
+                st.session_state.chat_history = []
+                st.rerun()
+
+        with col_chat:
+            st.markdown("""
+            <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
+                padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
+              <div style="font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🤖</div>
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;">J.A.R.V.I.S</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.8);">Consultor estrategico do seu portfolio</div>
+              </div>
+              <div style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;">
+                <span style="font-size:11px;color:#fff;font-family:'JetBrains Mono',monospace;">● ATIVO</span>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            if not st.session_state.chat_history:
+                st.markdown("""
+                <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
                   <div style="width:44px;height:44px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
                       border-radius:50%;display:flex;align-items:center;justify-content:center;
                       font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(107,33,168,0.3);">🤖</div>
                   <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:4px 16px 16px 16px;
-                      padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1225;
-                      box-shadow:0 2px 8px rgba(107,33,168,0.07);">
-                    {content}
+                      padding:16px 20px;max-width:90%;box-shadow:0 2px 8px rgba(107,33,168,0.07);">
+                    <div style="font-weight:700;color:#6B21A8;margin-bottom:8px;font-size:15px;">🔮 Salve, Bruxo! 🧙‍♂️</div>
+                    <div style="font-size:14px;color:#1A1225;line-height:1.7;">
+                      Sistema ativo e pronto. Tenho acesso completo ao seu portfolio —
+                      prazos, clientes, escopo, tudo.<br><br>
+                      Me diz o que precisa, Bruxo. Use os botoes ao lado ou
+                      manda sua pergunta aqui embaixo. 🔥
+                    </div>
                   </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+            for msg in st.session_state.chat_history:
+                if msg["role"] == "user":
+                    st.markdown(f"""
+                    <div style="display:flex;justify-content:flex-end;margin:12px 0;gap:8px;">
+                      <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
+                          border-radius:16px 16px 4px 16px;padding:12px 18px;max-width:75%;
+                          font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(107,33,168,0.25);">
+                        {msg["content"]}
+                      </div>
+                      <div style="width:36px;height:36px;background:#DDD8F0;border-radius:50%;
+                          display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🧙‍♂️</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    content = msg["content"].replace(chr(10), "<br>")
+                    st.markdown(f"""
+                    <div style="display:flex;align-items:flex-start;gap:12px;margin:12px 0;">
+                      <div style="width:44px;height:44px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+                          border-radius:50%;display:flex;align-items:center;justify-content:center;
+                          font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(107,33,168,0.3);">🤖</div>
+                      <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-radius:4px 16px 16px 16px;
+                          padding:16px 20px;max-width:85%;font-size:14px;line-height:1.7;color:#1A1225;
+                          box-shadow:0 2px 8px rgba(107,33,168,0.07);">
+                        {content}
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-        col_input, col_btn = st.columns([5, 1])
-        with col_input:
-            user_input = st.text_input(
-                "msg",
-                value=pergunta_sugerida or "",
-                placeholder="Fala, Bruxo! O que precisa saber?",
-                label_visibility="collapsed",
-                key="chat_input"
-            )
-        with col_btn:
-            enviar = st.button("Enviar", use_container_width=True)
+            st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-    if (enviar or pergunta_sugerida) and (user_input or pergunta_sugerida):
-        query = user_input or pergunta_sugerida
-        st.session_state.chat_history.append({"role": "user", "content": query})
+            col_input, col_btn = st.columns([5, 1])
+            with col_input:
+                user_input = st.text_input(
+                    "msg",
+                    value=pergunta_sugerida or "",
+                    placeholder="Fala, Bruxo! O que precisa saber?",
+                    label_visibility="collapsed",
+                    key="chat_input"
+                )
+            with col_btn:
+                enviar = st.button("Enviar", use_container_width=True)
 
-        now = pd.Timestamp.now()
-        q = query.lower()
+        if (enviar or pergunta_sugerida) and (user_input or pergunta_sugerida):
+            query = user_input or pergunta_sugerida
+            st.session_state.chat_history.append({"role": "user", "content": query})
 
-        try:
-            if df.empty:
-                answer = "⚠️ Nenhum projeto carregado. Sincronize a planilha primeiro, Bruxo!"
-            else:
-                ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento"])]
-                concluidos_df = df[df["Status"] == "Concluido"]
-                em_exec = df[df["Status"] == "Em Andamento"]
-                backlog = df[df["Status"] == "A Iniciar"]
-                futuros = df[df["Status"] == "Projetos Futuros"]
-                total = len(df)
-                taxa = round(len(concluidos_df)/total*100, 1) if total > 0 else 0
+            now_ts = pd.Timestamp.now()
+            q = query.lower()
 
-                urgentes = ativos.copy()
-                urgentes["dias"] = (urgentes["Prazo"] - now).dt.days
-                urgentes = urgentes.sort_values("dias")
+            try:
+                if df.empty:
+                    answer = "⚠️ Nenhum projeto carregado. Sincronize a planilha primeiro, Bruxo!"
+                else:
+                    ativos = df[df["Status"].isin(["A Iniciar", "Em Andamento"])]
+                    concluidos_df = df[df["Status"] == "Concluido"]
+                    em_exec = df[df["Status"] == "Em Andamento"]
+                    backlog = df[df["Status"] == "A Iniciar"]
+                    futuros = df[df["Status"] == "Projetos Futuros"]
+                    total = len(df)
+                    taxa = round(len(concluidos_df)/total*100, 1) if total > 0 else 0
 
-                if any(w in q for w in ["risco", "atraso", "urgente", "critico"]):
-                    top = urgentes.head(5)
-                    linhas = ""
-                    for _, r in top.iterrows():
-                        d = int((r["Prazo"] - now).days)
-                        emoji = "🔴" if d < 7 else "🟡" if d < 30 else "🟢"
-                        linhas += f"\n{emoji} **{r['Projeto']}** — {d} dias ({r['Prazo'].strftime('%d/%m/%Y')})"
-                    answer = f"**⚠️ Bruxo, esses sao os projetos em maior risco:**\n{linhas}\n\n💡 Os marcados em 🔴 precisam de atencao AGORA."
+                    urgentes = ativos.copy()
+                    urgentes["dias"] = (urgentes["Prazo"] - now_ts).dt.days
+                    urgentes = urgentes.sort_values("dias")
 
-                elif any(w in q for w in ["focar", "energia", "semana", "prioridade", "foco"]):
-                    top = urgentes.head(3)
-                    linhas = ""
-                    for _, r in top.iterrows():
-                        d = int((r["Prazo"] - now).days)
-                        foco = str(r.get("Foco",""))[:50] if pd.notna(r.get("Foco")) else ""
-                        linhas += f"\n🎯 **{r['Projeto']}** ({d}d) — {foco}"
-                    answer = f"**🎯 Bruxo, o foco desta semana e:**\n{linhas}\n\n⚡ Concentre a magia nestes para evitar atrasos!"
+                    if any(w in q for w in ["risco", "atraso", "urgente", "critico"]):
+                        top = urgentes.head(5)
+                        linhas = ""
+                        for _, r in top.iterrows():
+                            d = int((r["Prazo"] - now_ts).days)
+                            emoji = "🔴" if d < 7 else "🟡" if d < 30 else "🟢"
+                            linhas += f"\n{emoji} **{r['Projeto']}** — {d} dias ({r['Prazo'].strftime('%d/%m/%Y')})"
+                        answer = f"**⚠️ Bruxo, esses sao os projetos em maior risco:**\n{linhas}\n\n💡 Os marcados em 🔴 precisam de atencao AGORA."
 
-                elif any(w in q for w in ["diagnostico", "geral", "portfolio", "situacao", "status"]):
-                    answer = f"""**📊 Diagnostico do Portfolio, Bruxo:**
+                    elif any(w in q for w in ["focar", "energia", "semana", "prioridade", "foco"]):
+                        top = urgentes.head(3)
+                        linhas = ""
+                        for _, r in top.iterrows():
+                            d = int((r["Prazo"] - now_ts).days)
+                            foco = str(r.get("Foco",""))[:50] if pd.notna(r.get("Foco")) else ""
+                            linhas += f"\n🎯 **{r['Projeto']}** ({d}d) — {foco}"
+                        answer = f"**🎯 Bruxo, o foco desta semana e:**\n{linhas}\n\n⚡ Concentre a magia nestes para evitar atrasos!"
+
+                    elif any(w in q for w in ["diagnostico", "geral", "portfolio", "situacao", "status"]):
+                        answer = f"""**📊 Diagnostico do Portfolio, Bruxo:**
 
 🔢 **Total de projetos:** {total}
 ✅ **Concluidos:** {len(concluidos_df)} ({taxa}%)
@@ -1391,41 +1379,41 @@ with tab1:
 
 {"🟢 **Performance Excepcional!** Pipeline acima da media!" if taxa >= 70 else "🟡 **Performance Estavel.** Ha espaco para acelerar o backlog." if taxa >= 40 else "🔴 **Atencao, Bruxo!** Revisao estrategica recomendada."}
 
-💡 Proximo prazo critico: **{urgentes.iloc[0]['Projeto'] if not urgentes.empty else 'N/A'}** — vence em {int(urgentes.iloc[0]['dias']) if not urgentes.empty else 0} dias."""
+💡 Proximo prazo critico: **{urgentes.iloc[0]["Projeto"] if not urgentes.empty else "N/A"}** — vence em {int(urgentes.iloc[0]["dias"]) if not urgentes.empty else 0} dias."""
 
-                elif any(w in q for w in ["acelerar", "rapido", "adiantar"]):
-                    top = urgentes[urgentes["dias"] > 30].head(4)
-                    if top.empty:
-                        answer = "⚡ Bruxo, todos os projetos ativos estao com prazo proximo. Conclua os urgentes primeiro!"
-                    else:
-                        linhas = "\n".join([f"⚡ **{r['Projeto']}** — {int(r['dias'])} dias" for _, r in top.iterrows()])
-                        answer = f"**Projetos com prazo folgado para acelerar:**\n{linhas}\n\n✅ Aproveite o momento para adiantar, Bruxo!"
+                    elif any(w in q for w in ["acelerar", "rapido", "adiantar"]):
+                        top = urgentes[urgentes["dias"] > 30].head(4)
+                        if top.empty:
+                            answer = "⚡ Bruxo, todos os projetos ativos estao com prazo proximo. Conclua os urgentes primeiro!"
+                        else:
+                            linhas = "\n".join([f"⚡ **{r['Projeto']}** — {int(r['dias'])} dias" for _, r in top.iterrows()])
+                            answer = f"**Projetos com prazo folgado para acelerar:**\n{linhas}\n\n✅ Aproveite o momento para adiantar, Bruxo!"
 
-                elif any(w in q for w in ["gargalo", "problema", "bloqueio"]):
-                    muitos_urgentes = urgentes[urgentes["dias"] < 14]
-                    answer = f"""**🔍 Gargalos Identificados, Bruxo:**
+                    elif any(w in q for w in ["gargalo", "problema", "bloqueio"]):
+                        muitos_urgentes = urgentes[urgentes["dias"] < 14]
+                        answer = f"""**🔍 Gargalos Identificados, Bruxo:**
 
 {"🔴 **"+str(len(muitos_urgentes))+" projetos vencem em menos de 14 dias** — risco de sobrecarga!" if not muitos_urgentes.empty else "✅ Nenhum gargalo critico no momento."}
 
 📋 **Backlog represado:** {len(backlog)} projetos aguardando inicio.
 {"⚠️ Alto volume — considere priorizar ou redistribuir." if len(backlog) > 5 else "✅ Backlog em nivel saudavel."}"""
 
-                elif any(w in q for w in ["30 dias", "vence", "prazo", "mes"]):
-                    proximos = urgentes[urgentes["dias"] <= 30]
-                    if proximos.empty:
-                        answer = "✅ Bruxo, nenhum projeto vence nos proximos 30 dias. Tudo tranquilo!"
-                    else:
-                        linhas = ""
-                        for _, r in proximos.iterrows():
-                            d = int(r["dias"])
-                            emoji = "🔴" if d < 7 else "🟡"
-                            linhas += f"\n{emoji} **{r['Projeto']}** — {r['Prazo'].strftime('%d/%m/%Y')} ({d}d)"
-                        answer = f"**📅 Vence nos proximos 30 dias ({len(proximos)} projetos):**\n{linhas}"
+                    elif any(w in q for w in ["30 dias", "vence", "prazo", "mes"]):
+                        proximos = urgentes[urgentes["dias"] <= 30]
+                        if proximos.empty:
+                            answer = "✅ Bruxo, nenhum projeto vence nos proximos 30 dias. Tudo tranquilo!"
+                        else:
+                            linhas = ""
+                            for _, r in proximos.iterrows():
+                                d = int(r["dias"])
+                                emoji = "🔴" if d < 7 else "🟡"
+                                linhas += f"\n{emoji} **{r['Projeto']}** — {r['Prazo'].strftime('%d/%m/%Y')} ({d}d)"
+                            answer = f"**📅 Vence nos proximos 30 dias ({len(proximos)} projetos):**\n{linhas}"
 
-                else:
-                    top3 = urgentes.head(3)
-                    linhas = "\n".join([f"• **{r['Projeto']}** — {int(r['dias'])}d" for _, r in top3.iterrows()])
-                    answer = f"""**🤖 Resumo Executivo, Bruxo:**
+                    else:
+                        top3 = urgentes.head(3)
+                        linhas = "\n".join([f"• **{r['Projeto']}** — {int(r['dias'])}d" for _, r in top3.iterrows()])
+                        answer = f"""**🤖 Resumo Executivo, Bruxo:**
 
 📊 Portfolio: **{total} projetos** | Conclusao: **{taxa}%**
 ⚙️ Em andamento: **{len(em_exec)}** | Backlog: **{len(backlog)}**
@@ -1435,11 +1423,11 @@ with tab1:
 
 💬 Use os botoes ao lado para analises especificas!"""
 
-        except Exception as e:
-            answer = f"Erro interno: {str(e)}"
+            except Exception as e:
+                answer = f"Erro interno: {str(e)}"
 
-        st.session_state.chat_history.append({"role": "assistant", "content": answer})
-        st.rerun()
+            st.session_state.chat_history.append({"role": "assistant", "content": answer})
+            st.rerun()
 
 # ─────────────────────────────────────────────
 # TAB 2 — VISAO GERAL
