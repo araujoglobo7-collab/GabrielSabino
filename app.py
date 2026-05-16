@@ -869,15 +869,26 @@ if st.session_state.df_projetos is None:
 df = st.session_state.df_projetos
 
 # ============================================================
+# ============================================================
 # SIDEBAR
 # ============================================================
+if "sidebar_visivel" not in st.session_state:
+    st.session_state.sidebar_visivel = True
+
+# CSS dinâmico para esconder/mostrar sidebar
+if not st.session_state.sidebar_visivel:
+    st.markdown("""
+    <style>
+    section[data-testid="stSidebar"] { display:none !important; }
+    [data-testid="stAppViewContainer"] > div:first-child { display:none !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
 with st.sidebar:
     st.markdown("""
     <div style="padding:0 0 20px 0;">
       <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;color:#6B21A8;margin-bottom:4px;">&#9679; SISTEMA ATIVO</div>
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
-          color:#6B21A8;">
-          SABINO OS</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#6B21A8;">SABINO OS</div>
       <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">Hub Operacional v4.0</div>
     </div>
     """, unsafe_allow_html=True)
@@ -922,6 +933,11 @@ with st.sidebar:
         """, unsafe_allow_html=True)
 
     st.divider()
+
+    if st.button("⟵ Ocultar Menu", use_container_width=True, key="btn_ocultar"):
+        st.session_state.sidebar_visivel = False
+        st.rerun()
+
     if st.button("Sair", use_container_width=True):
         st.session_state.logado = False
         st.session_state.is_convidado = False
@@ -935,15 +951,38 @@ with st.sidebar:
 now = datetime.now()
 usuario_nome = st.session_state.nome_convidado.upper() if st.session_state.is_convidado else "GABRIEL SABINO"
 usuario_cor  = "#7C3AED" if st.session_state.is_convidado else "#6B21A8"
-st.markdown(f"""
+
+# Botão flutuante para reabrir menu quando oculto
+if not st.session_state.sidebar_visivel:
+    col_menu, col_head = st.columns([0.12, 0.88])
+    with col_menu:
+        if st.button("☰ Menu", key="btn_mostrar"):
+            st.session_state.sidebar_visivel = True
+            st.rerun()
+    with col_head:
+        st.markdown(f"""
 <div style="display:flex;justify-content:space-between;align-items:center;
     padding:16px 24px;border:1px solid #E2E4EA;border-radius:14px;
     background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:{"8px" if st.session_state.is_convidado else "24px"};">
   <div>
     <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
-    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
-        color:{usuario_cor};">
-        {usuario_nome}</div>
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:{usuario_cor};">{usuario_nome}</div>
+  </div>
+  <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:#9CA3AF;letter-spacing:1px;">
+    <div style="color:#2F9E44;margin-bottom:4px;">&#9679; JARVIS ONLINE</div>
+    <div>{now.strftime('%A, %d %b %Y')}</div>
+    <div>{now.strftime('%H:%M')}</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+else:
+    st.markdown(f"""
+<div style="display:flex;justify-content:space-between;align-items:center;
+    padding:16px 24px;border:1px solid #E2E4EA;border-radius:14px;
+    background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:{"8px" if st.session_state.is_convidado else "24px"};">
+  <div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:{usuario_cor};">{usuario_nome}</div>
   </div>
   <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:#9CA3AF;letter-spacing:1px;">
     <div style="color:#2F9E44;margin-bottom:4px;">&#9679; JARVIS ONLINE</div>
@@ -1586,34 +1625,45 @@ with tab5:
                     uf = row["UF"]
                     if uf in ESTADOS_COORDS:
                         lat, lon, nome = ESTADOS_COORDS[uf]
+                        projs = list(row["projetos"])
                         map_data.append({
                             "uf": uf, "nome": nome,
                             "lat": lat, "lon": lon,
-                            "total": int(row["total"])
+                            "total": int(row["total"]),
+                            "projetos": projs[:6]  # max 6 para não pesar
                         })
 
                 map_markers = ""
                 for m in map_data:
                     cor_marker = "#C92A2A" if m["total"] >= 5 else "#7C3AED" if m["total"] >= 3 else "#6B21A8"
-                    radius = 15 + m["total"] * 5
+                    # Raio menor — máximo 18, mínimo 8
+                    radius = min(8 + m["total"] * 2, 18)
+                    projs_html = "".join([f"<div style='font-size:10px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;'>{p}</div>" for p in m["projetos"]])
+                    if m["total"] > 6:
+                        projs_html += f"<div style='font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;'>+{m['total']-6} mais...</div>"
+                    popup_html = f"""<div style='font-family:Inter,sans-serif;background:#1A1225;color:#fff;border-radius:10px;padding:12px;min-width:180px;'>
+                        <div style='font-weight:800;font-size:13px;margin-bottom:4px;color:#A855F7;'>{m["nome"]} ({m["uf"]})</div>
+                        <div style='font-size:11px;color:#10B981;margin-bottom:8px;'>⬡ {m["total"]} projeto(s)</div>
+                        {projs_html}
+                    </div>"""
                     map_markers += f"""
                     L.circleMarker([{m['lat']}, {m['lon']}], {{
                         radius: {radius},
                         fillColor: '{cor_marker}',
                         color: '#fff',
-                        weight: 2,
+                        weight: 1.5,
                         opacity: 1,
-                        fillOpacity: 0.85
+                        fillOpacity: 0.9
                     }}).addTo(map)
-                    .bindPopup('<b>{m["nome"]} ({m["uf"]})</b><br>{m["total"]} projeto(s)')
-                    .on('click', function() {{
-                        window.parent.postMessage({{type:'estado_click', uf:'{m["uf"]}', nome:'{m["nome"]}'}}, '*');
+                    .bindPopup('{popup_html.replace(chr(10),"").replace(chr(39), "&#39;")}', {{
+                        maxWidth: 220,
+                        className: 'dark-popup'
                     }});
                     L.marker([{m['lat']}, {m['lon']}], {{
                         icon: L.divIcon({{
-                            html: '<div style="background:transparent;color:#fff;font-weight:800;font-size:11px;text-align:center;margin-top:-4px;">{m["total"]}</div>',
-                            iconSize: [20, 20],
-                            iconAnchor: [10, 10]
+                            html: '<div style="color:#fff;font-weight:800;font-size:10px;text-align:center;line-height:1;">{m["total"]}</div>',
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8]
                         }})
                     }}).addTo(map);
                     """
@@ -1629,22 +1679,55 @@ with tab5:
   body {{ margin: 0; padding: 0; background: #F6F5FA; }}
   #map {{ width: 100%; height: 580px; border-radius: 16px; }}
   .leaflet-popup-content-wrapper {{ border-radius: 10px; font-family: 'Inter', sans-serif; }}
+  .dark-popup .leaflet-popup-content-wrapper {{
+    background: #1A1225 !important;
+    border: 1px solid rgba(107,33,168,.4) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5) !important;
+    padding: 0 !important;
+  }}
+  .dark-popup .leaflet-popup-content {{ margin: 0 !important; }}
+  .dark-popup .leaflet-popup-tip {{ background: #1A1225 !important; }}
+  .dark-popup .leaflet-popup-close-button {{ color: rgba(255,255,255,.4) !important; top:8px !important; right:8px !important; }}
   .info-box {{
     position: absolute; bottom: 20px; left: 20px; z-index: 1000;
     background: rgba(255,255,255,0.95); border: 1px solid #DDD8F0;
     border-radius: 12px; padding: 12px 16px;
     font-family: monospace; font-size: 11px; color: #6B21A8;
   }}
+  /* Card de sobrevoo */
+  #fly-card {{
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(26,18,37,.92);
+    border: 1px solid rgba(107,33,168,.5);
+    border-radius: 14px;
+    padding: 12px 18px;
+    min-width: 220px; max-width: 300px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    font-family: 'Inter', sans-serif;
+    opacity: 0; transition: opacity .5s ease;
+    pointer-events: none;
+    text-align: left;
+  }}
+  #fly-card.show {{ opacity: 1; }}
+  #fly-card .fc-state {{ font-weight:800; font-size:16px; color:#fff; margin-bottom:3px; }}
+  #fly-card .fc-count {{ font-size:11px; color:#10B981; margin-bottom:8px;
+    font-family:monospace; letter-spacing:1px; }}
+  #fly-card .fc-proj {{ font-size:11px; color:rgba(255,255,255,.65);
+    padding:3px 0; border-bottom:1px solid rgba(255,255,255,.08);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
+  #fly-card .fc-more {{ font-size:10px; color:rgba(167,139,250,.6); margin-top:4px; }}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="info-box">&#9670; {len(df_mapa)} projetos mapeados em {len(map_data)} estados</div>
+<div id="fly-card"></div>
+<div class="info-box">&#9670; {len(df_mapa)} projetos em {len(map_data)} estados</div>
 <script>
   var map = L.map('map', {{ zoomControl: true, scrollWheelZoom: true }})
     .setView([-14.235, -51.925], 4);
 
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/light_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_matter_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd', maxZoom: 19
   }}).addTo(map);
@@ -1655,24 +1738,38 @@ with tab5:
     map.flyTo(e.popup.getLatLng(), 7, {{ animate: true, duration: 1.2 }});
   }});
 
-  // Sobrevoo em drone — baixo e rente às cidades, loop infinito
-  var _flyPts = {json.dumps([{"lat": m["lat"], "lon": m["lon"], "nome": m["nome"]} for m in map_data])};
+  // Dados para o card de sobrevoo
+  var _flyPts = {json.dumps([{"lat": m["lat"], "lon": m["lon"], "nome": m["nome"], "uf": m["uf"], "total": m["total"], "projetos": m["projetos"]} for m in map_data])};
   var _fi = 0;
+  var _flyCard = document.getElementById('fly-card');
+
+  function _showCard(pt) {{
+    var projs = pt.projetos || [];
+    var html = '<div class="fc-state">📍 ' + pt.nome + ' (' + pt.uf + ')</div>';
+    html += '<div class="fc-count">⬡ ' + pt.total + ' projeto(s) mapeado(s)</div>';
+    projs.forEach(function(p) {{
+      html += '<div class="fc-proj">› ' + p + '</div>';
+    }});
+    if(pt.total > projs.length) {{
+      html += '<div class="fc-more">+' + (pt.total - projs.length) + ' mais...</div>';
+    }}
+    _flyCard.innerHTML = html;
+    _flyCard.classList.add('show');
+    setTimeout(function() {{ _flyCard.classList.remove('show'); }}, 5500);
+  }}
+
   function _flyLoop() {{
     if(_flyPts.length < 1) return;
     var pt = _flyPts[_fi % _flyPts.length];
-    // Zoom 9-11 = bem rente, como drone passando pela cidade
     var z = 9 + Math.floor(Math.random() * 3);
     map.flyTo([pt.lat, pt.lon], z, {{
-      animate: true,
-      duration: 4.5,
-      easeLinearity: 0.1
+      animate: true, duration: 4.5, easeLinearity: 0.1
     }});
+    setTimeout(function() {{ _showCard(pt); }}, 2500);
     _fi++;
-    // Próximo voo após pousar + pausa dramática
     setTimeout(_flyLoop, 7000);
   }}
-  // Começa com visão geral do Brasil, depois mergulha
+
   setTimeout(function() {{
     map.flyTo([-14.235, -51.925], 4, {{animate:true, duration:2}});
     setTimeout(_flyLoop, 3500);
