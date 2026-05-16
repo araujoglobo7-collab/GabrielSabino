@@ -575,8 +575,8 @@ if not st.session_state.logado:
 
     /* Input estilizado */
     .stTextInput input {
-        background: rgba(255,255,255,.05) !important;
-        border: 1.5px solid rgba(107,33,168,.4) !important;
+        background: #0D0F1E !important;
+        border: 1.5px solid rgba(107,33,168,.5) !important;
         border-radius: 12px !important;
         color: #fff !important;
         font-size: 16px !important;
@@ -588,7 +588,7 @@ if not st.session_state.logado:
     .stTextInput input:focus {
         border-color: #7C3AED !important;
         box-shadow: 0 0 0 3px rgba(107,33,168,.2) !important;
-        background: rgba(107,33,168,.07) !important;
+        background: #11102A !important;
         outline: none !important;
     }
     .stTextInput input::placeholder { color: rgba(255,255,255,.2) !important; }
@@ -801,20 +801,6 @@ const p=Array.from({length:30},()=>({
                     border-radius:10px;padding:12px 16px;color:#F87171;font-size:13px;margin-top:8px;">
                   ❌ Senha incorreta.
                 </div>""", unsafe_allow_html=True)
-
-            st.markdown("""
-            <div style="margin-top:24px;padding:14px 16px;
-                background:rgba(107,33,168,.06);
-                border:1px solid rgba(107,33,168,.14);
-                border-radius:12px;">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
-                  letter-spacing:2px;color:rgba(167,139,250,.4);line-height:2.4;">
-                ⬡ ACESSO · CRIPTOGRAFADO<br>
-                ⬡ SESSÃO · MONITORADA<br>
-                ⬡ JARVIS · ONLINE
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
 
         else:  # nome_conv
             st.markdown("""
