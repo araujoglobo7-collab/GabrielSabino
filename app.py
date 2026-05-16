@@ -825,13 +825,8 @@ button.go:active{{transform:translateY(0);}}
 
     <div class="form-card">
       <div class="inp-label">{"SENHA" if step == "senha" else "SEU NOME"}</div>
-      {"<form method='GET'><input class='field' name='pw' type='password' placeholder='••••••••' autofocus autocomplete='off'/><br><br><button class='go' type='submit'>Entrar →</button></form>" if step == "senha" else "<form method='GET'><input class='field' name='nome' type='text' placeholder='Seu nome...' autofocus autocomplete='off'/><input type='hidden' name='pw' value='gsr17'/><button class='go' type='submit'>Entrar →</button></form>"}
+      {"<form method='GET' id='frm'><input class='field' name='pw' type='password' placeholder='••••••••' autofocus autocomplete='off' onkeydown=\"if(event.key==='Enter'){{event.preventDefault();document.getElementById('frm').submit();}}\"/><br><br><button class='go' type='submit'>Entrar →</button></form>" if step == "senha" else "<form method='GET' id='frm'><input class='field' name='nome' type='text' placeholder='Seu nome...' autofocus autocomplete='off' onkeydown=\"if(event.key==='Enter'){{event.preventDefault();document.getElementById('frm').submit();}}\"/><input type='hidden' name='pw' value='gsr17'/><button class='go' type='submit'>Entrar →</button></form>"}
       <div class="erro">❌ Senha incorreta. Tente novamente.</div>
-    </div>
-
-    <div class="info-card">
-      <div class="info-row"><div class="info-dot">🤖</div><div class="info-txt"><strong>gr1723</strong> — acesso completo como Gabriel</div></div>
-      <div class="info-row"><div class="info-dot">👤</div><div class="info-txt"><strong>gsr17</strong> — acesso como convidado (leitura)</div></div>
     </div>
   </div>
 
