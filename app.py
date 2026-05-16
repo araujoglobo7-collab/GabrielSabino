@@ -530,6 +530,7 @@ if "df_projetos" not in st.session_state:
 # ============================================================
 if not st.session_state.logado:
 
+    # Bruxo velho — cabelo e barba brancos, curvado, rugas, cajado mais trabalhado
     LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
@@ -541,50 +542,54 @@ if not st.session_state.logado:
   #stage { width: 100%; height: 100%; position: relative; background: transparent; display: flex; align-items: center; justify-content: center; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-  /* Humanoid Robot */
+  /* Humanoid Old Wizard */
   #humanoid {
     position: relative;
     z-index: 2;
     width: min(260px, 75vw);
     margin-top: 20px;
-    animation: float 4s ease-in-out infinite;
+    animation: float 5s ease-in-out infinite;
     filter: drop-shadow(0 8px 32px rgba(107,33,168,0.25));
   }
   @keyframes float {
     0%,100% { transform: translateY(0px); }
-    50%      { transform: translateY(-12px); }
+    50%      { transform: translateY(-10px); }
   }
 
-  /* Head animations */
-  .head-group { animation: headtilt 5s ease-in-out infinite; transform-origin: 110px 80px; }
-  @keyframes headtilt { 0%,100%{transform:rotate(0);} 35%{transform:rotate(-4deg);} 70%{transform:rotate(4deg);} }
+  /* Head animations — slower, more weary */
+  .head-group { animation: headtilt 8s ease-in-out infinite; transform-origin: 110px 95px; }
+  @keyframes headtilt { 0%,100%{transform:rotate(0);} 40%{transform:rotate(-3deg);} 75%{transform:rotate(2deg);} }
 
-  .eye { animation: blink 4s infinite; }
-  .eye-l { transform-origin: 90px 70px; }
-  .eye-r { transform-origin: 130px 70px; }
-  @keyframes blink { 0%,88%,100%{transform:scaleY(1);} 92%{transform:scaleY(0.05);} }
+  .eye { animation: blink 7s infinite; }
+  .eye-l { transform-origin: 88px 82px; }
+  .eye-r { transform-origin: 128px 82px; }
+  @keyframes blink { 0%,85%,100%{transform:scaleY(1);} 88%{transform:scaleY(0.06);} }
 
-  /* Robe/cloak sway */
-  .robe { animation: robesway 6s ease-in-out infinite; transform-origin: 110px 200px; }
-  @keyframes robesway { 0%,100%{transform:rotate(0);} 50%{transform:rotate(2deg);} }
+  /* Robe sway — slower for old wizard */
+  .robe { animation: robesway 8s ease-in-out infinite; transform-origin: 110px 220px; }
+  @keyframes robesway { 0%,100%{transform:rotate(0);} 50%{transform:rotate(1.5deg);} }
 
   /* Magic orb pulse */
-  .orb { animation: orbpulse 2s ease-in-out infinite; transform-origin: 155px 185px; }
-  @keyframes orbpulse { 0%,100%{transform:scale(1);opacity:0.8;} 50%{transform:scale(1.2);opacity:1;} }
+  .orb { animation: orbpulse 2.5s ease-in-out infinite; transform-origin: 168px 125px; }
+  @keyframes orbpulse { 0%,100%{transform:scale(1);opacity:0.85;} 50%{transform:scale(1.15);opacity:1;} }
 
   /* Stars */
-  .star { animation: twinkle 1.5s ease-in-out infinite; }
-  .s1{animation-delay:0s;} .s2{animation-delay:.3s;} .s3{animation-delay:.6s;} .s4{animation-delay:.9s;}
+  .star { animation: twinkle 2s ease-in-out infinite; }
+  .s1{animation-delay:0s;} .s2{animation-delay:.4s;} .s3{animation-delay:.8s;} .s4{animation-delay:1.2s;}
   @keyframes twinkle { 0%,100%{opacity:0.3;transform:scale(0.8);} 50%{opacity:1;transform:scale(1.2);} }
 
-  /* Arm with staff */
-  .arm-staff { animation: staffwave 3s ease-in-out infinite; transform-origin: 155px 160px; }
-  @keyframes staffwave { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-8deg);} }
+  /* Arm with staff — slower */
+  .arm-staff { animation: staffwave 5s ease-in-out infinite; transform-origin: 155px 175px; }
+  @keyframes staffwave { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-5deg);} }
+
+  /* Beard flow */
+  .beard { animation: beardway 6s ease-in-out infinite; transform-origin: 110px 130px; }
+  @keyframes beardway { 0%,100%{transform:skewX(0);} 50%{transform:skewX(1.5deg);} }
 
   /* Particles */
-  .magic-particle { animation: magicfloat 3s ease-in-out infinite; }
-  .mp1{animation-delay:0s;} .mp2{animation-delay:.5s;} .mp3{animation-delay:1s;} .mp4{animation-delay:1.5s;}
-  @keyframes magicfloat { 0%{transform:translateY(0) scale(1);opacity:1;} 100%{transform:translateY(-30px) scale(0);opacity:0;} }
+  .magic-particle { animation: magicfloat 3.5s ease-in-out infinite; }
+  .mp1{animation-delay:0s;} .mp2{animation-delay:.6s;} .mp3{animation-delay:1.2s;} .mp4{animation-delay:1.8s;}
+  @keyframes magicfloat { 0%{transform:translateY(0) scale(1);opacity:1;} 100%{transform:translateY(-35px) scale(0);opacity:0;} }
 
   .hud {
     position: absolute; bottom: 10px; left: 50%;
@@ -601,147 +606,235 @@ if not st.session_state.logado:
 <div id="stage">
   <canvas id="cv"></canvas>
 
-  <svg id="humanoid" viewBox="0 0 220 380" xmlns="http://www.w3.org/2000/svg">
+  <svg id="humanoid" viewBox="0 0 220 420" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <radialGradient id="gPurple" cx="50%" cy="30%">
-        <stop offset="0%" stop-color="#A855F7"/>
-        <stop offset="100%" stop-color="#4C1D95"/>
+      <radialGradient id="gPurple2" cx="50%" cy="30%">
+        <stop offset="0%" stop-color="#9D7FEA"/>
+        <stop offset="100%" stop-color="#3B1278"/>
       </radialGradient>
-      <radialGradient id="gRobe" cx="50%" cy="20%">
-        <stop offset="0%" stop-color="#7C3AED"/>
-        <stop offset="100%" stop-color="#2E1065"/>
+      <radialGradient id="gRobe2" cx="50%" cy="20%">
+        <stop offset="0%" stop-color="#6D28D9"/>
+        <stop offset="100%" stop-color="#1E0856"/>
       </radialGradient>
-      <radialGradient id="gSkin" cx="50%" cy="40%">
-        <stop offset="0%" stop-color="#FDE68A"/>
-        <stop offset="100%" stop-color="#D97706"/>
+      <radialGradient id="gSkin2" cx="50%" cy="40%">
+        <stop offset="0%" stop-color="#F5D9B0"/>
+        <stop offset="100%" stop-color="#C4956A"/>
       </radialGradient>
-      <radialGradient id="gOrb" cx="50%" cy="40%">
-        <stop offset="0%" stop-color="#10B981"/>
+      <radialGradient id="gOrb2" cx="50%" cy="40%">
+        <stop offset="0%" stop-color="#34D399"/>
         <stop offset="60%" stop-color="#059669"/>
-        <stop offset="100%" stop-color="#065F46"/>
+        <stop offset="100%" stop-color="#064E3B"/>
       </radialGradient>
-      <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="softglow"><feGaussianBlur stdDeviation="6"/></filter>
+      <linearGradient id="gStaff" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#7C5C2A"/>
+        <stop offset="50%" stop-color="#A0783A"/>
+        <stop offset="100%" stop-color="#5A3E18"/>
+      </linearGradient>
+      <filter id="glow2"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="softglow2"><feGaussianBlur stdDeviation="7"/></filter>
     </defs>
 
-    <!-- Shadow -->
-    <ellipse cx="110" cy="372" rx="55" ry="6" fill="#4C1D95" opacity="0.2" filter="url(#softglow)"/>
+    <!-- Shadow (offset right since wizard leans) -->
+    <ellipse cx="115" cy="413" rx="52" ry="5" fill="#3B1278" opacity="0.18" filter="url(#softglow2)"/>
 
-    <!-- ROBE/CLOAK -->
+    <!-- ══════════════ ROBE / CLOAK ══════════════ -->
     <g class="robe">
-      <!-- Main robe body -->
-      <path d="M55 175 Q45 200 35 280 Q30 340 40 360 L180 360 Q190 340 185 280 Q175 200 165 175 Z"
-            fill="url(#gRobe)" opacity="0.95"/>
-      <!-- Robe highlight -->
-      <path d="M75 175 Q70 210 65 280 L155 280 Q150 210 145 175 Z"
-            fill="#7C3AED" opacity="0.3"/>
-      <!-- Robe bottom edge -->
-      <path d="M35 360 Q55 370 110 368 Q165 370 180 360 L185 355 Q165 365 110 363 Q55 365 35 355 Z"
-            fill="#A855F7" opacity="0.5"/>
-      <!-- Star on robe -->
-      <text x="88" y="270" font-size="22" text-anchor="middle" class="star s1">⭐</text>
-      <text x="130" y="240" font-size="14" text-anchor="middle" class="star s2">✨</text>
-      <text x="70" y="310" font-size="12" text-anchor="middle" class="star s3">⭐</text>
+      <!-- Main robe — slightly asymmetric (leans on staff) -->
+      <path d="M58 185 Q44 215 32 305 Q26 360 38 390 L185 390 Q195 360 190 305 Q180 215 165 185 Z"
+            fill="url(#gRobe2)" opacity="0.97"/>
+      <!-- Inner robe highlight -->
+      <path d="M78 185 Q72 225 68 305 L152 305 Q148 225 142 185 Z"
+            fill="#7C3AED" opacity="0.22"/>
+      <!-- Robe hem -->
+      <path d="M32 390 Q58 400 115 397 Q172 400 185 390 L190 384 Q168 394 115 391 Q58 394 32 384 Z"
+            fill="#9D7FEA" opacity="0.45"/>
+      <!-- Moon on robe -->
+      <text x="80" y="290" font-size="18" text-anchor="middle" class="star s1" fill="#C4B5FD">☽</text>
+      <!-- Stars on robe -->
+      <text x="142" y="265" font-size="13" text-anchor="middle" class="star s2" fill="#DDD6FE">✦</text>
+      <text x="65" y="330" font-size="11" text-anchor="middle" class="star s3" fill="#C4B5FD">✦</text>
+      <text x="155" y="310" font-size="9"  text-anchor="middle" class="star s4" fill="#A78BFA">✦</text>
     </g>
 
-    <!-- BODY under robe -->
-    <rect x="75" y="155" width="70" height="30" rx="6" fill="#5B21B6" opacity="0.8"/>
+    <!-- BODY under robe collar -->
+    <rect x="76" y="168" width="68" height="28" rx="6" fill="#4C1D95" opacity="0.85"/>
+    <!-- Collar trim -->
+    <path d="M76 168 Q110 178 144 168" stroke="#9D7FEA" stroke-width="2" fill="none" opacity="0.7"/>
 
     <!-- NECK -->
-    <rect x="98" y="128" width="24" height="18" rx="4" fill="#D97706"/>
+    <rect x="100" y="142" width="22" height="20" rx="4" fill="#C4956A"/>
 
-    <!-- HEAD GROUP -->
+    <!-- ══════════════ HEAD GROUP ══════════════ -->
     <g class="head-group">
-      <!-- Hat brim -->
-      <ellipse cx="110" cy="30" rx="52" ry="9" fill="#4C1D95"/>
-      <!-- Hat cone -->
-      <path d="M110 0 L70 30 L150 30 Z" fill="url(#gPurple)"/>
-      <!-- Hat band -->
-      <rect x="70" y="26" width="80" height="7" rx="3" fill="#A855F7" opacity="0.8"/>
+
+      <!-- HAT — tall, slightly tilted -->
+      <!-- Brim -->
+      <ellipse cx="110" cy="38" rx="50" ry="10" fill="#3B1278" transform="rotate(-3 110 38)"/>
+      <!-- Cone — tall and dramatic -->
+      <path d="M108 0 L68 40 L152 40 Z" fill="url(#gPurple2)" transform="rotate(-2 110 20)"/>
+      <!-- Hat wrinkle band -->
+      <path d="M70 33 Q110 27 150 33" stroke="#7C3AED" stroke-width="3" fill="none" opacity="0.6"/>
+      <!-- Hat band buckle -->
+      <rect x="101" y="29" width="18" height="9" rx="2" fill="#C4956A" opacity="0.8"/>
+      <rect x="105" y="31" width="10" height="5" rx="1" fill="#7C3AED" opacity="0.7"/>
       <!-- Hat star -->
-      <text x="110" y="18" font-size="10" text-anchor="middle" class="star s4" fill="#FDE68A">★</text>
+      <text x="105" y="22" font-size="11" text-anchor="middle" class="star s4" fill="#FDE68A">★</text>
 
-      <!-- Face -->
-      <ellipse cx="110" cy="85" rx="38" ry="42" fill="url(#gSkin)"/>
-      <!-- Face shading -->
-      <ellipse cx="110" cy="90" rx="32" ry="35" fill="#FDE68A" opacity="0.4"/>
+      <!-- FACE — rounder, aged -->
+      <!-- Head shape slightly wider at jaw for jowls -->
+      <ellipse cx="110" cy="92" rx="38" ry="44" fill="url(#gSkin2)"/>
+      <!-- Jowls / cheek sag -->
+      <ellipse cx="78"  cy="108" rx="10" ry="8" fill="#C4956A" opacity="0.35"/>
+      <ellipse cx="142" cy="108" rx="10" ry="8" fill="#C4956A" opacity="0.35"/>
+      <!-- Age spots subtly -->
+      <circle cx="88" cy="82" r="2" fill="#B07A4A" opacity="0.2"/>
+      <circle cx="130" cy="78" r="1.5" fill="#B07A4A" opacity="0.2"/>
 
-      <!-- Beard -->
-      <path d="M78 105 Q90 135 110 140 Q130 135 142 105 Q130 118 110 122 Q90 118 78 105 Z"
-            fill="#E5E7EB" opacity="0.9"/>
-      <!-- Beard lines -->
-      <path d="M95 110 Q100 125 110 128" stroke="#D1D5DB" stroke-width="1" fill="none"/>
-      <path d="M125 110 Q120 125 110 128" stroke="#D1D5DB" stroke-width="1" fill="none"/>
+      <!-- Wrinkles — forehead -->
+      <path d="M88 65 Q110 60 132 65" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.45"/>
+      <path d="M92 58 Q110 54 128 58" stroke="#B07A4A" stroke-width="0.6" fill="none" opacity="0.3"/>
+      <!-- Crow's feet left -->
+      <path d="M75 88 Q72 84 74 80" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.4"/>
+      <path d="M75 88 Q71 88 72 84" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.35"/>
+      <!-- Crow's feet right -->
+      <path d="M145 88 Q148 84 146 80" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.4"/>
+      <path d="M145 88 Q149 88 148 84" stroke="#B07A4A" stroke-width="0.8" fill="none" opacity="0.35"/>
+      <!-- Nasolabial lines -->
+      <path d="M85 100 Q82 112 86 118" stroke="#B07A4A" stroke-width="0.7" fill="none" opacity="0.35"/>
+      <path d="M135 100 Q138 112 134 118" stroke="#B07A4A" stroke-width="0.7" fill="none" opacity="0.35"/>
 
-      <!-- Eyebrows -->
-      <path d="M82 65 Q90 60 100 64" stroke="#92400E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <path d="M120 64 Q130 60 138 65" stroke="#92400E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Thick bushy WHITE eyebrows — arched, bushy -->
+      <path d="M78 70 Q88 62 102 66" stroke="#E8E8E8" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <path d="M78 70 Q88 62 102 66" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <path d="M118 66 Q132 62 142 70" stroke="#E8E8E8" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <path d="M118 66 Q132 62 142 70" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <!-- Eyebrow wild tufts -->
+      <path d="M80 68 L76 63" stroke="#DEDEDE" stroke-width="2" stroke-linecap="round"/>
+      <path d="M140 68 L144 63" stroke="#DEDEDE" stroke-width="2" stroke-linecap="round"/>
 
-      <!-- Left Eye -->
+      <!-- Left Eye — smaller, more hooded -->
       <g class="eye eye-l">
-        <ellipse cx="90" cy="74" rx="11" ry="12" fill="white"/>
-        <ellipse cx="90" cy="74" rx="7" ry="8" fill="#4C1D95"/>
-        <ellipse cx="90" cy="74" rx="4" ry="4" fill="#1E0A36"/>
-        <ellipse cx="93" cy="71" rx="2" ry="2" fill="white" opacity="0.9"/>
-        <!-- Magic glow eye -->
-        <ellipse cx="90" cy="74" rx="7" ry="8" fill="#7C3AED" opacity="0.3" filter="url(#glow)"/>
+        <ellipse cx="88" cy="82" rx="10" ry="9" fill="white"/>
+        <!-- Hooded lid -->
+        <path d="M78 78 Q88 73 98 78" fill="#C4956A" opacity="0.5"/>
+        <ellipse cx="88" cy="83" rx="6" ry="6.5" fill="#3B1278"/>
+        <ellipse cx="88" cy="83" rx="3.5" ry="3.5" fill="#1A0A2E"/>
+        <ellipse cx="91" cy="80" rx="2" ry="2" fill="white" opacity="0.85"/>
+        <!-- Subtle purple iris glow -->
+        <ellipse cx="88" cy="83" rx="6" ry="6.5" fill="#7C3AED" opacity="0.25" filter="url(#glow2)"/>
       </g>
 
       <!-- Right Eye -->
       <g class="eye eye-r">
-        <ellipse cx="130" cy="74" rx="11" ry="12" fill="white"/>
-        <ellipse cx="130" cy="74" rx="7" ry="8" fill="#4C1D95"/>
-        <ellipse cx="130" cy="74" rx="4" ry="4" fill="#1E0A36"/>
-        <ellipse cx="133" cy="71" rx="2" ry="2" fill="white" opacity="0.9"/>
-        <ellipse cx="130" cy="74" rx="7" ry="8" fill="#7C3AED" opacity="0.3" filter="url(#glow)"/>
+        <ellipse cx="132" cy="82" rx="10" ry="9" fill="white"/>
+        <path d="M122 78 Q132 73 142 78" fill="#C4956A" opacity="0.5"/>
+        <ellipse cx="132" cy="83" rx="6" ry="6.5" fill="#3B1278"/>
+        <ellipse cx="132" cy="83" rx="3.5" ry="3.5" fill="#1A0A2E"/>
+        <ellipse cx="135" cy="80" rx="2" ry="2" fill="white" opacity="0.85"/>
+        <ellipse cx="132" cy="83" rx="6" ry="6.5" fill="#7C3AED" opacity="0.25" filter="url(#glow2)"/>
       </g>
 
-      <!-- Nose -->
-      <ellipse cx="110" cy="90" rx="5" ry="4" fill="#D97706" opacity="0.6"/>
+      <!-- Nose — larger, bulbous -->
+      <ellipse cx="110" cy="96" rx="7" ry="6" fill="#C4956A" opacity="0.65"/>
+      <ellipse cx="106" cy="98" rx="3" ry="2.5" fill="#B07A4A" opacity="0.3"/>
+      <ellipse cx="114" cy="98" rx="3" ry="2.5" fill="#B07A4A" opacity="0.3"/>
 
-      <!-- Smile -->
-      <path d="M95 102 Q110 114 125 102" stroke="#92400E" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Smile — subtle, warm -->
+      <path d="M96 112 Q110 122 124 112" stroke="#92400E" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <!-- Lip lines -->
+      <path d="M102 113 Q110 118 118 113" stroke="#A0522D" stroke-width="1" fill="none" opacity="0.4"/>
 
-      <!-- Ears -->
-      <ellipse cx="72" cy="85" rx="8" ry="10" fill="url(#gSkin)"/>
-      <ellipse cx="148" cy="85" rx="8" ry="10" fill="url(#gSkin)"/>
+      <!-- Ears — larger with age -->
+      <ellipse cx="72" cy="90" rx="9" ry="12" fill="url(#gSkin2)"/>
+      <ellipse cx="72" cy="90" rx="5" ry="7" fill="#C4956A" opacity="0.4"/>
+      <ellipse cx="148" cy="90" rx="9" ry="12" fill="url(#gSkin2)"/>
+      <ellipse cx="148" cy="90" rx="5" ry="7" fill="#C4956A" opacity="0.4"/>
+
+      <!-- WHITE HAIR — flowing out from hat sides -->
+      <path d="M72 55 Q60 75 65 100 Q62 110 68 125" stroke="#E8E8E8" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M72 55 Q58 80 62 108 Q60 118 65 130" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+      <path d="M148 55 Q160 75 155 100 Q158 110 152 125" stroke="#E8E8E8" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M148 55 Q162 80 158 108 Q160 118 155 130" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+
+      <!-- LONG WHITE BEARD — flowing down, layered -->
+      <g class="beard">
+        <!-- Beard base wide -->
+        <path d="M80 125 Q75 155 72 185 Q70 210 78 230 Q95 255 110 260 Q125 255 142 230 Q150 210 148 185 Q145 155 140 125 Q125 132 110 133 Q95 132 80 125 Z"
+              fill="#E8E8E8"/>
+        <!-- Beard mid layer -->
+        <path d="M84 125 Q80 158 78 190 Q76 215 85 238 Q98 257 110 260 Q122 257 135 238 Q144 215 142 190 Q140 158 136 125 Q123 131 110 132 Q97 131 84 125 Z"
+              fill="#F0F0F0" opacity="0.8"/>
+        <!-- Beard highlight -->
+        <path d="M100 128 Q100 160 102 200 Q103 230 110 248" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
+        <path d="M120 128 Q119 165 118 205 Q117 232 110 248" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+        <!-- Beard tip wisps -->
+        <path d="M100 248 Q105 265 108 272" stroke="#D0D0D0" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M110 255 Q110 270 110 278" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M120 248 Q115 265 112 272" stroke="#D0D0D0" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Moustache -->
+        <path d="M94 118 Q102 124 110 121 Q118 124 126 118" stroke="#D0D0D0" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <path d="M94 118 Q102 124 110 121 Q118 124 126 118" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+      </g>
+
     </g>
 
-    <!-- LEFT ARM (holding robe) -->
-    <path d="M75 165 Q55 175 48 210 Q44 230 50 240 Q58 245 65 235 Q68 220 72 200 L78 178 Z"
-          fill="#5B21B6"/>
-    <!-- Left hand -->
-    <ellipse cx="52" cy="242" rx="12" ry="10" fill="url(#gSkin)"/>
+    <!-- ══════════════ LEFT ARM (holding robe, slightly bent) ══════════════ -->
+    <path d="M72 185 Q54 198 48 230 Q44 252 52 262 Q60 268 67 258 Q70 240 74 218 L80 192 Z"
+          fill="#4C1D95"/>
+    <!-- Left hand — aged -->
+    <ellipse cx="52" cy="264" rx="11" ry="9" fill="url(#gSkin2)"/>
+    <!-- Knuckle lines -->
+    <path d="M44 262 Q52 258 60 262" stroke="#C4956A" stroke-width="0.8" fill="none" opacity="0.5"/>
 
-    <!-- RIGHT ARM with staff -->
+    <!-- ══════════════ RIGHT ARM — holding staff ══════════════ -->
     <g class="arm-staff">
-      <path d="M145 165 Q162 172 168 195 Q172 215 165 230 L158 218 Q156 200 150 182 L142 170 Z"
-            fill="#5B21B6"/>
+      <path d="M148 185 Q164 195 170 218 Q175 240 168 255 L160 242 Q158 220 154 200 L144 190 Z"
+            fill="#4C1D95"/>
       <!-- Right hand -->
-      <ellipse cx="163" cy="232" rx="12" ry="10" fill="url(#gSkin)"/>
+      <ellipse cx="166" cy="257" rx="11" ry="9" fill="url(#gSkin2)"/>
+      <path d="M158 255 Q166 251 174 255" stroke="#C4956A" stroke-width="0.8" fill="none" opacity="0.5"/>
 
-      <!-- Staff -->
-      <line x1="163" y1="225" x2="175" y2="120" stroke="#92400E" stroke-width="5" stroke-linecap="round"/>
-      <line x1="163" y1="225" x2="175" y2="120" stroke="#FDE68A" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+      <!-- STAFF — gnarled, wooden -->
+      <path d="M166 248 Q164 220 168 180 Q171 145 170 115 Q169 95 168 80"
+            stroke="url(#gStaff)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <!-- Staff grain lines -->
+      <path d="M166 248 Q164 220 168 180 Q171 145 170 115 Q169 95 168 80"
+            stroke="#FDE68A" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.3"/>
+      <!-- Staff knot / knurl details -->
+      <ellipse cx="169" cy="175" rx="5" ry="4" fill="#7C5C2A" opacity="0.8"/>
+      <ellipse cx="170" cy="140" rx="4" ry="3" fill="#7C5C2A" opacity="0.6"/>
+      <!-- Staff gnarled tip curl -->
+      <path d="M168 80 Q162 68 155 62 Q148 56 152 50 Q157 44 165 48"
+            stroke="url(#gStaff)" stroke-width="5" fill="none" stroke-linecap="round"/>
 
-      <!-- Orb on staff -->
+      <!-- ORB on staff top — glowing green -->
       <g class="orb">
-        <ellipse cx="175" cy="112" rx="18" ry="18" fill="#10B981" opacity="0.3" filter="url(#softglow)"/>
-        <ellipse cx="175" cy="112" rx="14" ry="14" fill="url(#gOrb)" filter="url(#glow)"/>
-        <ellipse cx="175" cy="112" rx="8" ry="8" fill="#34D399" opacity="0.6"/>
-        <ellipse cx="171" cy="108" rx="4" ry="4" fill="white" opacity="0.7"/>
+        <ellipse cx="163" cy="47" rx="20" ry="20" fill="#10B981" opacity="0.25" filter="url(#softglow2)"/>
+        <ellipse cx="163" cy="47" rx="15" ry="15" fill="url(#gOrb2)" filter="url(#glow2)"/>
+        <ellipse cx="163" cy="47" rx="9" ry="9" fill="#34D399" opacity="0.55"/>
+        <ellipse cx="158" cy="42" rx="5" ry="5" fill="white" opacity="0.65"/>
+        <!-- Orbits around the orb -->
+        <circle cx="163" cy="47" r="19" fill="none" stroke="#10B981" stroke-width="0.7" opacity="0.4" stroke-dasharray="3 4"/>
       </g>
 
       <!-- Magic particles from orb -->
-      <circle class="magic-particle mp1" cx="185" cy="100" r="3" fill="#10B981" opacity="0.8"/>
-      <circle class="magic-particle mp2" cx="162" cy="95" r="2" fill="#A855F7" opacity="0.8"/>
-      <circle class="magic-particle mp3" cx="190" cy="108" r="2" fill="#FDE68A" opacity="0.8"/>
-      <circle class="magic-particle mp4" cx="168" cy="88" r="3" fill="#10B981" opacity="0.8"/>
+      <circle class="magic-particle mp1" cx="178" cy="35" r="3"   fill="#10B981" opacity="0.85"/>
+      <circle class="magic-particle mp2" cx="148" cy="30" r="2"   fill="#A855F7" opacity="0.85"/>
+      <circle class="magic-particle mp3" cx="183" cy="47" r="2.5" fill="#FDE68A" opacity="0.85"/>
+      <circle class="magic-particle mp4" cx="152" cy="24" r="3"   fill="#34D399" opacity="0.85"/>
+      <!-- Extra sparkles -->
+      <text class="star s2" x="188" y="42" font-size="9" fill="#FDE68A">✦</text>
+      <text class="star s3" x="145" y="20" font-size="8" fill="#A78BFA">✦</text>
     </g>
 
-    <!-- Feet -->
-    <ellipse cx="90" cy="360" rx="22" ry="8" fill="#3B0764" opacity="0.9"/>
-    <ellipse cx="130" cy="360" rx="22" ry="8" fill="#3B0764" opacity="0.9"/>
+    <!-- Feet / shoes — pointy wizard shoes -->
+    <path d="M82 388 Q78 395 58 400 Q52 402 55 407 Q60 410 80 406 Q100 403 105 395 L105 388 Z"
+          fill="#2D1654"/>
+    <path d="M138 388 Q142 395 162 400 Q168 402 165 407 Q160 410 140 406 Q120 403 115 395 L115 388 Z"
+          fill="#2D1654"/>
+    <!-- Shoe tips shine -->
+    <path d="M58 400 Q54 403 56 406" stroke="#4C1D95" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M162 400 Q166 403 164 406" stroke="#4C1D95" stroke-width="1.5" fill="none" opacity="0.6"/>
   </svg>
 
   <div class="hud">&#128302; FEITICO ATIVO &middot; AGUARDANDO BRUXO &#128302;</div>
@@ -866,7 +959,6 @@ def carregar_dados():
         from io import StringIO
         df = pd.read_csv(StringIO(r.text), encoding='utf-8')
         if df is not None and not df.empty:
-            # Fix encoding for text columns
             for col in ["Projeto","Status","Foco","Escopo","Detalhamento","Resultado Esperado"]:
                 if col in df.columns:
                     df[col] = df[col].apply(fix_encoding)
@@ -1449,7 +1541,6 @@ with tab5:
     if df.empty:
         st.warning("Sem dados carregados.")
     else:
-        # Mapeamento de estados brasileiros para coordenadas
         ESTADOS_COORDS = {
             "AC": (-9.0238, -70.812, "Acre"),
             "AL": (-9.5713, -36.782, "Alagoas"),
@@ -1480,7 +1571,6 @@ with tab5:
             "TO": (-10.1753, -48.298, "Tocantins"),
         }
 
-        # Siglas de cidades conhecidas -> estado
         CIDADE_ESTADO = {
             "ponta negra": "RN", "natal": "RN", "mossoro": "RN", "caico": "RN",
             "fortaleza": "CE", "caucaia": "CE", "juazeiro": "CE", "sobral": "CE",
@@ -1508,20 +1598,17 @@ with tab5:
             if not isinstance(nome_projeto, str):
                 return None
             nome_lower = nome_projeto.lower()
-            # Tenta formato "Cidade/UF"
             import re
             match = re.search(r'/\s*([A-Z]{2})', nome_projeto)
             if match:
                 uf = match.group(1)
                 if uf in ESTADOS_COORDS:
                     return uf
-            # Tenta por cidade conhecida
             for cidade, uf in CIDADE_ESTADO.items():
                 if cidade in nome_lower:
                     return uf
             return None
 
-        # Extrai estado de cada projeto
         df_mapa = df.copy()
         df_mapa["UF"] = df_mapa["Projeto"].apply(extrair_estado)
         df_mapa = df_mapa.dropna(subset=["UF"])
@@ -1529,13 +1616,11 @@ with tab5:
         if df_mapa.empty:
             st.warning("Nenhum projeto com localizacao identificada. Certifique-se que os projetos tem formato 'Cidade/UF - Cliente'.")
         else:
-            # Agrupa por estado
             resumo_estados = df_mapa.groupby("UF").agg(
                 total=("Projeto", "count"),
                 projetos=("Projeto", lambda x: list(x))
             ).reset_index()
 
-            # Estado selecionado (session state)
             if "estado_selecionado" not in st.session_state:
                 st.session_state.estado_selecionado = None
             if "projeto_chat_mapa" not in st.session_state:
@@ -1546,7 +1631,6 @@ with tab5:
             col_mapa, col_info = st.columns([1.6, 1])
 
             with col_mapa:
-                # Monta dados para o mapa
                 map_data = []
                 for _, row in resumo_estados.iterrows():
                     uf = row["UF"]
@@ -1558,7 +1642,6 @@ with tab5:
                             "total": int(row["total"])
                         })
 
-                # Gera mapa HTML interativo com Leaflet
                 map_markers = ""
                 for m in map_data:
                     cor_marker = "#C92A2A" if m["total"] >= 5 else "#7C3AED" if m["total"] >= 3 else "#6B21A8"
@@ -1629,7 +1712,6 @@ with tab5:
                 components.html(mapa_html, height=540)
 
             with col_info:
-                # Seletor de estado
                 estados_disponiveis = sorted(resumo_estados["UF"].tolist())
                 estado_sel = st.selectbox(
                     "🗺️ Selecione o Estado",
@@ -1654,7 +1736,6 @@ with tab5:
                 </div>
                 """, unsafe_allow_html=True)
 
-                # Tabela de projetos
                 st.markdown("""
                 <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">
                 PROJETOS NO ESTADO
@@ -1662,19 +1743,18 @@ with tab5:
                 """, unsafe_allow_html=True)
 
                 projeto_selecionado = None
-                for _, row in df_estado.sort_values("Prazo").iterrows():
+                for idx, row in df_estado.sort_values("Prazo").iterrows():
                     dias = (row["Prazo"] - pd.Timestamp.now()).days
                     cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
                     status_cor = STATUS_COLORS.get(row.get("Status",""), "#6B21A8")
                     if st.button(
                         f"{'🔴' if dias < 7 else '🟡' if dias < 30 else '🟢'} {row['Projeto'][:35]}",
-                        key=f"proj_mapa_{row['Projeto'][:20]}_{row['Prazo']}",
+                        key=f"proj_mapa_{idx}",
                         use_container_width=True
                     ):
                         st.session_state.projeto_chat_mapa = row.to_dict()
                         st.session_state.chat_mapa_history = []
 
-                # Painel do projeto selecionado
                 if st.session_state.projeto_chat_mapa:
                     proj = st.session_state.projeto_chat_mapa
                     dias_p = (pd.Timestamp(proj["Prazo"]) - pd.Timestamp.now()).days
