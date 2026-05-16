@@ -1617,214 +1617,60 @@ with tab5:
             if "chat_mapa_history" not in st.session_state:
                 st.session_state.chat_mapa_history = []
 
-            col_mapa, col_info = st.columns([1.6, 1])
+                # MAPA FULL WIDTH — sem coluna lateral
+                components.html(mapa_html, height=640)
 
-            with col_mapa:
-                map_data = []
-                for _, row in resumo_estados.iterrows():
-                    uf = row["UF"]
-                    if uf in ESTADOS_COORDS:
-                        lat, lon, nome = ESTADOS_COORDS[uf]
-                        projs = list(row["projetos"])
-                        map_data.append({
-                            "uf": uf, "nome": nome,
-                            "lat": lat, "lon": lon,
-                            "total": int(row["total"]),
-                            "projetos": projs[:6]  # max 6 para não pesar
-                        })
+                st.markdown("<br>", unsafe_allow_html=True)
 
-                map_markers = ""
-                for m in map_data:
-                    cor_marker = "#C92A2A" if m["total"] >= 5 else "#7C3AED" if m["total"] >= 3 else "#6B21A8"
-                    # Raio menor — máximo 18, mínimo 8
-                    radius = min(8 + m["total"] * 2, 18)
-                    projs_html = "".join([f"<div style='font-size:10px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;'>{p}</div>" for p in m["projetos"]])
-                    if m["total"] > 6:
-                        projs_html += f"<div style='font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;'>+{m['total']-6} mais...</div>"
-                    popup_html = f"""<div style='font-family:Inter,sans-serif;background:#1A1225;color:#fff;border-radius:10px;padding:12px;min-width:180px;'>
-                        <div style='font-weight:800;font-size:13px;margin-bottom:4px;color:#A855F7;'>{m["nome"]} ({m["uf"]})</div>
-                        <div style='font-size:11px;color:#10B981;margin-bottom:8px;'>⬡ {m["total"]} projeto(s)</div>
-                        {projs_html}
-                    </div>"""
-                    map_markers += f"""
-                    L.circleMarker([{m['lat']}, {m['lon']}], {{
-                        radius: {radius},
-                        fillColor: '{cor_marker}',
-                        color: '#fff',
-                        weight: 1.5,
-                        opacity: 1,
-                        fillOpacity: 0.9
-                    }}).addTo(map)
-                    .bindPopup('{popup_html.replace(chr(10),"").replace(chr(39), "&#39;")}', {{
-                        maxWidth: 220,
-                        className: 'dark-popup'
-                    }});
-                    L.marker([{m['lat']}, {m['lon']}], {{
-                        icon: L.divIcon({{
-                            html: '<div style="color:#fff;font-weight:800;font-size:10px;text-align:center;line-height:1;">{m["total"]}</div>',
-                            iconSize: [16, 16],
-                            iconAnchor: [8, 8]
-                        }})
-                    }}).addTo(map);
-                    """
+                # Painel abaixo: seletor + projetos em colunas
+                col_sel, col_projs = st.columns([1, 2])
 
-                mapa_html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-  body {{ margin: 0; padding: 0; background: #F6F5FA; }}
-  #map {{ width: 100%; height: 580px; border-radius: 16px; }}
-  .leaflet-popup-content-wrapper {{ border-radius: 10px; font-family: 'Inter', sans-serif; }}
-  .dark-popup .leaflet-popup-content-wrapper {{
-    background: #1A1225 !important;
-    border: 1px solid rgba(107,33,168,.4) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,.5) !important;
-    padding: 0 !important;
-  }}
-  .dark-popup .leaflet-popup-content {{ margin: 0 !important; }}
-  .dark-popup .leaflet-popup-tip {{ background: #1A1225 !important; }}
-  .dark-popup .leaflet-popup-close-button {{ color: rgba(255,255,255,.4) !important; top:8px !important; right:8px !important; }}
-  .info-box {{
-    position: absolute; bottom: 20px; left: 20px; z-index: 1000;
-    background: rgba(255,255,255,0.95); border: 1px solid #DDD8F0;
-    border-radius: 12px; padding: 12px 16px;
-    font-family: monospace; font-size: 11px; color: #6B21A8;
-  }}
-  /* Card de sobrevoo */
-  #fly-card {{
-    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-    z-index: 1000;
-    background: rgba(26,18,37,.92);
-    border: 1px solid rgba(107,33,168,.5);
-    border-radius: 14px;
-    padding: 12px 18px;
-    min-width: 220px; max-width: 300px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.4);
-    font-family: 'Inter', sans-serif;
-    opacity: 0; transition: opacity .5s ease;
-    pointer-events: none;
-    text-align: left;
-  }}
-  #fly-card.show {{ opacity: 1; }}
-  #fly-card .fc-state {{ font-weight:800; font-size:16px; color:#fff; margin-bottom:3px; }}
-  #fly-card .fc-count {{ font-size:11px; color:#10B981; margin-bottom:8px;
-    font-family:monospace; letter-spacing:1px; }}
-  #fly-card .fc-proj {{ font-size:11px; color:rgba(255,255,255,.65);
-    padding:3px 0; border-bottom:1px solid rgba(255,255,255,.08);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
-  #fly-card .fc-more {{ font-size:10px; color:rgba(167,139,250,.6); margin-top:4px; }}
-</style>
-</head>
-<body>
-<div id="map"></div>
-<div id="fly-card"></div>
-<div class="info-box">&#9670; {len(df_mapa)} projetos em {len(map_data)} estados</div>
-<script>
-  var map = L.map('map', {{ zoomControl: true, scrollWheelZoom: true }})
-    .setView([-14.235, -51.925], 4);
+                with col_sel:
+                    estados_disponiveis = sorted(resumo_estados["UF"].tolist())
+                    estado_sel = st.selectbox(
+                        "🗺️ Selecione o Estado",
+                        options=["Todos"] + estados_disponiveis,
+                        format_func=lambda x: f"{x} — {ESTADOS_COORDS[x][2]}" if x != "Todos" and x in ESTADOS_COORDS else x,
+                        key="estado_sel"
+                    )
+                    if estado_sel == "Todos":
+                        df_estado = df_mapa.copy()
+                        titulo_estado = "Todos os Estados"
+                    else:
+                        df_estado = df_mapa[df_mapa["UF"] == estado_sel].copy()
+                        nome_estado = ESTADOS_COORDS.get(estado_sel, ("","",""))[2]
+                        titulo_estado = f"{nome_estado} ({estado_sel})"
 
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_matter_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: 'abcd', maxZoom: 19
-  }}).addTo(map);
+                    st.markdown(f"""
+                    <div style="background:#6B21A8;color:#fff;border-radius:10px;
+                        padding:10px 14px;margin-top:8px;text-align:center;">
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                          letter-spacing:2px;opacity:0.8;">PROJETOS</div>
+                      <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;">{len(df_estado)}</div>
+                      <div style="font-size:11px;opacity:0.9;">{titulo_estado}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-  {map_markers}
+                with col_projs:
+                    st.markdown("""
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                        letter-spacing:2px;color:#9588AA;margin-bottom:8px;">
+                    PROJETOS NO ESTADO
+                    </div>
+                    """, unsafe_allow_html=True)
 
-  map.on('popupopen', function(e) {{
-    map.flyTo(e.popup.getLatLng(), 7, {{ animate: true, duration: 1.2 }});
-  }});
+                    for idx, row in df_estado.sort_values("Prazo").iterrows():
+                        dias = (row["Prazo"] - pd.Timestamp.now()).days
+                        cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
+                        if st.button(
+                            f"{'🔴' if dias < 7 else '🟡' if dias < 30 else '🟢'} {row['Projeto'][:45]}",
+                            key=f"proj_mapa_{idx}",
+                            use_container_width=True
+                        ):
+                            st.session_state.projeto_chat_mapa = row.to_dict()
+                            st.session_state.chat_mapa_history = []
 
-  // Dados para o card de sobrevoo
-  var _flyPts = {json.dumps([{"lat": m["lat"], "lon": m["lon"], "nome": m["nome"], "uf": m["uf"], "total": m["total"], "projetos": m["projetos"]} for m in map_data])};
-  var _fi = 0;
-  var _flyCard = document.getElementById('fly-card');
-
-  function _showCard(pt) {{
-    var projs = pt.projetos || [];
-    var html = '<div class="fc-state">📍 ' + pt.nome + ' (' + pt.uf + ')</div>';
-    html += '<div class="fc-count">⬡ ' + pt.total + ' projeto(s) mapeado(s)</div>';
-    projs.forEach(function(p) {{
-      html += '<div class="fc-proj">› ' + p + '</div>';
-    }});
-    if(pt.total > projs.length) {{
-      html += '<div class="fc-more">+' + (pt.total - projs.length) + ' mais...</div>';
-    }}
-    _flyCard.innerHTML = html;
-    _flyCard.classList.add('show');
-    setTimeout(function() {{ _flyCard.classList.remove('show'); }}, 5500);
-  }}
-
-  function _flyLoop() {{
-    if(_flyPts.length < 1) return;
-    var pt = _flyPts[_fi % _flyPts.length];
-    var z = 9 + Math.floor(Math.random() * 3);
-    map.flyTo([pt.lat, pt.lon], z, {{
-      animate: true, duration: 4.5, easeLinearity: 0.1
-    }});
-    setTimeout(function() {{ _showCard(pt); }}, 2500);
-    _fi++;
-    setTimeout(_flyLoop, 7000);
-  }}
-
-  setTimeout(function() {{
-    map.flyTo([-14.235, -51.925], 4, {{animate:true, duration:2}});
-    setTimeout(_flyLoop, 3500);
-  }}, 1500);
-</script>
-</body>
-</html>
-                """
-
-                components.html(mapa_html, height=600)
-
-            with col_info:
-                estados_disponiveis = sorted(resumo_estados["UF"].tolist())
-                estado_sel = st.selectbox(
-                    "🗺️ Selecione o Estado",
-                    options=["Todos"] + estados_disponiveis,
-                    format_func=lambda x: f"{x} — {ESTADOS_COORDS[x][2]}" if x != "Todos" and x in ESTADOS_COORDS else x,
-                    key="estado_sel"
-                )
-
-                if estado_sel == "Todos":
-                    df_estado = df_mapa.copy()
-                    titulo_estado = "Todos os Estados"
-                else:
-                    df_estado = df_mapa[df_mapa["UF"] == estado_sel].copy()
-                    nome_estado = ESTADOS_COORDS.get(estado_sel, ("","",""))[2]
-                    titulo_estado = f"{nome_estado} ({estado_sel})"
-
-                st.markdown(f"""
-                <div style="background:#6B21A8;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;text-align:center;">
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;opacity:0.8;">PROJETOS</div>
-                  <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;">{len(df_estado)}</div>
-                  <div style="font-size:11px;opacity:0.9;">{titulo_estado}</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-                st.markdown("""
-                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">
-                PROJETOS NO ESTADO
-                </div>
-                """, unsafe_allow_html=True)
-
-                projeto_selecionado = None
-                for idx, row in df_estado.sort_values("Prazo").iterrows():
-                    dias = (row["Prazo"] - pd.Timestamp.now()).days
-                    cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
-                    status_cor = STATUS_COLORS.get(row.get("Status",""), "#6B21A8")
-                    if st.button(
-                        f"{'🔴' if dias < 7 else '🟡' if dias < 30 else '🟢'} {row['Projeto'][:35]}",
-                        key=f"proj_mapa_{idx}",
-                        use_container_width=True
-                    ):
-                        st.session_state.projeto_chat_mapa = row.to_dict()
-                        st.session_state.chat_mapa_history = []
-
+                # Projeto selecionado
                 if st.session_state.projeto_chat_mapa:
                     proj = st.session_state.projeto_chat_mapa
                     dias_p = (pd.Timestamp(proj["Prazo"]) - pd.Timestamp.now()).days
@@ -1833,82 +1679,24 @@ with tab5:
                     st.markdown(f"""
                     <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-left:4px solid {cor_p};
                         border-radius:12px;padding:14px;margin-top:12px;">
-                      <div style="font-weight:700;color:#1A1225;font-size:13px;margin-bottom:8px;">{proj.get('Projeto','')}</div>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                      <div style="font-weight:700;color:#1A1225;font-size:14px;margin-bottom:8px;">{proj.get('Projeto','')}</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
                         <div style="background:#F6F5FA;border-radius:6px;padding:6px 8px;">
                           <div style="font-size:8px;color:#9588AA;">STATUS</div>
                           <div style="font-size:11px;color:#6B21A8;font-weight:600;">{proj.get('Status','')}</div>
                         </div>
-                        <div style="background:{cor_p}11;border-radius:6px;padding:6px 8px;">
+                        <div style="background:#F6F5FA;border-radius:6px;padding:6px 8px;">
+                          <div style="font-size:8px;color:#9588AA;">FOCO</div>
+                          <div style="font-size:11px;color:#1A1225;">{proj.get('Foco','—')}</div>
+                        </div>
+                        <div style="background:{cor_p}11;border-radius:6px;padding:6px 8px;border:1px solid {cor_p}33;">
                           <div style="font-size:8px;color:#9588AA;">PRAZO</div>
                           <div style="font-size:11px;color:{cor_p};font-weight:700;">{pd.Timestamp(proj['Prazo']).strftime('%d/%m/%Y')} ({dias_p}d)</div>
                         </div>
                       </div>
-                      <div style="font-size:11px;color:#5B4E72;line-height:1.5;">
-                        🎯 {proj.get('Foco','')}<br>
-                        📋 {proj.get('Escopo','') or '—'}
-                      </div>
                     </div>
                     """, unsafe_allow_html=True)
 
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    st.markdown("""
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#6B21A8;margin-bottom:6px;">
-                    🤖 JARVIS — PERGUNTE SOBRE ESTE PROJETO
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    for msg in st.session_state.chat_mapa_history:
-                        if msg["role"] == "user":
-                            st.markdown(f"""
-                            <div style="display:flex;justify-content:flex-end;margin:6px 0;">
-                              <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
-                                  border-radius:12px 12px 3px 12px;padding:8px 12px;max-width:85%;font-size:13px;">
-                                {msg['content']}
-                              </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            st.markdown(f"""
-                            <div style="background:#F6F5FA;border:1px solid #DDD8F0;border-radius:3px 12px 12px 12px;
-                                padding:10px 12px;font-size:13px;color:#1A1225;line-height:1.6;margin:6px 0;">
-                              🤖 {msg['content'].replace(chr(10), '<br>')}
-                            </div>
-                            """, unsafe_allow_html=True)
-
-                    chat_m_input = st.text_input(
-                        "chat_mapa_in",
-                        placeholder="Pergunta sobre este projeto...",
-                        label_visibility="collapsed",
-                        key="chat_mapa_input"
-                    )
-                    if st.button("Perguntar", use_container_width=True, key="btn_chat_mapa"):
-                        if chat_m_input:
-                            st.session_state.chat_mapa_history.append({"role": "user", "content": chat_m_input})
-                            q_m = chat_m_input.lower()
-                            p = st.session_state.projeto_chat_mapa
-                            dias_resp = (pd.Timestamp(p["Prazo"]) - pd.Timestamp.now()).days
-                            cor_r = "🔴 URGENTE" if dias_resp < 7 else "🟡 ATENCAO" if dias_resp < 30 else "🟢 OK"
-
-                            if any(w in q_m for w in ["prazo", "quando", "vence", "data"]):
-                                resp = f"Prazo: **{pd.Timestamp(p['Prazo']).strftime('%d/%m/%Y')}** — {dias_resp} dias restantes. Status: {cor_r}"
-                            elif any(w in q_m for w in ["escopo", "o que", "trata"]):
-                                resp = f"**Escopo:** {p.get('Escopo','—')}\n\n**Detalhamento:** {p.get('Detalhamento','—')}"
-                            elif any(w in q_m for w in ["resultado", "entrega", "objetivo"]):
-                                resp = f"**Resultado Esperado:** {p.get('Resultado Esperado','—')}"
-                            elif any(w in q_m for w in ["status", "situacao", "como"]):
-                                resp = f"Status atual: **{p.get('Status','—')}**\nFoco: **{p.get('Foco','—')}**\nDias restantes: **{dias_resp}d** ({cor_r})"
-                            elif any(w in q_m for w in ["foco", "prioridade"]):
-                                resp = f"Foco: **{p.get('Foco','—')}**"
-                            else:
-                                resp = f"""**{p.get('Projeto','')}**
-Status: {p.get('Status','—')} | Foco: {p.get('Foco','—')}
-Prazo: {pd.Timestamp(p['Prazo']).strftime('%d/%m/%Y')} ({dias_resp}d) {cor_r}
-Escopo: {p.get('Escopo','—')}"""
-                            st.session_state.chat_mapa_history.append({"role": "assistant", "content": resp})
-                            st.rerun()
-
-# ─────────────────────────────────────────────
 # TAB 6 — NOTAS
 # ─────────────────────────────────────────────
 with tab6:
