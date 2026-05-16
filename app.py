@@ -524,6 +524,10 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "df_projetos" not in st.session_state:
     st.session_state.df_projetos = None
+if "login_stage" not in st.session_state:
+    st.session_state.login_stage = "senha"  # "senha" | "face_check" | "face_scan"
+if "is_convidado" not in st.session_state:
+    st.session_state.is_convidado = False
 
 # ============================================================
 # LOGIN
@@ -869,61 +873,558 @@ tick();
 </html>
 """
 
-    col_bot, col_gap, col_form = st.columns([1.1, 0.05, 0.85])
+    if st.session_state.login_stage == "senha":
+        col_bot, col_gap, col_form = st.columns([1.1, 0.05, 0.85])
 
-    with col_bot:
-        components.html(LOGIN_HTML, height=620, scrolling=False)
+        with col_bot:
+            components.html(LOGIN_HTML, height=620, scrolling=False)
 
-    with col_form:
+        with col_form:
+            st.markdown("""
+            <div style="padding:48px 0 28px 0;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
+                  color:#6B21A8;margin-bottom:16px;">&#128302; SISTEMA ATIVO</div>
+              <div style="font-size:38px;margin-bottom:4px;">🧙‍♂️</div>
+              <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
+                  color:#6B21A8;line-height:1;margin-bottom:4px;">Bem-vindo,</div>
+              <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
+                  color:#10B981;line-height:1;margin-bottom:20px;">Sabino.</div>
+              <p style="color:#5B4E72;font-size:14px;line-height:1.8;margin-bottom:0;">
+                O feitico aguarda.<br>
+                Insira sua credencial para<br>
+                acessar o hub operacional.
+              </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            senha = st.text_input(
+                "CREDENCIAL SECRETA",
+                type="password",
+                placeholder="••••••••",
+                label_visibility="visible"
+            )
+
+            if st.button("🔮  INVOCAR ACESSO", use_container_width=True):
+                if senha == "gsr17":
+                    st.session_state.login_stage = "face_check"
+                    st.rerun()
+                else:
+                    st.markdown("""
+                    <div style="background:rgba(201,42,42,0.06);border:1px solid rgba(201,42,42,0.2);
+                        border-radius:10px;padding:12px 16px;color:#C92A2A;font-size:13px;margin-top:8px;">
+                      &#10007; &nbsp; Feitico invalido. Acesso negado, impostor!
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            st.markdown("""
+            <div style="margin-top:28px;padding:16px;border:1px solid #DDD8F0;
+                border-radius:10px;background:#EFECF8;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+                  color:#5B4E72;line-height:2.2;">
+                &#9670; GRIMORIUM &middot; AES-256<br>
+                &#9670; SESSAO &middot; MONITORADA<br>
+                &#9670; ACESSO &middot; REGISTRADO
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.stop()
+
+    # ── STAGE: face_check — robô abre o rosto, pergunta se é Gabriel ──
+    elif st.session_state.login_stage == "face_check":
+
+        ROBOT_OPEN_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background: #F6F5FA; display:flex; align-items:center; justify-content:center; height:100vh; overflow:hidden; font-family:'Inter',sans-serif; }
+#scene { position:relative; width:340px; height:500px; }
+
+/* Particles */
+canvas#pc { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+
+/* Robot body */
+#robot { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:200px; }
+
+/* Face open animation */
+.face-shell {
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:140px; height:140px;
+}
+.face-top {
+  position:absolute; top:0; left:0; right:0; height:70px;
+  background: linear-gradient(135deg,#E8EAEF,#C8CDD8);
+  border-radius:70px 70px 0 0;
+  border:2px solid #9CA3AF;
+  transform-origin: center bottom;
+  animation: openTop 1.2s 0.5s cubic-bezier(.4,0,.2,1) forwards;
+  z-index:3;
+}
+.face-bottom {
+  position:absolute; bottom:0; left:0; right:0; height:70px;
+  background: linear-gradient(135deg,#C8CDD8,#E8EAEF);
+  border-radius:0 0 70px 70px;
+  border:2px solid #9CA3AF;
+  transform-origin: center top;
+  animation: openBottom 1.2s 0.5s cubic-bezier(.4,0,.2,1) forwards;
+  z-index:3;
+}
+@keyframes openTop    { to { transform: rotateX(-110deg); opacity:0.6; } }
+@keyframes openBottom { to { transform: rotateX(110deg);  opacity:0.6; } }
+
+/* Inner face revealed */
+.face-inner {
+  position:absolute; inset:6px;
+  border-radius:64px;
+  background: radial-gradient(circle at 50% 40%, #1A1D2E, #0A0C18);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:8px;
+  opacity:0; animation: revealFace 0.6s 1.4s ease forwards;
+  overflow:hidden;
+}
+@keyframes revealFace { to { opacity:1; } }
+
+/* Eyes inside */
+.bot-eye {
+  width:28px; height:22px; border-radius:50%;
+  background: radial-gradient(circle at 40% 35%, #7C3AED, #3B0D8C);
+  box-shadow: 0 0 12px #7C3AED, 0 0 24px rgba(124,58,237,0.4);
+  animation: eyepulse 2s ease-in-out infinite 1.8s;
+}
+@keyframes eyepulse { 0%,100%{box-shadow:0 0 12px #7C3AED,0 0 24px rgba(124,58,237,0.4);} 50%{box-shadow:0 0 20px #A855F7,0 0 40px rgba(168,85,247,0.6);} }
+
+.eyes-row { display:flex; gap:22px; }
+
+/* Scan line sweeping */
+.scan-line {
+  position:absolute; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, #10B981, transparent);
+  animation: scan 1.8s linear infinite 1.6s;
+  box-shadow: 0 0 8px #10B981;
+}
+@keyframes scan { 0%{top:10%;} 100%{top:90%;} }
+
+/* Equalizer mouth */
+.eq-row { display:flex; gap:3px; align-items:flex-end; height:20px; }
+.eq-bar {
+  width:5px; border-radius:2px;
+  background: linear-gradient(to top, #6B21A8, #A855F7);
+  animation: eq 0.25s ease-in-out infinite alternate;
+}
+.eq-bar:nth-child(1){height:8px;  animation-delay:0s;}
+.eq-bar:nth-child(2){height:14px; animation-delay:.04s;}
+.eq-bar:nth-child(3){height:18px; animation-delay:.08s;}
+.eq-bar:nth-child(4){height:20px; animation-delay:.12s;}
+.eq-bar:nth-child(5){height:18px; animation-delay:.08s;}
+.eq-bar:nth-child(6){height:14px; animation-delay:.04s;}
+.eq-bar:nth-child(7){height:8px;  animation-delay:0s;}
+@keyframes eq { from{transform:scaleY(0.2);} to{transform:scaleY(1);} }
+
+/* Robot body/neck/shoulders */
+.robot-body {
+  margin-top:148px;
+  background: linear-gradient(180deg,#E8EAEF,#D1D5DB);
+  border-radius:24px 24px 16px 16px;
+  border:2px solid #9CA3AF;
+  padding:16px 20px 20px;
+  position:relative;
+}
+.robot-neck {
+  width:36px; height:18px; margin:0 auto -2px;
+  background:#C8CDD8; border-radius:4px 4px 0 0;
+  border:2px solid #9CA3AF; border-bottom:none;
+}
+/* Arc reactor */
+.arc {
+  width:52px; height:52px; border-radius:50%;
+  background: radial-gradient(circle at 40% 35%, #E8EAEF, #C8CDD8);
+  border:2px solid #9CA3AF;
+  margin:0 auto 8px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 0 16px rgba(107,33,168,0.2);
+}
+.arc-inner {
+  width:28px; height:28px; border-radius:50%;
+  background: radial-gradient(circle at 40% 35%, #7C3AED, #1E0856);
+  box-shadow: 0 0 12px #7C3AED;
+  animation: arcpulse 1.5s ease-in-out infinite;
+}
+@keyframes arcpulse { 0%,100%{box-shadow:0 0 12px #7C3AED;} 50%{box-shadow:0 0 24px #A855F7,0 0 48px rgba(107,33,168,0.4);} }
+.leds { display:flex; justify-content:space-between; }
+.led { width:8px; height:8px; border-radius:50%; }
+.led-g { background:#10B981; animation:ledpulse 2s infinite; box-shadow:0 0 6px #10B981; }
+.led-p { background:#7C3AED; animation:ledpulse 1.3s infinite; box-shadow:0 0 6px #7C3AED; }
+@keyframes ledpulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+
+/* Speech bubble */
+#bubble {
+  position:absolute; top:20px; right:-10px;
+  background:#fff; border:2px solid #6B21A8;
+  border-radius:16px 16px 16px 4px;
+  padding:14px 18px;
+  width:180px;
+  box-shadow:0 4px 20px rgba(107,33,168,0.15);
+  opacity:0; transform:scale(0.8) translateY(10px);
+  animation: popBubble 0.5s 1.8s cubic-bezier(.34,1.56,.64,1) forwards;
+  z-index:10;
+}
+@keyframes popBubble { to { opacity:1; transform:scale(1) translateY(0); } }
+#bubble::before {
+  content:''; position:absolute; bottom:-10px; left:12px;
+  border:10px solid transparent;
+  border-top-color:#6B21A8; border-bottom:none;
+}
+#bubble::after {
+  content:''; position:absolute; bottom:-7px; left:13px;
+  border:9px solid transparent;
+  border-top-color:#fff; border-bottom:none;
+}
+#bubble .btext {
+  font-size:13px; color:#1A1225; font-weight:600; line-height:1.5;
+  margin-bottom:10px;
+}
+#bubble .bbuts { display:flex; gap:8px; }
+.bbut {
+  flex:1; padding:6px 0; border-radius:8px; border:none;
+  font-size:12px; font-weight:700; cursor:pointer;
+  transition:all 0.15s;
+}
+.bbut-sim { background:#6B21A8; color:#fff; }
+.bbut-sim:hover { background:#4C1D95; transform:scale(1.05); }
+.bbut-nao { background:#F6F5FA; color:#6B21A8; border:1px solid #DDD8F0; }
+.bbut-nao:hover { background:#EFECF8; transform:scale(1.05); }
+</style>
+</head>
+<body>
+<canvas id="pc"></canvas>
+<div id="scene">
+  <!-- Speech bubble -->
+  <div id="bubble">
+    <div class="btext">Oi! 👋<br>É você, Gabriel?</div>
+    <div class="bbuts">
+      <button class="bbut bbut-sim" onclick="escolher('sim')">✅ Sim</button>
+      <button class="bbut bbut-nao" onclick="escolher('nao')">❌ Não</button>
+    </div>
+  </div>
+
+  <!-- Robot -->
+  <div id="robot">
+    <div class="face-shell">
+      <div class="face-top"></div>
+      <div class="face-bottom"></div>
+      <div class="face-inner">
+        <div class="scan-line"></div>
+        <div class="eyes-row">
+          <div class="bot-eye"></div>
+          <div class="bot-eye"></div>
+        </div>
+        <div class="eq-row">
+          <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+          <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+        </div>
+      </div>
+    </div>
+    <div class="robot-neck"></div>
+    <div class="robot-body">
+      <div class="arc"><div class="arc-inner"></div></div>
+      <div class="leds">
+        <div class="led led-g"></div>
+        <div class="led led-p"></div>
+        <div class="led led-g"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Particles
+const cv=document.getElementById('pc'), ctx=cv.getContext('2d');
+cv.width=window.innerWidth; cv.height=window.innerHeight;
+const P=Array.from({length:25},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,
+  vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.5+.5,
+  c:Math.random()>.5?'#6B21A8':'#10B981'}));
+function tick(){ctx.clearRect(0,0,cv.width,cv.height);
+  P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>cv.width)p.vx*=-1;if(p.y<0||p.y>cv.height)p.vy*=-1;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.c;ctx.shadowBlur=6;ctx.shadowColor=p.c;ctx.fill();});
+  requestAnimationFrame(tick);}
+tick();
+
+function escolher(resp){
+  window.parent.postMessage({type:'face_answer', answer: resp}, '*');
+}
+</script>
+</body>
+</html>
+"""
         st.markdown("""
-        <div style="padding:48px 0 28px 0;">
+        <div style="text-align:center;padding:30px 0 10px 0;">
           <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
-              color:#6B21A8;margin-bottom:16px;">&#128302; SISTEMA ATIVO</div>
-          <div style="font-size:38px;margin-bottom:4px;">🧙‍♂️</div>
-          <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
-              color:#6B21A8;line-height:1;margin-bottom:4px;">Bem-vindo,</div>
-          <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;
-              color:#10B981;line-height:1;margin-bottom:20px;">Sabino.</div>
-          <p style="color:#5B4E72;font-size:14px;line-height:1.8;margin-bottom:0;">
-            O feitico aguarda.<br>
-            Insira sua credencial para<br>
-            acessar o hub operacional.
-          </p>
+              color:#6B21A8;margin-bottom:8px;">🔐 SENHA VALIDADA</div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#1A1225;">
+            Identificação Biométrica</div>
+          <div style="font-size:13px;color:#5B4E72;margin-top:6px;">
+            Responda ao J.A.R.V.I.S para continuar</div>
         </div>
         """, unsafe_allow_html=True)
 
-        senha = st.text_input(
-            "CREDENCIAL SECRETA",
-            type="password",
-            placeholder="••••••••",
-            label_visibility="visible"
-        )
+        col_r, col_c, col_l = st.columns([1, 1.4, 1])
+        with col_c:
+            components.html(ROBOT_OPEN_HTML, height=500, scrolling=False)
 
-        if st.button("🔮  INVOCAR ACESSO", use_container_width=True):
-            if senha == "gsr17":
-                st.session_state.logado = True
+        col_b1, col_b2, col_b3 = st.columns([1.5, 1, 1, 1.5] if False else [1,1,1])
+        with col_b1:
+            if st.button("✅  Sim, sou eu!", use_container_width=True, key="btn_sim"):
+                st.session_state.login_stage = "face_scan"
+                st.session_state.is_convidado = False
                 st.rerun()
-            else:
-                st.markdown("""
-                <div style="background:rgba(201,42,42,0.06);border:1px solid rgba(201,42,42,0.2);
-                    border-radius:10px;padding:12px 16px;color:#C92A2A;font-size:13px;margin-top:8px;">
-                  &#10007; &nbsp; Feitico invalido. Acesso negado, impostor!
-                </div>
-                """, unsafe_allow_html=True)
+        with col_b2:
+            if st.button("❌  Não sou eu", use_container_width=True, key="btn_nao"):
+                st.session_state.logado = True
+                st.session_state.is_convidado = True
+                st.rerun()
+
+        st.stop()
+
+    # ── STAGE: face_scan — câmera + face-api.js ──
+    elif st.session_state.login_stage == "face_scan":
+
+        # URL da foto de referência do Gabriel (perfil Claude.ai)
+        GABRIEL_PHOTO_URL = "https://lh3.googleusercontent.com/a/ACg8ocL-YourProfilePhotoID"
+        # ^ ATENÇÃO: substitua pela URL real da sua foto
+
+        FACE_SCAN_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0A0C18; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; min-height:100vh; font-family:'Inter',sans-serif; color:#fff; }
+#container { position:relative; width:320px; }
+#vid, #overlay { border-radius:16px; }
+#vid { width:320px; height:240px; object-fit:cover; display:block;
+  border:2px solid #6B21A8; box-shadow:0 0 24px rgba(107,33,168,0.4); }
+#overlay { position:absolute; top:0; left:0; pointer-events:none; }
+.scan-bar {
+  position:absolute; left:0; right:0; height:3px;
+  background:linear-gradient(90deg,transparent,#10B981,transparent);
+  box-shadow:0 0 10px #10B981; animation:scanbar 2s linear infinite; top:0;
+}
+@keyframes scanbar{0%{top:0;}100%{top:238px;}}
+#status {
+  margin:16px 0 8px; font-size:13px; letter-spacing:2px;
+  font-family:monospace; color:#10B981; text-align:center;
+  min-height:20px;
+}
+#msg { font-size:11px; color:#7C3AED; letter-spacing:1px; text-align:center; margin-bottom:12px; }
+.corner { position:absolute; width:20px; height:20px; border-color:#10B981; border-style:solid; }
+.tl{top:4px;left:4px;border-width:2px 0 0 2px;}
+.tr{top:4px;right:4px;border-width:2px 2px 0 0;}
+.bl{bottom:4px;left:4px;border-width:0 0 2px 2px;}
+.br{bottom:4px;right:4px;border-width:0 2px 2px 0;}
+#result { display:none; flex-direction:column; align-items:center; gap:12px; }
+#result-icon { font-size:56px; }
+#result-text { font-size:18px; font-weight:700; letter-spacing:1px; }
+.ring-anim {
+  width:120px; height:120px; border-radius:50%;
+  border:3px solid #10B981; box-shadow:0 0 20px #10B981;
+  animation:ringspin 1s linear infinite;
+}
+@keyframes ringspin{to{transform:rotate(360deg);box-shadow:0 0 30px #A855F7;}}
+#btn-guest {
+  display:none; margin-top:8px; padding:10px 24px;
+  background:#6B21A8; color:#fff; border:none; border-radius:10px;
+  font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px;
+}
+#btn-retry {
+  display:none; margin-top:8px; padding:10px 24px;
+  background:#1E0856; color:#A855F7; border:1px solid #6B21A8; border-radius:10px;
+  font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+<div id="container">
+  <video id="vid" autoplay muted playsinline></video>
+  <canvas id="overlay"></canvas>
+  <div class="scan-bar"></div>
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+</div>
+<div id="status">● CARREGANDO MODELOS...</div>
+<div id="msg">Aguarde o sistema biométrico</div>
+
+<div id="result">
+  <div id="result-icon"></div>
+  <div id="result-text"></div>
+</div>
+<button id="btn-guest" onclick="entrarConvidado()">Entrar como Convidado</button>
+<button id="btn-retry" onclick="location.reload()">Tentar Novamente</button>
+
+<script>
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+const GABRIEL_URL = 'https://avatars.githubusercontent.com/u/0'; // placeholder — troque pela URL real
+const STATUS = document.getElementById('status');
+const MSG    = document.getElementById('msg');
+
+async function init(){
+  STATUS.textContent = '● CARREGANDO MODELOS...';
+  try {
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ]);
+    STATUS.textContent = '● MODELOS OK — ABRINDO CÂMERA';
+    startCamera();
+  } catch(e){
+    STATUS.textContent = '⚠ Erro ao carregar modelos';
+    MSG.textContent = e.message;
+  }
+}
+
+let labeledDescriptors = null;
+async function loadReference(){
+  try {
+    const img = await faceapi.fetchImage(GABRIEL_URL);
+    const det = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks(true).withFaceDescriptor();
+    if(!det){ MSG.textContent='Foto de referência sem rosto detectado'; return false; }
+    labeledDescriptors = new faceapi.LabeledFaceDescriptors('Gabriel',[det.descriptor]);
+    return true;
+  } catch(e){ MSG.textContent='Erro na foto de referência: '+e.message; return false; }
+}
+
+async function startCamera(){
+  const vid = document.getElementById('vid');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:320,height:240}});
+    vid.srcObject = stream;
+    vid.onloadedmetadata = async () => {
+      STATUS.textContent = '● ANALISANDO ROSTO...';
+      MSG.textContent = 'Olhe para a câmera';
+      const refOk = await loadReference();
+      if(!refOk){ showFail(); return; }
+      setTimeout(()=>scan(vid), 1500);
+    };
+  } catch(e){
+    STATUS.textContent = '⚠ Câmera bloqueada';
+    MSG.textContent = 'Permita o acesso à câmera';
+    document.getElementById('btn-guest').style.display='block';
+  }
+}
+
+async function scan(vid){
+  STATUS.textContent = '● ESCANEANDO...';
+  const canvas = document.getElementById('overlay');
+  const dims = {width:320, height:240};
+  faceapi.matchDimensions(canvas, dims);
+
+  const det = await faceapi.detectSingleFace(vid, new faceapi.TinyFaceDetectorOptions())
+    .withFaceLandmarks(true).withFaceDescriptor();
+
+  if(!det){
+    STATUS.textContent = '● ROSTO NÃO DETECTADO';
+    MSG.textContent = 'Centralize o rosto e tente novamente';
+    document.getElementById('btn-retry').style.display='block';
+    document.getElementById('btn-guest').style.display='block';
+    return;
+  }
+
+  faceapi.draw.drawDetections(canvas, faceapi.resizeResults(det, dims));
+
+  const matcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
+  const match   = matcher.findBestMatch(det.descriptor);
+
+  if(match.label === 'Gabriel'){
+    showSuccess();
+    setTimeout(()=>window.parent.postMessage({type:'face_result', result:'gabriel'}, '*'), 1800);
+  } else {
+    showStranger();
+    setTimeout(()=>window.parent.postMessage({type:'face_result', result:'stranger'}, '*'), 2200);
+  }
+}
+
+function showSuccess(){
+  document.getElementById('result').style.display='flex';
+  document.getElementById('result-icon').textContent='✅';
+  document.getElementById('result-text').innerHTML='<span style="color:#10B981">Olá, Gabriel!</span>';
+  STATUS.textContent='● IDENTIDADE CONFIRMADA';
+}
+function showStranger(){
+  document.getElementById('result').style.display='flex';
+  document.getElementById('result-icon').textContent='🔒';
+  document.getElementById('result-text').innerHTML='<span style="color:#C92A2A">Rosto não reconhecido</span>';
+  STATUS.textContent='● ACESSO RESTRITO';
+  MSG.textContent='Entrando como Convidado...';
+}
+function showFail(){
+  document.getElementById('btn-guest').style.display='block';
+  document.getElementById('btn-retry').style.display='block';
+}
+function entrarConvidado(){
+  window.parent.postMessage({type:'face_result', result:'guest'}, '*');
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
+"""
 
         st.markdown("""
-        <div style="margin-top:28px;padding:16px;border:1px solid #DDD8F0;
-            border-radius:10px;background:#EFECF8;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
-              color:#5B4E72;line-height:2.2;">
-            &#9670; GRIMORIUM &middot; AES-256<br>
-            &#9670; SESSAO &middot; MONITORADA<br>
-            &#9670; ACESSO &middot; REGISTRADO
-          </div>
+        <div style="text-align:center;padding:20px 0 8px 0;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
+              color:#6B21A8;margin-bottom:8px;">🎥 RECONHECIMENTO FACIAL</div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#1A1225;">
+            Olhe para a câmera</div>
+          <div style="font-size:13px;color:#5B4E72;margin-top:4px;">
+            O sistema vai verificar sua identidade automaticamente</div>
         </div>
         """, unsafe_allow_html=True)
 
-    st.stop()
+        col_a, col_b, col_c = st.columns([1, 1.2, 1])
+        with col_b:
+            components.html(FACE_SCAN_HTML, height=420, scrolling=False)
+
+        st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
+        with c2:
+            if st.button("👤  Entrar como Convidado", use_container_width=True, key="btn_guest_manual"):
+                st.session_state.logado = True
+                st.session_state.is_convidado = True
+                st.rerun()
+        with c1:
+            if st.button("← Voltar", use_container_width=True, key="btn_back"):
+                st.session_state.login_stage = "senha"
+                st.rerun()
+
+        # Recebe resultado via query param (workaround para postMessage)
+        params = st.query_params
+        if params.get("face_result") == "gabriel":
+            st.session_state.logado = True
+            st.session_state.is_convidado = False
+            st.query_params.clear()
+            st.rerun()
+        elif params.get("face_result") in ["stranger","guest"]:
+            st.session_state.logado = True
+            st.session_state.is_convidado = True
+            st.query_params.clear()
+            st.rerun()
+
+        st.stop()
+
+
 
 # ============================================================
 # DATA LOADING
@@ -1030,6 +1531,8 @@ with st.sidebar:
     st.divider()
     if st.button("Sair", use_container_width=True):
         st.session_state.logado = False
+        st.session_state.is_convidado = False
+        st.session_state.login_stage = "senha"
         st.session_state.df_projetos = None
         st.rerun()
 
@@ -1037,15 +1540,17 @@ with st.sidebar:
 # HEADER
 # ============================================================
 now = datetime.now()
+usuario_nome = "CONVIDADO" if st.session_state.is_convidado else "GABRIEL SABINO"
+usuario_cor  = "#7C3AED"   if st.session_state.is_convidado else "#6B21A8"
 st.markdown(f"""
 <div style="display:flex;justify-content:space-between;align-items:center;
     padding:16px 24px;border:1px solid #E2E4EA;border-radius:14px;
-    background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:24px;">
+    background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:{"8px" if st.session_state.is_convidado else "24px"};">
   <div>
     <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
     <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
-        color:#6B21A8;">
-        GABRIEL SABINO</div>
+        color:{usuario_cor};">
+        {usuario_nome}</div>
   </div>
   <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:#9CA3AF;letter-spacing:1px;">
     <div style="color:#2F9E44;margin-bottom:4px;">&#9679; JARVIS ONLINE</div>
@@ -1054,6 +1559,22 @@ st.markdown(f"""
   </div>
 </div>
 """, unsafe_allow_html=True)
+
+# Banner convidado
+if st.session_state.is_convidado:
+    st.markdown("""
+    <div style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.25);
+        border-radius:10px;padding:10px 18px;margin-bottom:18px;
+        display:flex;align-items:center;gap:10px;">
+      <span style="font-size:18px;">🔒</span>
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C3AED;font-weight:700;">
+          ACESSO CONVIDADO</span>
+        <span style="font-size:12px;color:#5B4E72;margin-left:10px;">
+          Rosto não reconhecido. Acesso em modo leitura.</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ============================================================
 # TABS
