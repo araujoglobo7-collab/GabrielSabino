@@ -517,6 +517,7 @@ setTimeout(() => {
 
 # ============================================================
 # ============================================================
+# ============================================================
 # SESSION STATE
 # ============================================================
 if "logado" not in st.session_state:
@@ -527,488 +528,519 @@ if "df_projetos" not in st.session_state:
     st.session_state.df_projetos = None
 if "is_convidado" not in st.session_state:
     st.session_state.is_convidado = False
+if "quem_login" not in st.session_state:
+    st.session_state.quem_login = None   # "gabriel" | "convidado"
 
 # ============================================================
-# LOGIN — vai direto pra biometria, sem tela de senha
+# LOGIN
 # ============================================================
 if not st.session_state.logado:
 
-    FACE_HTML = """
+    # Processa resposta vinda do iframe via query param
+    qp = st.query_params
+    if qp.get("login") == "gabriel":
+        st.session_state.logado = True
+        st.session_state.is_convidado = False
+        st.query_params.clear()
+        st.rerun()
+    elif qp.get("login") == "convidado":
+        st.session_state.logado = True
+        st.session_state.is_convidado = True
+        st.query_params.clear()
+        st.rerun()
+
+    # Botões Streamlit ocultos acionados pelo JS via click simulado
+    col_sim, col_nao = st.columns(2)
+    with col_sim:
+        gabriel_btn = st.button("gabriel_hidden", key="btn_gabriel_hidden")
+    with col_nao:
+        nao_btn = st.button("nao_hidden", key="btn_nao_hidden")
+
+    if gabriel_btn:
+        st.session_state.logado = True
+        st.session_state.is_convidado = False
+        st.rerun()
+    if nao_btn:
+        st.session_state.logado = True
+        st.session_state.is_convidado = True
+        st.rerun()
+
+    LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-html,body { width:100%; height:100%; overflow:hidden; }
-body {
-  background:#0D0618;
-  font-family:'Inter',sans-serif;
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:0;
-}
-canvas#pc { position:fixed; inset:0; pointer-events:none; z-index:0; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ── Layout principal ── */
-#main {
-  position:relative; z-index:1;
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  justify-content:center;
-  gap:32px;
-  padding:16px 20px;
-  width:100%;
-  max-width:860px;
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:100%; height:100%; overflow:hidden;
+  background: #080B18;
+  font-family: 'Inter', sans-serif;
+  color: #fff;
 }
 
-/* ── Robô Bruxo Humanóide ── */
-#wizard {
-  flex:0 0 200px;
-  animation:float 5s ease-in-out infinite;
-  filter:drop-shadow(0 8px 28px rgba(107,33,168,0.5));
-}
-@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
+/* Particles */
+#pc { position:fixed; inset:0; pointer-events:none; z-index:0; }
 
-.whead { animation:headtilt 7s ease-in-out infinite; transform-origin:110px 75px; }
-@keyframes headtilt { 0%,100%{transform:rotate(0);} 35%{transform:rotate(-3deg);} 70%{transform:rotate(3deg);} }
-.weye { animation:blink 5s infinite; }
-.wel  { transform-origin:88px 68px; }
-.wer  { transform-origin:132px 68px; }
+/* Main layout */
+#wrap {
+  position: relative; z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 16px;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+/* ── ROBOT ── */
+#robot-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#robot {
+  width: clamp(160px, 22vw, 240px);
+  filter: drop-shadow(0 0 20px rgba(107,33,168,0.4));
+  animation: float 5s ease-in-out infinite;
+}
+@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
+
+/* Head animations */
+.rhead { animation: headtilt 7s ease-in-out infinite; transform-origin: 100px 90px; }
+@keyframes headtilt { 0%,100%{transform:rotate(0);} 35%{transform:rotate(-3deg);} 70%{transform:rotate(2.5deg);} }
+
+/* Eye blink */
+.reye { animation: blink 5s infinite; }
+.rel  { transform-origin: 78px 76px; }
+.rer  { transform-origin: 122px 76px; }
 @keyframes blink { 0%,88%,100%{transform:scaleY(1);} 92%{transform:scaleY(0.05);} }
-.wbar { animation:weq .22s ease-in-out infinite alternate; transform-origin:center bottom; }
-.wb1{animation-delay:0s;}.wb2{animation-delay:.04s;}.wb3{animation-delay:.08s;}
-.wb4{animation-delay:.12s;}.wb5{animation-delay:.08s;}
-@keyframes weq { from{transform:scaleY(.15);} to{transform:scaleY(1.5);} }
-.wrobe { animation:robesway 7s ease-in-out infinite; transform-origin:110px 200px; }
-@keyframes robesway { 0%,100%{transform:rotate(0);} 50%{transform:rotate(1.5deg);} }
-.warm { animation:staffwave 4s ease-in-out infinite; transform-origin:150px 155px; }
-@keyframes staffwave { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-7deg);} }
-.worb { animation:orbpulse 2s ease-in-out infinite; transform-origin:165px 58px; }
-@keyframes orbpulse { 0%,100%{transform:scale(1);opacity:.85;} 50%{transform:scale(1.2);opacity:1;} }
-.wstar { animation:twinkle 2s ease-in-out infinite; }
-.ws1{animation-delay:0s;}.ws2{animation-delay:.5s;}.ws3{animation-delay:1s;}
-@keyframes twinkle { 0%,100%{opacity:.2;transform:scale(.7);} 50%{opacity:1;transform:scale(1.2);} }
-.wrotor { animation:spin 3s linear infinite; transform-origin:110px 195px; }
-@keyframes spin { to{transform:rotate(360deg);} }
-.wled1{animation:led1 2s infinite;}.wled2{animation:led2 1.3s infinite;}
+
+/* EQ mouth */
+.rbar { animation: req .22s ease-in-out infinite alternate; transform-origin: center bottom; }
+.rb1{animation-delay:0s;} .rb2{animation-delay:.04s;} .rb3{animation-delay:.08s;}
+.rb4{animation-delay:.12s;} .rb5{animation-delay:.08s;} .rb6{animation-delay:.04s;}
+@keyframes req { from{transform:scaleY(.15);} to{transform:scaleY(1.5);} }
+
+/* Arc reactor pulse */
+.rarc { animation: arcpulse 2s ease-in-out infinite; }
+@keyframes arcpulse { 0%,100%{opacity:.7;} 50%{opacity:1; filter:drop-shadow(0 0 6px #7C3AED);} }
+
+/* Arm swing */
+.rarm-l { animation: armL 5s ease-in-out infinite; transform-origin: 30px 135px; }
+.rarm-r { animation: armR 5s ease-in-out infinite; transform-origin: 170px 135px; }
+@keyframes armL { 0%,100%{transform:rotate(0);} 50%{transform:rotate(-8deg);} }
+@keyframes armR { 0%,100%{transform:rotate(0);} 50%{transform:rotate(8deg);} }
+
+/* LED blink */
+.rled1 { animation: led1 2s infinite; }
+.rled2 { animation: led2 1.4s infinite; }
 @keyframes led1 { 0%,100%{opacity:.3;} 50%{opacity:1;} }
 @keyframes led2 { 0%,100%{opacity:.3;} 50%{opacity:1;} }
 
-/* ── Painel câmera ── */
-#campanel {
-  flex:0 0 320px;
-  display:flex; flex-direction:column; align-items:center; gap:12px;
+/* Rotor */
+.rrotor { animation: spin 3s linear infinite; transform-origin: 100px 185px; }
+@keyframes spin { to{transform:rotate(360deg);} }
+
+/* ── SPEECH BUBBLE ── */
+#bubble {
+  position: absolute;
+  top: 10px;
+  right: -220px;
+  width: 200px;
+  background: #fff;
+  border: 2px solid #6B21A8;
+  border-radius: 18px 18px 18px 4px;
+  padding: 18px 16px 14px;
+  box-shadow: 0 8px 32px rgba(107,33,168,.25), 0 2px 8px rgba(0,0,0,.15);
+  opacity: 0;
+  transform: scale(0.85) translateY(8px);
+  animation: popbub 0.5s 0.8s cubic-bezier(.34,1.56,.64,1) forwards;
+  z-index: 20;
+}
+@keyframes popbub { to { opacity:1; transform:scale(1) translateY(0); } }
+
+/* tail */
+#bubble::before {
+  content:''; position:absolute; left:-12px; top:20px;
+  border:12px solid transparent;
+  border-right-color:#6B21A8;
+  border-left:none;
+}
+#bubble::after {
+  content:''; position:absolute; left:-9px; top:22px;
+  border:10px solid transparent;
+  border-right-color:#fff;
+  border-left:none;
 }
 
-#title {
-  text-align:center;
+.b-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px; letter-spacing:3px; color:#7C3AED;
+  margin-bottom:8px; text-transform:uppercase;
 }
-#title .sub {
-  font-family:monospace; font-size:9px; letter-spacing:4px;
-  color:#7C3AED; margin-bottom:6px;
+.b-text {
+  font-size:15px; font-weight:700; color:#1A1225;
+  line-height:1.4; margin-bottom:14px;
 }
-#title h1 {
-  font-size:22px; font-weight:800; color:#fff; margin:0;
+.b-name {
+  color:#6B21A8;
+}
+.b-btns {
+  display: flex; gap:8px;
+}
+.bbtn {
+  flex:1; padding:9px 4px;
+  border-radius:10px; border:none;
+  font-size:13px; font-weight:700;
+  cursor:pointer; transition:all .18s;
   font-family:'Inter',sans-serif;
 }
-#title p { font-size:12px; color:#9D7FEA; margin-top:4px; }
+.bbtn-sim {
+  background: linear-gradient(135deg,#6B21A8,#4C1D95);
+  color:#fff;
+  box-shadow: 0 4px 12px rgba(107,33,168,.35);
+}
+.bbtn-sim:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(107,33,168,.5); }
+.bbtn-nao {
+  background: #F3F0FF;
+  color:#6B21A8;
+  border:1px solid #DDD8F0;
+}
+.bbtn-nao:hover { background:#EDE9FE; transform:translateY(-2px); }
 
-#camwrap {
-  position:relative; width:280px; height:210px;
-  border-radius:16px; overflow:hidden;
-  border:2px solid #6B21A8;
-  box-shadow:0 0 24px rgba(107,33,168,.55);
-  background:#080A12;
+/* ── RIGHT PANEL ── */
+#panel {
+  flex: 0 0 auto;
+  width: clamp(260px, 30vw, 340px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
-#vid {
-  width:100%; height:100%; object-fit:cover; display:block;
+.p-badge {
+  display:inline-block;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:4px; color:#7C3AED;
+  background:rgba(107,33,168,.1);
+  border:1px solid rgba(107,33,168,.25);
+  padding:5px 12px; border-radius:20px;
+  margin-bottom:4px;
 }
-#ovl {
-  position:absolute; top:0; left:0;
-  pointer-events:none; border-radius:14px;
+.p-title {
+  font-size: clamp(28px,4vw,42px);
+  font-weight:800; line-height:1.1; color:#fff;
 }
-.sbar {
-  position:absolute; left:0; right:0; height:2px;
-  background:linear-gradient(90deg,transparent,#10B981,transparent);
-  box-shadow:0 0 8px #10B981; top:0;
-  animation:sbarA 2s linear infinite;
+.p-title span { color:#10B981; }
+.p-sub {
+  font-size:14px; color:rgba(255,255,255,.55); line-height:1.7;
 }
-@keyframes sbarA { 0%{top:0;} 100%{top:96%;} }
-.corner { position:absolute; width:16px; height:16px; border-color:#10B981; border-style:solid; }
-.tl{top:4px;left:4px;  border-width:2px 0 0 2px;}
-.tr{top:4px;right:4px; border-width:2px 2px 0 0;}
-.bl{bottom:4px;left:4px;border-width:0 0 2px 2px;}
-.br{bottom:4px;right:4px;border-width:0 2px 2px 0;}
-
-/* câmera não disponível — fallback manual */
-#noCam {
-  display:none;
-  width:280px; text-align:center;
-  padding:16px;
-  background:rgba(107,33,168,0.12);
-  border:1px solid rgba(107,33,168,0.3);
+.p-card {
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
   border-radius:14px;
+  padding:16px 18px;
 }
-#noCam p { font-size:13px; color:#C4B5FD; line-height:1.7; margin-bottom:12px; }
-
-#status {
-  font-size:11px; letter-spacing:2px; font-family:monospace;
-  color:#10B981; text-align:center; min-height:18px;
+.p-card-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:2px; color:#7C3AED;
+  margin-bottom:10px;
 }
-#msg { font-size:11px; color:#9D7FEA; text-align:center; min-height:16px; }
-
-#result {
-  display:none; flex-direction:column; align-items:center; gap:8px; margin-top:4px;
+.p-steps {
+  display:flex; flex-direction:column; gap:10px;
 }
-#rico { font-size:48px; }
-#rtxt { font-size:16px; font-weight:700; }
-
-.btn-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
-.btn {
-  padding:10px 20px; border-radius:10px; border:none;
-  font-size:12px; font-weight:700; cursor:pointer; letter-spacing:1px;
-  transition:all .15s;
+.p-step {
+  display:flex; align-items:center; gap:12px;
 }
-.btn-p { background:#6B21A8; color:#fff; }
-.btn-p:hover { background:#4C1D95; }
-.btn-g { background:#111827; color:#9D7FEA; border:1px solid #4C1D95; }
-.btn-g:hover { background:#1F2937; }
+.p-step-dot {
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(107,33,168,.2);
+  border:1px solid rgba(107,33,168,.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; flex-shrink:0;
+}
+.p-step-txt { font-size:13px; color:rgba(255,255,255,.7); }
+.p-step-txt strong { color:#fff; }
 
-#btn-gabriel { display:none; }
-#btn-retry   { display:none; }
-#btn-guest   { display:none; }
+/* HUD bottom */
+.hud {
+  position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
+  font-family:'JetBrains Mono',monospace; font-size:9px;
+  letter-spacing:3px; color:rgba(107,33,168,.5);
+  white-space:nowrap; animation:hudb 2s ease-in-out infinite; z-index:5;
+}
+@keyframes hudb { 0%,100%{opacity:.4;} 50%{opacity:.9;} }
+
+/* Responsive */
+@media(max-width:640px){
+  #bubble { right:auto; left:50%; transform:translateX(-50%) scale(0.85) translateY(8px); top:auto; bottom:-130px; border-radius:4px 18px 18px 18px; }
+  #bubble::before, #bubble::after { display:none; }
+  @keyframes popbub { to { opacity:1; transform:translateX(-50%) scale(1) translateY(0); } }
+  #panel { width:100%; }
+}
 </style>
 </head>
 <body>
 <canvas id="pc"></canvas>
 
-<div id="main">
+<div id="wrap">
 
-  <!-- Robô Bruxo -->
-  <svg id="wizard" viewBox="0 0 220 400" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="gM" cx="50%" cy="30%"><stop offset="0%" stop-color="#D1D5DB"/><stop offset="100%" stop-color="#9CA3AF"/></radialGradient>
-    <radialGradient id="gV" cx="50%" cy="40%"><stop offset="0%" stop-color="#1A1D2E"/><stop offset="100%" stop-color="#3B1278"/></radialGradient>
-    <radialGradient id="gR" cx="50%" cy="20%"><stop offset="0%" stop-color="#6D28D9"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
-    <radialGradient id="gO" cx="50%" cy="35%"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#064E3B"/></radialGradient>
-    <radialGradient id="gA" cx="50%" cy="35%"><stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#1E0856"/></radialGradient>
-    <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="sg"><feGaussianBlur stdDeviation="6"/></filter>
-    <linearGradient id="gSt" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#8B6534"/><stop offset="100%" stop-color="#4A3010"/></linearGradient>
-  </defs>
-  <ellipse cx="110" cy="396" rx="52" ry="4" fill="#3B1278" opacity="0.3" filter="url(#sg)"/>
-  <!-- Robe -->
-  <g class="wrobe">
-    <path d="M52 168 Q38 210 28 300 Q22 350 34 378 L186 378 Q198 350 192 300 Q182 210 168 168 Z" fill="url(#gR)" opacity="0.96"/>
-    <path d="M72 168 Q66 215 62 295 L158 295 Q154 215 148 168 Z" fill="#7C3AED" opacity="0.2"/>
-    <path d="M28 378 Q56 390 110 387 Q164 390 186 378" fill="none" stroke="#9D7FEA" stroke-width="2" opacity="0.5"/>
-    <text x="72" y="278" font-size="16" text-anchor="middle" class="wstar ws1" fill="#C4B5FD">☽</text>
-    <text x="148" y="255" font-size="12" text-anchor="middle" class="wstar ws2" fill="#DDD6FE">✦</text>
-    <text x="60"  y="320" font-size="10" text-anchor="middle" class="wstar ws3" fill="#C4B5FD">✦</text>
-    <text x="155" y="308" font-size="9"  text-anchor="middle" class="wstar ws1" fill="#A78BFA">★</text>
-    <!-- Arc reactor -->
-    <circle cx="110" cy="230" r="26" fill="#0D0F1C" opacity="0.6"/>
-    <circle cx="110" cy="230" r="20" fill="none" stroke="rgba(124,58,237,.5)" stroke-width="1.5"/>
-    <circle cx="110" cy="230" r="12" fill="none" stroke="rgba(99,179,237,.5)" stroke-width="1"/>
-    <circle cx="110" cy="230" r="7" fill="url(#gA)" filter="url(#glow)"/>
-    <circle cx="110" cy="230" r="3" fill="white" opacity="0.9"/>
-    <g class="wrotor">
-      <line x1="110" y1="204" x2="110" y2="212" stroke="#7C3AED" stroke-width="1.8"/>
-      <line x1="110" y1="248" x2="110" y2="256" stroke="#7C3AED" stroke-width="1.8"/>
-      <line x1="84"  y1="230" x2="92"  y2="230" stroke="#7C3AED" stroke-width="1.8"/>
-      <line x1="128" y1="230" x2="136" y2="230" stroke="#7C3AED" stroke-width="1.8"/>
-    </g>
-    <circle cx="86"  cy="200" r="3.5" fill="#10B981" class="wled1" filter="url(#glow)"/>
-    <circle cx="134" cy="200" r="3.5" fill="#7C3AED" class="wled2" filter="url(#glow)"/>
-  </g>
-  <!-- Collar -->
-  <rect x="80" y="155" width="60" height="22" rx="5" fill="#4C1D95" opacity="0.9"/>
-  <path d="M80 155 Q110 165 140 155" stroke="#9D7FEA" stroke-width="1.8" fill="none" opacity="0.7"/>
-  <!-- Neck -->
-  <rect x="98" y="138" width="24" height="18" rx="4" fill="url(#gM)"/>
-  <!-- Head -->
-  <g class="whead">
-    <ellipse cx="110" cy="36" rx="48" ry="9" fill="#2D0A6E" transform="rotate(-2 110 36)"/>
-    <path d="M109 2 L70 38 L150 38 Z" fill="url(#gV)" transform="rotate(-2 110 20)"/>
-    <path d="M72 31 Q110 25 148 31" stroke="#6B21A8" stroke-width="3" fill="none" opacity="0.7"/>
-    <rect x="100" y="27" width="20" height="9" rx="2" fill="url(#gM)"/>
-    <rect x="104" y="29" width="12" height="5" rx="1" fill="#7C3AED" opacity="0.8"/>
-    <text x="106" y="20" font-size="11" text-anchor="middle" class="wstar ws2" fill="#FDE68A">★</text>
-    <!-- Face plate -->
-    <rect x="75" y="48" width="70" height="80" rx="12" fill="url(#gM)"/>
-    <rect x="75" y="48" width="70" height="80" rx="12" fill="none" stroke="rgba(124,58,237,.3)" stroke-width="1.5"/>
-    <!-- Visor -->
-    <rect x="82" y="56" width="56" height="50" rx="8" fill="#080A12"/>
-    <rect x="82" y="56" width="56" height="50" rx="8" fill="url(#gV)" opacity="0.3"/>
-    <rect x="82" y="56" width="56" height="50" rx="8" fill="none" stroke="rgba(124,58,237,.4)" stroke-width="1"/>
-    <line x1="83" y1="68" x2="137" y2="68" stroke="#7C3AED" stroke-width=".4" opacity=".35"/>
-    <line x1="83" y1="78" x2="137" y2="78" stroke="#7C3AED" stroke-width=".4" opacity=".35"/>
-    <line x1="83" y1="88" x2="137" y2="88" stroke="#7C3AED" stroke-width=".4" opacity=".35"/>
-    <line x1="83" y1="98" x2="137" y2="98" stroke="#7C3AED" stroke-width=".4" opacity=".35"/>
-    <!-- Eyes -->
-    <g class="weye wel">
-      <circle cx="97" cy="76" r="11" fill="#0D0F1C" stroke="rgba(167,139,250,.4)" stroke-width="1"/>
-      <circle cx="97" cy="76" r="7"  fill="url(#gA)" filter="url(#glow)"/>
-      <circle cx="100" cy="73" r="2.5" fill="white" opacity="0.8"/>
-    </g>
-    <g class="weye wer">
-      <circle cx="123" cy="76" r="11" fill="#0D0F1C" stroke="rgba(167,139,250,.4)" stroke-width="1"/>
-      <circle cx="123" cy="76" r="7"  fill="url(#gA)" filter="url(#glow)"/>
-      <circle cx="126" cy="73" r="2.5" fill="white" opacity="0.8"/>
-    </g>
-    <!-- Corner accents -->
-    <path d="M86 60 L93 60" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
-    <path d="M86 60 L86 66" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
-    <path d="M134 60 L127 60" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
-    <path d="M134 60 L134 66" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
-    <!-- EQ mouth -->
-    <g transform="translate(93,108)">
-      <rect class="wbar wb1" x="0"  y="-4" width="5" height="8"  rx="2" fill="#7C3AED" opacity=".8"/>
-      <rect class="wbar wb2" x="7"  y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-      <rect class="wbar wb3" x="14" y="-8" width="5" height="16" rx="2" fill="#A855F7" opacity=".8"/>
-      <rect class="wbar wb4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
-      <rect class="wbar wb5" x="28" y="-4" width="5" height="8"  rx="2" fill="#7C3AED" opacity=".8"/>
-    </g>
-    <!-- Side vents -->
-    <rect x="75" y="76" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-    <rect x="75" y="81" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-    <rect x="140" y="76" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-    <rect x="140" y="81" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
-    <text x="110" y="126" text-anchor="middle" fill="rgba(167,139,250,.7)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
-  </g>
-  <!-- Left arm -->
-  <path d="M68 168 Q50 180 44 215 Q40 238 48 248 Q56 253 62 243 Q65 224 68 205 L74 175 Z" fill="#4C1D95"/>
-  <ellipse cx="46" cy="250" rx="10" ry="8" fill="#C4956A"/>
-  <!-- Right arm + staff -->
-  <g class="warm">
-    <path d="M152 168 Q168 178 173 210 Q177 232 170 244 L163 232 Q161 212 157 195 L148 173 Z" fill="#4C1D95"/>
-    <ellipse cx="168" cy="246" rx="10" ry="8" fill="#C4956A"/>
-    <path d="M168 240 Q166 210 169 175 Q172 145 170 115 Q169 90 168 72" stroke="url(#gSt)" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-    <path d="M168 240 Q166 210 169 175 Q172 145 170 115 Q169 90 168 72" stroke="#FDE68A" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".25"/>
-    <path d="M168 72 Q162 60 155 55 Q148 50 152 44 Q157 38 164 42" stroke="url(#gSt)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-    <!-- Orb -->
-    <g class="worb">
-      <ellipse cx="164" cy="40" rx="17" ry="17" fill="#10B981" opacity=".2" filter="url(#sg)"/>
-      <ellipse cx="164" cy="40" rx="13" ry="13" fill="url(#gO)" filter="url(#glow)"/>
-      <ellipse cx="164" cy="40" rx="7"  ry="7"  fill="#34D399" opacity=".6"/>
-      <ellipse cx="160" cy="36" rx="4"  ry="4"  fill="white" opacity=".65"/>
-      <circle  cx="164" cy="40" r="17" fill="none" stroke="#10B981" stroke-width=".7" opacity=".4" stroke-dasharray="3 4"/>
-    </g>
-    <circle cx="178" cy="28" r="2.5" fill="#10B981"><animate attributeName="cy" values="28;14;28" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0;.9" dur="2s" repeatCount="indefinite"/></circle>
-    <circle cx="150" cy="24" r="2"   fill="#A855F7"><animate attributeName="cy" values="24;10;24" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0;.9" dur="2.5s" repeatCount="indefinite"/></circle>
-    <circle cx="182" cy="40" r="2"   fill="#FDE68A"><animate attributeName="cx" values="182;194;182" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0;.9" dur="1.8s" repeatCount="indefinite"/></circle>
-  </g>
-  <!-- Shoes -->
-  <path d="M78 376 Q74 382 54 386 Q48 388 51 393 Q56 396 76 392 Q96 389 100 382 L100 376 Z" fill="#2D0A6E"/>
-  <path d="M142 376 Q146 382 166 386 Q172 388 169 393 Q164 396 144 392 Q124 389 120 382 L120 376 Z" fill="#2D0A6E"/>
-  </svg>
+  <!-- ── ROBOT ── -->
+  <div id="robot-wrap">
 
-  <!-- Painel câmera -->
-  <div id="campanel">
-    <div id="title">
-      <div class="sub">⬡ IDENTIFICAÇÃO BIOMÉTRICA</div>
-      <h1>J.A.R.V.I.S</h1>
-      <p>Reconhecimento facial automático</p>
+    <!-- Speech bubble -->
+    <div id="bubble">
+      <div class="b-label">⬡ J.A.R.V.I.S</div>
+      <div class="b-text">Olá! Você é<br><span class="b-name">Gabriel Sabino</span>?</div>
+      <div class="b-btns">
+        <button class="bbtn bbtn-sim" onclick="resp('sim')">✅ Sim</button>
+        <button class="bbtn bbtn-nao" onclick="resp('nao')">❌ Não</button>
+      </div>
     </div>
 
-    <!-- câmera disponível -->
-    <div id="camwrap">
-      <video id="vid" autoplay muted playsinline></video>
-      <canvas id="ovl"></canvas>
-      <div class="sbar"></div>
-      <div class="corner tl"></div><div class="corner tr"></div>
-      <div class="corner bl"></div><div class="corner br"></div>
+    <svg id="robot" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="gMet" cx="50%" cy="30%">
+        <stop offset="0%" stop-color="#C8CDD8"/><stop offset="100%" stop-color="#8B92A0"/>
+      </radialGradient>
+      <radialGradient id="gVisor" cx="50%" cy="40%">
+        <stop offset="0%" stop-color="#1A1D2E"/><stop offset="100%" stop-color="#2D1278"/>
+      </radialGradient>
+      <radialGradient id="gChest" cx="50%" cy="20%">
+        <stop offset="0%" stop-color="#D1D5DB"/><stop offset="100%" stop-color="#9CA3AF"/>
+      </radialGradient>
+      <radialGradient id="gArc" cx="50%" cy="35%">
+        <stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#1E0856"/>
+      </radialGradient>
+      <linearGradient id="gBody" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#E5E7EB"/><stop offset="100%" stop-color="#C8CDD8"/>
+      </linearGradient>
+      <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="sglow"><feGaussianBlur stdDeviation="8"/></filter>
+    </defs>
+
+    <!-- Shadow -->
+    <ellipse cx="100" cy="356" rx="65" ry="6" fill="#6B21A8" opacity="0.25" filter="url(#sglow)"/>
+
+    <!-- ── LEFT ARM ── -->
+    <g class="rarm-l">
+      <rect x="14" y="132" width="22" height="90" rx="11" fill="url(#gMet)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
+      <rect x="18" y="132" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/>
+      <circle cx="25" cy="228" r="12" fill="url(#gMet)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
+      <circle cx="25" cy="228" r="5" fill="rgba(107,33,168,.5)"/>
+    </g>
+
+    <!-- ── RIGHT ARM ── -->
+    <g class="rarm-r">
+      <rect x="164" y="132" width="22" height="90" rx="11" fill="url(#gMet)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
+      <rect x="168" y="132" width="14" height="24" rx="4" fill="rgba(107,33,168,.3)"/>
+      <circle cx="175" cy="228" r="12" fill="url(#gMet)" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
+      <circle cx="175" cy="228" r="5" fill="rgba(107,33,168,.5)"/>
+    </g>
+
+    <!-- ── BODY ── -->
+    <rect x="40" y="128" width="120" height="130" rx="18" fill="url(#gBody)" stroke="rgba(107,33,168,.15)" stroke-width="1.5"/>
+    <!-- Shoulder trim -->
+    <path d="M40 145 L70 128 L130 128 L160 145" fill="none" stroke="rgba(107,33,168,.3)" stroke-width="1.5"/>
+    <!-- Chest lines -->
+    <line x1="40" y1="165" x2="160" y2="165" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
+    <line x1="40" y1="220" x2="160" y2="220" stroke="rgba(107,33,168,.12)" stroke-width="1"/>
+
+    <!-- ARC REACTOR -->
+    <circle cx="100" cy="185" r="32" fill="rgba(10,12,24,.4)"/>
+    <circle cx="100" cy="185" r="26" fill="none" stroke="rgba(124,58,237,.4)" stroke-width="1.5"/>
+    <circle cx="100" cy="185" r="18" fill="none" stroke="rgba(99,179,237,.4)" stroke-width="1"/>
+    <circle cx="100" cy="185" r="10" fill="url(#gArc)" class="rarc" filter="url(#glow)"/>
+    <circle cx="100" cy="185" r="5"  fill="white" opacity=".9"/>
+    <!-- Rotor -->
+    <g class="rrotor">
+      <line x1="100" y1="153" x2="100" y2="162" stroke="#7C3AED" stroke-width="2"/>
+      <line x1="100" y1="208" x2="100" y2="217" stroke="#7C3AED" stroke-width="2"/>
+      <line x1="68"  y1="185" x2="77"  y2="185" stroke="#7C3AED" stroke-width="2"/>
+      <line x1="123" y1="185" x2="132" y2="185" stroke="#7C3AED" stroke-width="2"/>
+      <line x1="77"  y1="163" x2="83"  y2="170" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+      <line x1="123" y1="163" x2="117" y2="170" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+      <line x1="77"  y1="207" x2="83"  y2="200" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+      <line x1="123" y1="207" x2="117" y2="200" stroke="rgba(99,179,237,.5)" stroke-width="1.5"/>
+    </g>
+    <!-- Side LEDs -->
+    <circle cx="56" cy="148" r="4" fill="#10B981" class="rled1" filter="url(#glow)"/>
+    <circle cx="144" cy="148" r="4" fill="#7C3AED" class="rled2" filter="url(#glow)"/>
+    <circle cx="56" cy="160" r="3" fill="#7C3AED" class="rled2"/>
+
+    <!-- ── NECK ── -->
+    <rect x="84" y="115" width="32" height="16" rx="5" fill="url(#gMet)" stroke="rgba(107,33,168,.2)" stroke-width="1"/>
+
+    <!-- ── HEAD ── -->
+    <g class="rhead">
+      <!-- Antenna -->
+      <line x1="100" y1="18" x2="100" y2="42" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="100" cy="13" r="7" fill="url(#gArc)" filter="url(#glow)">
+        <animate attributeName="r" values="5;9;5" dur="1.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".7;1;.7" dur="1.4s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- Head shell -->
+      <rect x="54" y="42" width="92" height="76" rx="16" fill="url(#gMet)"/>
+      <rect x="54" y="42" width="92" height="76" rx="16" fill="none" stroke="rgba(107,33,168,.25)" stroke-width="1.5"/>
+      <!-- Top band -->
+      <rect x="60" y="42" width="80" height="16" rx="8" fill="rgba(107,33,168,.3)"/>
+      <text x="100" y="55" text-anchor="middle" fill="rgba(200,180,255,.8)" font-size="7" font-weight="700" letter-spacing="2" font-family="monospace">J.A.R.V.I.S</text>
+
+      <!-- Visor -->
+      <rect x="62" y="62" width="76" height="46" rx="10" fill="#080A12"/>
+      <rect x="62" y="62" width="76" height="46" rx="10" fill="url(#gVisor)" opacity=".4"/>
+      <rect x="62" y="62" width="76" height="46" rx="10" fill="none" stroke="rgba(107,33,168,.45)" stroke-width="1.5"/>
+      <!-- Scan lines -->
+      <line x1="63" y1="74" x2="137" y2="74" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+      <line x1="63" y1="84" x2="137" y2="84" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+      <line x1="63" y1="94" x2="137" y2="94" stroke="#7C3AED" stroke-width=".4" opacity=".4"/>
+      <!-- Corner accents -->
+      <path d="M66 66 L73 66" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
+      <path d="M66 66 L66 72" stroke="#7C3AED" stroke-width="1.5" opacity=".6"/>
+      <path d="M134 66 L127 66" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
+      <path d="M134 66 L134 72" stroke="#A855F7" stroke-width="1.5" opacity=".6"/>
+
+      <!-- LEFT EYE -->
+      <g class="reye rel">
+        <circle cx="84" cy="80" r="12" fill="#080A12" stroke="rgba(167,139,250,.35)" stroke-width="1"/>
+        <circle cx="84" cy="80" r="8"  fill="url(#gArc)" filter="url(#glow)"/>
+        <circle cx="87" cy="77" r="3"  fill="white" opacity=".85"/>
+        <circle cx="84" cy="80" r="3.5" fill="#0A0C18" opacity=".6"/>
+      </g>
+      <!-- RIGHT EYE -->
+      <g class="reye rer">
+        <circle cx="116" cy="80" r="12" fill="#080A12" stroke="rgba(167,139,250,.35)" stroke-width="1"/>
+        <circle cx="116" cy="80" r="8"  fill="url(#gArc)" filter="url(#glow)"/>
+        <circle cx="119" cy="77" r="3"  fill="white" opacity=".85"/>
+        <circle cx="116" cy="80" r="3.5" fill="#0A0C18" opacity=".6"/>
+      </g>
+
+      <!-- EQ Mouth -->
+      <g transform="translate(79,107)">
+        <rect class="rbar rb1" x="0"  y="-4" width="5" height="8"  rx="2" fill="#7C3AED" opacity=".8"/>
+        <rect class="rbar rb2" x="7"  y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
+        <rect class="rbar rb3" x="14" y="-8" width="5" height="16" rx="2" fill="#A855F7" opacity=".8"/>
+        <rect class="rbar rb4" x="21" y="-6" width="5" height="12" rx="2" fill="#6B21A8"/>
+        <rect class="rbar rb5" x="28" y="-4" width="5" height="8"  rx="2" fill="#7C3AED" opacity=".8"/>
+        <rect class="rbar rb6" x="35" y="-2" width="5" height="4"  rx="2" fill="#A855F7" opacity=".6"/>
+      </g>
+      <!-- Side vents -->
+      <rect x="55" y="74" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="55" y="80" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="55" y="86" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="140" y="74" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="140" y="80" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+      <rect x="140" y="86" width="5" height="2.5" rx="1" fill="rgba(167,139,250,.4)"/>
+    </g>
+
+    <!-- LEGS -->
+    <rect x="55"  y="258" width="38" height="50" rx="10" fill="url(#gMet)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
+    <rect x="107" y="258" width="38" height="50" rx="10" fill="url(#gMet)" stroke="rgba(107,33,168,.15)" stroke-width="1"/>
+    <rect x="50"  y="304" width="48" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
+    <rect x="102" y="304" width="48" height="14" rx="7" fill="rgba(107,33,168,.35)"/>
+    </svg>
+  </div><!-- #robot-wrap -->
+
+  <!-- ── RIGHT PANEL ── -->
+  <div id="panel">
+    <div>
+      <div class="p-badge">⬡ SISTEMA ATIVO</div>
+      <div class="p-title">Hub<br><span>Operacional</span></div>
+      <div class="p-sub" style="margin-top:10px;">
+        J.A.R.V.I.S precisa confirmar<br>sua identidade para liberar o acesso.
+      </div>
     </div>
 
-    <!-- fallback quando câmera não abre -->
-    <div id="noCam">
-      <p>📷 Câmera não disponível.<br>
-      Escolha como continuar:</p>
+    <div class="p-card">
+      <div class="p-card-label">PROTOCOLO DE ACESSO</div>
+      <div class="p-steps">
+        <div class="p-step">
+          <div class="p-step-dot">🤖</div>
+          <div class="p-step-txt"><strong>J.A.R.V.I.S pergunta</strong> quem é você</div>
+        </div>
+        <div class="p-step">
+          <div class="p-step-dot">✅</div>
+          <div class="p-step-txt"><strong>Sim</strong> — acesso completo como Gabriel</div>
+        </div>
+        <div class="p-step">
+          <div class="p-step-dot">👤</div>
+          <div class="p-step-txt"><strong>Não</strong> — acesso como convidado (leitura)</div>
+        </div>
+      </div>
     </div>
 
-    <div id="status">● INICIANDO...</div>
-    <div id="msg"></div>
-
-    <div id="result">
-      <div id="rico"></div>
-      <div id="rtxt"></div>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn btn-p" id="btn-gabriel" onclick="entrarGabriel()">✅ Entrar como Gabriel</button>
-      <button class="btn btn-p" id="btn-retry"   onclick="location.reload()">🔄 Tentar Novamente</button>
-      <button class="btn btn-g" id="btn-guest"   onclick="entrarConvidado()">👤 Entrar como Convidado</button>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(107,33,168,.55);line-height:2.2;">
+      ⬡ GRIMORIUM · AES-256<br>
+      ⬡ SESSÃO · MONITORADA<br>
+      ⬡ ACESSO · REGISTRADO
     </div>
   </div>
 
-</div><!-- #main -->
+</div><!-- #wrap -->
+
+<div class="hud">⬡ J.A.R.V.I.S · IDENTIFICAÇÃO BIOMÉTRICA ⬡</div>
 
 <script>
-// ── Partículas ──
+// ── Particles ──
 const pc=document.getElementById('pc'), pctx=pc.getContext('2d');
-function resizePC(){ pc.width=window.innerWidth; pc.height=window.innerHeight; }
-resizePC(); window.addEventListener('resize',resizePC);
-const parts=Array.from({length:30},()=>({
+function resPC(){ pc.width=window.innerWidth; pc.height=window.innerHeight; }
+resPC(); window.addEventListener('resize',resPC);
+const pts=Array.from({length:32},()=>({
   x:Math.random()*pc.width, y:Math.random()*pc.height,
   vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
   r:Math.random()*1.8+.4,
   c:Math.random()>.5?'#6B21A8':'#10B981'
 }));
-(function tickP(){
+(function loop(){
   pctx.clearRect(0,0,pc.width,pc.height);
-  parts.forEach(p=>{
+  pts.forEach(p=>{
     p.x+=p.vx; p.y+=p.vy;
-    if(p.x<0||p.x>pc.width)p.vx*=-1;
-    if(p.y<0||p.y>pc.height)p.vy*=-1;
+    if(p.x<0||p.x>pc.width) p.vx*=-1;
+    if(p.y<0||p.y>pc.height) p.vy*=-1;
     pctx.beginPath(); pctx.arc(p.x,p.y,p.r,0,Math.PI*2);
     pctx.fillStyle=p.c; pctx.shadowBlur=6; pctx.shadowColor=p.c; pctx.fill();
   });
-  requestAnimationFrame(tickP);
+  requestAnimationFrame(loop);
 })();
 
-// ── Câmera + face-api ──
-const MODEL_BASE = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-// Substitua pela URL pública real da sua foto (GitHub, etc.)
-const GABRIEL_URL = 'COLE_AQUI_URL_DA_SUA_FOTO';
-
-const ST  = document.getElementById('status');
-const MSG = document.getElementById('msg');
-
-function show(id){ document.getElementById(id).style.display='inline-flex'; }
-function showResult(icon,html){
-  document.getElementById('result').style.display='flex';
-  document.getElementById('rico').textContent=icon;
-  document.getElementById('rtxt').innerHTML=html;
-}
-function showNoCam(){
-  document.getElementById('camwrap').style.display='none';
-  document.getElementById('noCam').style.display='block';
-  show('btn-guest');
-}
-
-async function init(){
-  ST.textContent='● CARREGANDO MODELOS...';
-  // Checar se getUserMedia existe
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    ST.textContent='⚠ Câmera não suportada';
-    showNoCam(); return;
-  }
-  // Tentar abrir câmera ANTES de carregar modelos (para forçar prompt de permissão)
-  let stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'user', width:{ideal:320}, height:{ideal:240} }
-    });
-  } catch(e){
-    ST.textContent='⚠ Câmera bloqueada — '+e.name;
-    MSG.textContent='Permita o acesso à câmera nas configurações do navegador';
-    showNoCam(); return;
-  }
-
-  const vid=document.getElementById('vid');
-  vid.srcObject=stream;
-
-  ST.textContent='● CÂMERA OK — CARREGANDO MODELOS...';
-  try {
-    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_BASE);
-    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_BASE);
-    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_BASE);
-  } catch(e){
-    ST.textContent='⚠ Modelos: '+e.message;
-    MSG.textContent='Identificação automática indisponível';
-    show('btn-gabriel'); show('btn-guest'); return;
-  }
-
-  await new Promise(r=>{ if(vid.readyState>=2)r(); else vid.addEventListener('loadeddata',r,{once:true}); });
-
-  // Carregar referência do Gabriel
-  ST.textContent='● CARREGANDO REFERÊNCIA...';
-  let ref=null;
-  if(GABRIEL_URL && GABRIEL_URL!=='COLE_AQUI_URL_DA_SUA_FOTO'){
-    try {
-      const img=await faceapi.fetchImage(GABRIEL_URL);
-      const d=await faceapi.detectSingleFace(img,new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks(true).withFaceDescriptor();
-      if(d) ref=new faceapi.LabeledFaceDescriptors('Gabriel',[d.descriptor]);
-    } catch(e){ MSG.textContent='Ref: '+e.message; }
-  }
-
-  if(!ref){
-    ST.textContent='⚠ Sem foto de referência';
-    MSG.textContent='Use os botões abaixo para entrar';
-    show('btn-gabriel'); show('btn-guest'); return;
-  }
-
-  ST.textContent='● CENTRALIZE O ROSTO';
-  MSG.textContent='Olhe para a câmera — análise automática';
-  setTimeout(()=>scan(vid,ref), 2000);
-}
-
-async function scan(vid, ref){
-  ST.textContent='● ESCANEANDO...';
-  const cvs=document.getElementById('ovl');
-  const w=vid.videoWidth||320, h=vid.videoHeight||240;
-  cvs.width=w; cvs.height=h;
-  faceapi.matchDimensions(cvs,{width:w,height:h});
-
-  const det=await faceapi
-    .detectSingleFace(vid,new faceapi.TinyFaceDetectorOptions())
-    .withFaceLandmarks(true).withFaceDescriptor();
-
-  if(!det){
-    ST.textContent='● ROSTO NÃO DETECTADO';
-    MSG.textContent='Centralize o rosto e tente novamente';
-    show('btn-retry'); show('btn-guest'); return;
-  }
-
-  faceapi.draw.drawDetections(cvs,faceapi.resizeResults(det,{width:w,height:h}));
-  const m=new faceapi.FaceMatcher(ref,0.52).findBestMatch(det.descriptor);
-
-  if(m.label==='Gabriel'){
-    showResult('✅','<span style="color:#10B981;font-size:18px;">Olá, Gabriel! 🎉</span>');
-    ST.textContent='● IDENTIDADE CONFIRMADA';
-    setTimeout(()=>window.parent.postMessage({type:'face_ok',result:'gabriel'},'*'), 1500);
-  } else {
-    showResult('🔒','<span style="color:#F87171">Rosto não reconhecido</span>');
-    ST.textContent='● ACESSO RESTRITO';
-    MSG.textContent='Entrando como Convidado...';
-    setTimeout(()=>window.parent.postMessage({type:'face_ok',result:'stranger'},'*'), 2000);
+// ── Button response ──
+function resp(r) {
+  // Tenta clicar no botão Streamlit correspondente
+  const label = r === 'sim' ? 'gabriel_hidden' : 'nao_hidden';
+  const btns = window.parent.document.querySelectorAll('button');
+  let found = false;
+  btns.forEach(b => {
+    if (b.innerText.trim() === label) {
+      b.click(); found = true;
+    }
+  });
+  // Fallback: query param
+  if (!found) {
+    const val = r === 'sim' ? 'gabriel' : 'convidado';
+    window.parent.location.href = window.parent.location.href.split('?')[0] + '?login=' + val;
   }
 }
-
-function entrarGabriel()  { window.parent.postMessage({type:'face_ok',result:'gabriel'},'*'); }
-function entrarConvidado() { window.parent.postMessage({type:'face_ok',result:'guest'},  '*'); }
-
-window.addEventListener('load', init);
 </script>
 </body>
 </html>
 """
 
-    components.html(FACE_HTML, height=640, scrolling=False)
+    # Esconde os botões Streamlit com CSS
+    st.markdown("""
+    <style>
+    [data-testid="stHorizontalBlock"] { display:none !important; }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # Botões Streamlit como fallback (postMessage não funciona cross-origin no Streamlit Cloud)
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        if st.button("✅  Sou eu, Gabriel!", use_container_width=True, key="btn_gabriel_st"):
-            st.session_state.logado = True
-            st.session_state.is_convidado = False
-            st.rerun()
-    with c2:
-        if st.button("👤  Entrar como Convidado", use_container_width=True, key="btn_guest_st"):
-            st.session_state.logado = True
-            st.session_state.is_convidado = True
-            st.rerun()
-    with c3:
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-
+    components.html(LOGIN_HTML, height=620, scrolling=False)
     st.stop()
 
 # ============================================================
