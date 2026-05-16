@@ -848,22 +848,21 @@ html, body { width:100%; height:100%; overflow:hidden; background:#060912; font-
     <div id="msgs">
       <div class="msg-bot">
         <div class="bot-bubble">
-          Oi! 👋 Eu sou o <strong>J.A.R.V.I.S</strong>, assistente do hub operacional.<br><br>
-          Você é <strong>Gabriel Sabino</strong>? Digite sua senha para confirmar. Se for convidado, informe seu nome e senha de convidado.
+          Olá! 👋 Digite sua senha para entrar.
         </div>
       </div>
     </div>
 
-    <!-- Input dinâmico -->
+    <!-- Input -->
     <div class="input-wrap" id="input-area">
       <div class="input-label" id="inp-label">SENHA</div>
       <input class="input-field" id="inp-nome" type="text"
         placeholder="Seu nome..." style="display:none"
         onkeydown="if(event.key==='Enter') enviar()"/>
       <input class="input-field" id="inp-senha" type="password"
-        placeholder="••••••••"
+        placeholder="••••••••" autofocus
         onkeydown="if(event.key==='Enter') enviar()"/>
-      <button class="btn-send" id="btn-send" onclick="enviar()">Confirmar →</button>
+      <button class="btn-send" id="btn-send" onclick="enviar()">Entrar →</button>
     </div>
   </div>
 
@@ -893,99 +892,59 @@ const pts=Array.from({length:32},()=>({
   requestAnimationFrame(loop);
 })();
 
-// Chat logic
-let stage = 'senha_gabriel'; // 'senha_gabriel' | 'nome_convidado' | 'senha_convidado'
+// Estados: 'senha' | 'nome_conv'
+let stage = 'senha';
 let nomeConv = '';
 
-const msgs      = document.getElementById('msgs');
-const inpNome   = document.getElementById('inp-nome');
-const inpSenha  = document.getElementById('inp-senha');
-const inpLabel  = document.getElementById('inp-label');
-const btnSend   = document.getElementById('btn-send');
+const msgs    = document.getElementById('msgs');
+const inpNome = document.getElementById('inp-nome');
+const inpSenha= document.getElementById('inp-senha');
+const inpLabel= document.getElementById('inp-label');
 
-function addMsg(txt, delay=0){
-  setTimeout(()=>{
-    const d=document.createElement('div');
-    d.className='msg-bot';
-    d.innerHTML=`<div class="bot-bubble">${txt}</div>`;
-    msgs.appendChild(d);
-    msgs.scrollTop=msgs.scrollHeight;
-  }, delay);
+function addMsg(txt){
+  const d=document.createElement('div');
+  d.className='msg-bot';
+  d.innerHTML=`<div class="bot-bubble">${txt}</div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop=msgs.scrollHeight;
 }
 
 function shake(){
   const w=document.getElementById('input-area');
-  w.classList.remove('shake');
-  void w.offsetWidth;
-  w.classList.add('shake');
-}
-
-function setMode(mode){
-  if(mode==='nome'){
-    inpLabel.textContent='SEU NOME';
-    inpNome.style.display='block';
-    inpSenha.style.display='none';
-    inpNome.value=''; inpNome.focus();
-    btnSend.textContent='Próximo →';
-  } else {
-    inpLabel.textContent='SENHA';
-    inpNome.style.display='none';
-    inpSenha.style.display='block';
-    inpSenha.value=''; inpSenha.focus();
-    btnSend.textContent='Confirmar →';
-  }
+  w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake');
 }
 
 function enviar(){
-  if(stage==='senha_gabriel'){
+  if(stage==='senha'){
     const s=inpSenha.value.trim();
     inpSenha.value='';
     if(s==='gr1723'){
-      addMsg('✅ <strong>Identidade confirmada, Gabriel!</strong><br>Bem-vindo de volta. Liberando acesso completo... 🚀');
-      setTimeout(()=>login('gabriel',''), 1400);
+      addMsg('✅ <strong>Bem-vindo, Gabriel!</strong> Liberando acesso...');
+      setTimeout(()=>login('gabriel',''), 900);
     } else if(s==='gsr17'){
-      // senha de convidado na primeira tentativa — pede nome
-      stage='nome_convidado';
-      addMsg('👤 Senha de convidado detectada. Qual é o seu nome?', 200);
-      setMode('nome');
+      stage='nome_conv';
+      inpLabel.textContent='SEU NOME';
+      inpNome.style.display='block';
+      inpSenha.style.display='none';
+      document.getElementById('btn-send').textContent='Entrar →';
+      addMsg('👤 Acesso de convidado. Qual é o seu nome?');
+      inpNome.focus();
     } else if(s!==''){
-      addMsg('❌ Senha incorreta. Tente novamente ou use a senha de convidado.');
-      shake();
-      inpSenha.focus();
+      addMsg('❌ Senha incorreta.');
+      shake(); inpSenha.focus();
     }
-  } else if(stage==='nome_convidado'){
+  } else {
     const n=inpNome.value.trim();
     if(n.length<2){ shake(); inpNome.focus(); return; }
-    nomeConv=n;
-    stage='senha_convidado';
-    addMsg(`Olá, <strong>${n}</strong>! Agora informe a senha de convidado.`, 200);
-    setMode('senha');
-  } else if(stage==='senha_convidado'){
-    const s=inpSenha.value.trim();
-    inpSenha.value='';
-    if(s==='gsr17'){
-      addMsg(`✅ Acesso de convidado confirmado, <strong>${nomeConv}</strong>!<br>Bem-vindo ao hub. Acesso em modo leitura. 👤`);
-      setTimeout(()=>login('convidado', nomeConv), 1400);
-    } else if(s!==''){
-      addMsg('❌ Senha de convidado incorreta. Tente novamente.');
-      shake();
-      inpSenha.focus();
-    }
+    addMsg(`✅ Bem-vindo, <strong>${n}</strong>! Acesso como convidado.`);
+    setTimeout(()=>login('convidado', n), 900);
   }
 }
 
 function login(tipo, nome){
-  // Envia via postMessage para o pai (Streamlit)
-  try {
-    window.parent.postMessage({type:'sabino_login', user:tipo, nome:nome}, '*');
-  } catch(e){}
-  // Fallback: query param
   let url=window.parent.location.href.split('?')[0];
   window.parent.location.href=url+'?login='+tipo+'&nome='+encodeURIComponent(nome);
 }
-
-// Auto-focus
-setTimeout(()=>inpSenha.focus(), 600);
 </script>
 </body>
 </html>
