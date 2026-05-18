@@ -885,7 +885,7 @@ def carregar_visao_gs():
                 df_v[col] = df_v[col].apply(lambda x: x.encode('latin1').decode('utf-8') if isinstance(x, str) else x)
         return df_v
     except Exception as e:
-        return pd.DataFrame()
+        return pd.DataFrame({"_erro": [str(e)]})
 
 # ============================================================
 # ============================================================
@@ -2153,8 +2153,18 @@ with tab8:
     with col_sync:
         if st.button("🔄 Sincronizar", key="sync_visao", use_container_width=True):
             st.cache_data.clear()
+            st.rerun()
 
     df_visao = carregar_visao_gs()
+
+    # Debug — mostra o que veio da planilha
+    if "_erro" in df_visao.columns:
+        st.error(f"Erro ao carregar: {df_visao['_erro'].iloc[0]}")
+        df_visao = pd.DataFrame()
+    elif not df_visao.empty:
+        with st.expander("📋 Dados brutos da planilha (debug)", expanded=False):
+            st.write("Colunas encontradas:", list(df_visao.columns))
+            st.dataframe(df_visao.head(10))
 
     # Cores e ícones por categoria
     CARD_CONFIG = {
