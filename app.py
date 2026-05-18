@@ -1669,112 +1669,94 @@ with tab5:
             col_mapa, col_info = st.columns([1.6, 1])
 
             with col_mapa:
-                    map_data = []
-                    for _, row in resumo_estados.iterrows():
-                        uf = row["UF"]
-                        if uf in ESTADOS_COORDS:
-                            lat, lon, nome = ESTADOS_COORDS[uf]
-                            map_data.append({
-                                "uf": uf, "nome": nome,
-                                "lat": lat, "lon": lon,
-                                "total": int(row["total"]),
-                                "projetos": list(row["projetos"])[:6]
-                            })
+                map_data = []
+                for _, row in resumo_estados.iterrows():
+                    uf = row["UF"]
+                    if uf in ESTADOS_COORDS:
+                        lat, lon, nome = ESTADOS_COORDS[uf]
+                        map_data.append({
+                            "uf": uf, "nome": nome,
+                            "lat": lat, "lon": lon,
+                            "total": int(row["total"]),
+                            "projetos": list(row["projetos"])[:8]
+                        })
 
-                    map_markers = ""
-                    for m in map_data:
-                        cor_marker = "#C92A2A" if m["total"] >= 5 else "#7C3AED" if m["total"] >= 3 else "#6B21A8"
-                        radius = 15 + m["total"] * 5
-                        map_markers += f"""
-                        L.circleMarker([{m["lat"]}, {m["lon"]}], {{
-                            radius: {radius},
-                            fillColor: '{cor_marker}',
-                            color: '#fff',
-                            weight: 2,
-                            opacity: 1,
-                            fillOpacity: 0.85
-                        }}).addTo(map)
-                        .bindPopup('<b>{m["nome"]} ({m["uf"]})</b><br>{m["total"]} projeto(s)')
-                        .on('click', function() {{
-                            window.parent.postMessage({{type:'estado_click', uf:'{m["uf"]}', nome:'{m["nome"]}'}}, '*');
-                        }});
-                        L.marker([{m["lat"]}, {m["lon"]}], {{
-                            icon: L.divIcon({{
-                                html: '<div style="background:transparent;color:#fff;font-weight:800;font-size:11px;text-align:center;margin-top:-4px;">{m["total"]}</div>',
-                                iconSize: [20, 20],
-                                iconAnchor: [10, 10]
-                            }})
-                        }}).addTo(map);
-                        """
+                map_markers = ""
+                for m in map_data:
+                    cor_marker = "#C92A2A" if m["total"] >= 5 else "#7C3AED" if m["total"] >= 3 else "#6B21A8"
+                    radius = min(8 + m["total"] * 2, 20)
+                    projs_li = "".join([f"<li style='padding:2px 0;font-size:11px;'>{p}</li>" for p in m["projetos"]])
+                    if m["total"] > 8:
+                        projs_li += f"<li style='color:#A855F7;font-size:10px;'>+{m['total']-8} mais...</li>"
+                    popup = (
+                        f"<div style='font-family:Inter,sans-serif;padding:4px;min-width:160px;'>"
+                        f"<b style='color:#6B21A8;font-size:13px;'>{m['nome']} ({m['uf']})</b><br>"
+                        f"<span style='color:#10B981;font-size:11px;'>⬡ {m['total']} projeto(s)</span>"
+                        f"<ul style='margin:6px 0 0 12px;color:#1A1225;'>{projs_li}</ul>"
+                        f"</div>"
+                    )
+                    map_markers += f"""
+                    L.circleMarker([{m["lat"]}, {m["lon"]}], {{
+                        radius: {radius},
+                        fillColor: '{cor_marker}',
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.88
+                    }}).addTo(map).bindPopup({_json.dumps(popup)});
+                    L.marker([{m["lat"]}, {m["lon"]}], {{
+                        icon: L.divIcon({{
+                            html: '<div style="color:#fff;font-weight:800;font-size:10px;text-align:center;line-height:1;margin-top:1px;">{m["total"]}</div>',
+                            iconSize: [16,16], iconAnchor:[8,8]
+                        }})
+                    }}).addTo(map);
+                    """
 
-                    mapa_html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
+                mapa_html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  body {{ margin: 0; padding: 0; background: #F6F5FA; }}
-  #map {{ width: 100%; height: 520px; border-radius: 16px; }}
-  .leaflet-popup-content-wrapper {{ border-radius: 10px; font-family: 'Inter', sans-serif; }}
-  .info-box {{
-    position: absolute; bottom: 20px; left: 20px; z-index: 1000;
-    background: rgba(255,255,255,0.95); border: 1px solid #DDD8F0;
-    border-radius: 12px; padding: 12px 16px;
-    font-family: monospace; font-size: 11px; color: #6B21A8;
-  }}
-</style>
-</head>
-<body>
+  body{{margin:0;padding:0;background:#F6F5FA;}}
+  #map{{width:100%;height:520px;border-radius:16px;}}
+  .leaflet-popup-content-wrapper{{border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);}}
+  .info-box{{position:absolute;bottom:16px;left:16px;z-index:1000;
+    background:rgba(255,255,255,.95);border:1px solid #DDD8F0;
+    border-radius:10px;padding:10px 14px;font-family:monospace;
+    font-size:10px;color:#6B21A8;}}
+</style></head><body>
 <div id="map"></div>
-<div class="info-box">&#9670; {len(df_mapa)} projetos mapeados em {len(map_data)} estados</div>
+<div class="info-box">&#9670; {len(df_mapa)} projetos · {len(map_data)} estados</div>
 <script>
-  var map = L.map('map', {{ zoomControl: true, scrollWheelZoom: true }})
-    .setView([-14.235, -51.925], 4);
-
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/light_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: 'abcd', maxZoom: 19
+  var map = L.map('map',{{zoomControl:true,scrollWheelZoom:true}}).setView([-14.235,-51.925],4);
+  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/light_all/{{z}}/{{x}}/{{y}}{{r}}.png',{{
+    attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19
   }}).addTo(map);
-
   {map_markers}
-
-  map.on('popupopen', function(e) {{
-    map.flyTo(e.popup.getLatLng(), 7, {{ animate: true, duration: 1.2 }});
-  }});
-
-  // Sobrevoo automático em loop contínuo
-  var _flyPts = {_json.dumps([{"lat": m["lat"], "lon": m["lon"], "nome": m["nome"]} for m in map_data])};
-  var _fi = 0;
-  function _flyLoop() {{
-    if(_flyPts.length < 2) return;
-    var pt = _flyPts[_fi % _flyPts.length];
-    var z = 9 + Math.floor(Math.random() * 3);
-    map.flyTo([pt.lat, pt.lon], z, {{ animate: true, duration: 4.5, easeLinearity: 0.1 }});
-    _fi++;
-    setTimeout(_flyLoop, 7000);
+  map.on('popupopen',function(e){{map.flyTo(e.popup.getLatLng(),7,{{animate:true,duration:1.2}});}});
+  var _fp={_json.dumps([{"lat":m["lat"],"lon":m["lon"],"nome":m["nome"]} for m in map_data])};
+  var _fi=0;
+  function _fly(){{
+    if(_fp.length<2)return;
+    var p=_fp[_fi%_fp.length];
+    map.flyTo([p.lat,p.lon],9+Math.floor(Math.random()*3),{{animate:true,duration:4.5,easeLinearity:0.1}});
+    _fi++;setTimeout(_fly,7000);
   }}
-  setTimeout(function() {{
-    map.flyTo([-14.235, -51.925], 4, {{ animate: true, duration: 2 }});
-    setTimeout(_flyLoop, 3500);
-  }}, 1500);
-</script>
-</body>
-</html>
-"""
+  setTimeout(function(){{map.flyTo([-14.235,-51.925],4,{{animate:true,duration:2}});setTimeout(_fly,3500);}},1500);
+</script></body></html>"""
 
-            components.html(mapa_html, height=540)
+                components.html(mapa_html, height=540)
 
             with col_info:
+                # Filtro de estado
                 estados_disponiveis = sorted(resumo_estados["UF"].tolist())
                 estado_sel = st.selectbox(
-                    "🗺️ Selecione o Estado",
+                    "🗺️ Estado",
                     options=["Todos"] + estados_disponiveis,
                     format_func=lambda x: f"{x} — {ESTADOS_COORDS[x][2]}" if x != "Todos" and x in ESTADOS_COORDS else x,
                     key="estado_sel"
                 )
-    
+
                 if estado_sel == "Todos":
                     df_estado = df_mapa.copy()
                     titulo_estado = "Todos os Estados"
@@ -1782,57 +1764,56 @@ with tab5:
                     df_estado = df_mapa[df_mapa["UF"] == estado_sel].copy()
                     nome_estado = ESTADOS_COORDS.get(estado_sel, ("","",""))[2]
                     titulo_estado = f"{nome_estado} ({estado_sel})"
-    
+
+                # Badge contador
                 st.markdown(f"""
-                <div style="background:#6B21A8;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;text-align:center;">
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;opacity:0.8;">PROJETOS</div>
-                  <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;">{len(df_estado)}</div>
-                  <div style="font-size:11px;opacity:0.9;">{titulo_estado}</div>
+                <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
+                    border-radius:12px;padding:12px 16px;margin-bottom:12px;
+                    display:flex;align-items:center;justify-content:space-between;">
+                  <div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                        letter-spacing:2px;opacity:.7;margin-bottom:2px;">PROJETOS</div>
+                    <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;">{len(df_estado)}</div>
+                  </div>
+                  <div style="text-align:right;font-size:12px;opacity:.8;">{titulo_estado}</div>
                 </div>
                 """, unsafe_allow_html=True)
-    
-                st.markdown("""
-                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">
-                PROJETOS NO ESTADO
-                </div>
-                """, unsafe_allow_html=True)
-    
-                for idx, row in df_estado.sort_values("Prazo").iterrows():
+
+                # Lista de clientes como ícones compactos
+                st.markdown("""<div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                    letter-spacing:2px;color:#9588AA;margin-bottom:8px;">CLIENTES</div>""",
+                    unsafe_allow_html=True)
+
+                for _, row in df_estado.sort_values("Prazo").iterrows():
                     dias = (row["Prazo"] - pd.Timestamp.now()).days
-                    cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
-                    if st.button(
-                        f"{'🔴' if dias < 7 else '🟡' if dias < 30 else '🟢'} {row['Projeto'][:35]}",
-                        key=f"proj_mapa_{idx}",
-                        use_container_width=True
-                    ):
-                        st.session_state.projeto_chat_mapa = row.to_dict()
-                        st.session_state.chat_mapa_history = []
-    
-                if st.session_state.projeto_chat_mapa:
-                    proj = st.session_state.projeto_chat_mapa
-                    dias_p = (pd.Timestamp(proj["Prazo"]) - pd.Timestamp.now()).days
-                    cor_p = "#C92A2A" if dias_p < 7 else "#7C3AED" if dias_p < 30 else "#2F9E44"
-    
+                    cor  = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
+                    pin  = "🔴" if dias < 7 else "🟡" if dias < 30 else "🟢"
+                    status_cor = STATUS_COLORS.get(row.get("Status",""), "#6B21A8")
+                    nome_curto = row["Projeto"][:38]
                     st.markdown(f"""
-                    <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-left:4px solid {cor_p};
-                        border-radius:12px;padding:14px;margin-top:12px;">
-                      <div style="font-weight:700;color:#1A1225;font-size:13px;margin-bottom:8px;">{proj.get('Projeto','')}</div>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-                        <div style="background:#F6F5FA;border-radius:6px;padding:6px 8px;">
-                          <div style="font-size:8px;color:#9588AA;">STATUS</div>
-                          <div style="font-size:11px;color:#6B21A8;font-weight:600;">{proj.get('Status','')}</div>
+                    <div style="display:flex;align-items:center;gap:8px;
+                        padding:8px 10px;margin-bottom:5px;
+                        background:#fff;border:1px solid #EDE9FE;
+                        border-left:3px solid {cor};border-radius:8px;
+                        box-shadow:0 1px 4px rgba(107,33,168,.06);">
+                      <span style="font-size:14px;flex-shrink:0;">{pin}</span>
+                      <div style="flex:1;min-width:0;">
+                        <div style="font-size:12px;font-weight:600;color:#1A1225;
+                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          {nome_curto}
                         </div>
-                        <div style="background:{cor_p}11;border-radius:6px;padding:6px 8px;">
-                          <div style="font-size:8px;color:#9588AA;">PRAZO</div>
-                          <div style="font-size:11px;color:{cor_p};font-weight:700;">{pd.Timestamp(proj['Prazo']).strftime('%d/%m/%Y')} ({dias_p}d)</div>
+                        <div style="display:flex;gap:6px;margin-top:2px;">
+                          <span style="font-size:9px;color:{status_cor};font-family:monospace;">
+                            {row.get("Status","")}
+                          </span>
+                          <span style="font-size:9px;color:{cor};font-weight:700;">
+                            {dias}d
+                          </span>
                         </div>
                       </div>
-                      <div style="font-size:11px;color:#5B4E72;line-height:1.5;">
-                                🎯 {proj.get('Foco','')}<br>
-                                📋 {proj.get('Escopo','') or '—'}
-                          </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                    </div>
+                    """, unsafe_allow_html=True)
+
 
 # TAB 6 — NOTAS
 # ─────────────────────────────────────────────
