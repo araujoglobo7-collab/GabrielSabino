@@ -873,14 +873,43 @@ def carregar_visao_gs():
     try:
         import requests
         from io import StringIO
+        import unicodedata
+
         sheet_id = "1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg"
         csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1049091112"
         r = requests.get(csv_url, allow_redirects=True, timeout=15)
         r.raise_for_status()
-        # Lê direto como UTF-8 — não aplica fix de latin1
-        df_v = pd.read_csv(StringIO(r.text), encoding='utf-8')
-        # Normaliza nomes das colunas — remove acentos para comparação interna
-        df_v.columns = [c.strip() for c in df_v.columns]
+
+        # Tenta UTF-8 primeiro, depois latin1
+        try:
+            texto = r.content.decode('utf-8')
+        except:
+            texto = r.content.decode('latin1')
+
+        df_v = pd.read_csv(StringIO(texto))
+
+        # Normaliza nomes das colunas — tira acento e espaço
+        def norm(s):
+            s = str(s).strip()
+            return ''.join(c for c in unicodedata.normalize('NFD', s)
+                          if unicodedata.category(c) != 'Mn').lower()
+
+        # Mapa de coluna normalizada → nome canônico
+        col_canon = {
+            "categoria": "Categoria",
+            "titulo": "Titulo",
+            "descricao": "Descricao",
+            "data": "Data",
+            "responsavel": "Responsavel",
+            "status": "Status",
+        }
+        rename = {}
+        for col in df_v.columns:
+            n = norm(col)
+            if n in col_canon:
+                rename[col] = col_canon[n]
+        df_v = df_v.rename(columns=rename)
+
         return df_v
     except Exception as e:
         return pd.DataFrame({"_erro": [str(e)]})
@@ -2199,38 +2228,33 @@ with tab8:
             {"Categoria": "Meta Mensal",  "Título": "10 novos projetos",    "Descrição": "Alcançar 10 novos contratos assinados no mês de maio.", "Data": "31/05/2025", "Responsável": "Gabriel", "Status": "Em andamento"},
         ])
     else:
-        # Normaliza coluna Categoria — aceita com/sem acento
-        cat_col = next((c for c in df_visao.columns if c.lower().strip() in ["categoria"]), None)
+        # Normaliza coluna Categoria
+        cat_col = next((c for c in df_visao.columns if str(c).strip().lower() in ["categoria"]), None)
         if cat_col and cat_col != "Categoria":
             df_visao["Categoria"] = df_visao[cat_col]
         if "Categoria" not in df_visao.columns:
             df_visao["Categoria"] = ""
         df_visao["Categoria"] = df_visao["Categoria"].astype(str).str.strip()
 
-    # ── Renderiza quadro por categoria ──
-    ORDEM = ["Missão", "Visão", "Valores", "Meta Semanal", "Meta Mensal"]
-    # Compara sem acento para ser robusto
+    # Normaliza categorias — remove acento para comparar
     import unicodedata
-    def rm_accent(s):
-        return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn').lower()
+    def rm_acc(s):
+        return ''.join(c for c in unicodedata.normalize('NFD', str(s))
+                      if unicodedata.category(c) != 'Mn').strip()
 
-    categorias_raw = df_visao["Categoria"].unique()
-    # Mapeia cada categoria da planilha para o nome canônico
-    cat_map = {}
-    for cr in categorias_raw:
-        for ordem in ORDEM:
-            if rm_accent(str(cr)) == rm_accent(ordem):
-                cat_map[cr] = ordem
-                break
-        else:
-            if str(cr).strip() and str(cr) != "nan":
-                cat_map[cr] = str(cr).strip()
+    ORDEM = ["Missão", "Visão", "Valores", "Meta Semanal", "Meta Mensal"]
+    ORDEM_NORM = {rm_acc(o): o for o in ORDEM}
 
-    df_visao["Categoria"] = df_visao["Categoria"].map(lambda x: cat_map.get(x, x))
+    def canonico(cat):
+        n = rm_acc(cat)
+        return ORDEM_NORM.get(n, cat)
+
+    df_visao["Categoria"] = df_visao["Categoria"].apply(canonico)
+    df_visao = df_visao[df_visao["Categoria"].str.strip().str.lower() != "nan"]
 
     categorias_presentes = [c for c in ORDEM if c in df_visao["Categoria"].values]
     for c in df_visao["Categoria"].unique():
-        if c not in categorias_presentes and str(c).strip() and str(c) != "nan":
+        if c not in categorias_presentes and str(c).strip():
             categorias_presentes.append(str(c))
 
     # Layout: até 3 colunas por linha
@@ -2264,17 +2288,16 @@ with tab8:
 
                 # Cards dentro da coluna
                 for _, row in cards_cat.iterrows():
-                    # Lê colunas aceitando variações com/sem acento
                     def gcol(r, *names):
                         for n in names:
                             if n in r.index and pd.notna(r[n]) and str(r[n]).strip() not in ["", "nan"]:
                                 return str(r[n]).strip()
                         return ""
 
-                    titulo    = gcol(row, "Título", "Titulo", "título", "titulo") or "—"
-                    descricao = gcol(row, "Descrição", "Descricao", "descrição", "descricao")
+                    titulo    = gcol(row, "Titulo", "Título", "titulo", "título") or "—"
+                    descricao = gcol(row, "Descricao", "Descrição", "descricao")
                     data      = gcol(row, "Data", "data")
-                    resp      = gcol(row, "Responsável", "Responsavel", "responsável", "responsavel")
+                    resp      = gcol(row, "Responsavel", "Responsável", "responsavel")
                     status    = gcol(row, "Status", "status")
 
                     status_cor = {"Ativo": "#2F9E44", "Concluido": "#2F9E44", "Concluído": "#2F9E44",
