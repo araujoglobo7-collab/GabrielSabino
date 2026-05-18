@@ -868,6 +868,25 @@ if st.session_state.df_projetos is None:
 
 df = st.session_state.df_projetos
 
+@st.cache_data(ttl=300)
+def carregar_visao_gs():
+    """Carrega a aba Visão GS da planilha (gid=1049091112)"""
+    try:
+        import requests
+        from io import StringIO
+        sheet_id = "1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg"
+        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1049091112"
+        r = requests.get(csv_url, allow_redirects=True, timeout=15)
+        r.raise_for_status()
+        df_v = pd.read_csv(StringIO(r.text), encoding='utf-8')
+        # Fix encoding
+        for col in df_v.columns:
+            if df_v[col].dtype == object:
+                df_v[col] = df_v[col].apply(lambda x: x.encode('latin1').decode('utf-8') if isinstance(x, str) else x)
+        return df_v
+    except Exception as e:
+        return pd.DataFrame()
+
 # ============================================================
 # ============================================================
 # SIDEBAR
@@ -1011,14 +1030,15 @@ if st.session_state.is_convidado:
 # ============================================================
 # TABS
 # ============================================================
-tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
     "🤖 CHAT IA",
     "⚡ VISAO GERAL",
     "📋 KANBAN",
     "🗂️ DADOS",
     "🗺️ MAPEAMENTO GS",
     "✍️ NOTAS",
-    "📅 CALENDARIO"
+    "📅 CALENDARIO",
+    "🎯 VISÃO GS"
 ])
 
 # ─────────────────────────────────────────────
@@ -2117,3 +2137,134 @@ render();
 </script></body></html>"""
 
         components.html(CAL_HTML, height=840, scrolling=True)
+
+# ─────────────────────────────────────────────
+# TAB 8 — VISÃO GS
+# ─────────────────────────────────────────────
+with tab8:
+    st.markdown("""
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:#6B21A8;margin-bottom:6px;">
+    ⬡ VISÃO GS — QUADRO ESTRATÉGICO
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Botão sincronizar
+    col_sync, col_space = st.columns([1, 4])
+    with col_sync:
+        if st.button("🔄 Sincronizar", key="sync_visao", use_container_width=True):
+            st.cache_data.clear()
+
+    df_visao = carregar_visao_gs()
+
+    # Cores e ícones por categoria
+    CARD_CONFIG = {
+        "Missão":       {"icon": "🎯", "cor": "#6B21A8", "bg": "#F3EEFF", "border": "#C4B5FD"},
+        "Visão":        {"icon": "🔭", "cor": "#0C8599", "bg": "#E0F7FA", "border": "#80DEEA"},
+        "Valores":      {"icon": "💎", "cor": "#2F9E44", "bg": "#E8F5E9", "border": "#A5D6A7"},
+        "Meta Semanal": {"icon": "⚡", "cor": "#C92A2A", "bg": "#FFF3E0", "border": "#FFCC80"},
+        "Meta Mensal":  {"icon": "🚀", "cor": "#7C3AED", "bg": "#EDE9FE", "border": "#C4B5FD"},
+    }
+
+    if df_visao.empty:
+        # Mostra quadro de exemplo para o usuário entender o formato
+        st.markdown("""
+        <div style="background:rgba(107,33,168,.06);border:1px dashed rgba(107,33,168,.3);
+            border-radius:14px;padding:24px;text-align:center;margin-bottom:20px;">
+          <div style="font-size:32px;margin-bottom:10px;">📋</div>
+          <div style="font-weight:700;color:#6B21A8;font-size:16px;margin-bottom:8px;">
+            Planilha Visão GS não encontrada</div>
+          <div style="font-size:13px;color:#5B4E72;line-height:1.8;">
+            Crie uma aba chamada <strong>Visão GS</strong> na sua planilha com as colunas:<br>
+            <code style="background:#EFECF8;padding:2px 8px;border-radius:4px;">Categoria | Título | Descrição | Data | Responsável | Status</code>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Mostra cards de exemplo
+        df_visao = pd.DataFrame([
+            {"Categoria": "Missão",       "Título": "Nossa Missão",         "Descrição": "Transformar a gestão de projetos com tecnologia e dados, entregando resultados excepcionais.", "Data": "", "Responsável": "Gabriel", "Status": "Ativo"},
+            {"Categoria": "Visão",        "Título": "Onde queremos chegar", "Descrição": "Ser referência nacional em gestão de projetos de engenharia até 2026.", "Data": "", "Responsável": "Gabriel", "Status": "Ativo"},
+            {"Categoria": "Valores",      "Título": "Excelência",           "Descrição": "Entregamos além do esperado em cada projeto.", "Data": "", "Responsável": "Time", "Status": "Ativo"},
+            {"Categoria": "Valores",      "Título": "Transparência",        "Descrição": "Comunicação clara e honesta com todos os stakeholders.", "Data": "", "Responsável": "Time", "Status": "Ativo"},
+            {"Categoria": "Valores",      "Título": "Inovação",             "Descrição": "Buscamos sempre soluções criativas e tecnológicas.", "Data": "", "Responsável": "Time", "Status": "Ativo"},
+            {"Categoria": "Meta Semanal", "Título": "Fechar 2 propostas",   "Descrição": "Enviar e fechar pelo menos 2 novas propostas comerciais esta semana.", "Data": "31/05/2025", "Responsável": "Gabriel", "Status": "Em andamento"},
+            {"Categoria": "Meta Mensal",  "Título": "10 novos projetos",    "Descrição": "Alcançar 10 novos contratos assinados no mês de maio.", "Data": "31/05/2025", "Responsável": "Gabriel", "Status": "Em andamento"},
+        ])
+    else:
+        # Garante colunas mínimas
+        for col in ["Categoria", "Título", "Descrição", "Data", "Responsável", "Status"]:
+            if col not in df_visao.columns:
+                df_visao[col] = ""
+
+    # ── Renderiza quadro por categoria ──
+    ORDEM = ["Missão", "Visão", "Valores", "Meta Semanal", "Meta Mensal"]
+    categorias_presentes = [c for c in ORDEM if c in df_visao["Categoria"].values]
+    # Adiciona categorias da planilha que não estão na ordem padrão
+    for c in df_visao["Categoria"].unique():
+        if c not in categorias_presentes and str(c).strip():
+            categorias_presentes.append(str(c))
+
+    # Layout: até 3 colunas por linha
+    n = len(categorias_presentes)
+    cols_por_linha = min(3, n)
+    linhas = [categorias_presentes[i:i+cols_por_linha] for i in range(0, n, cols_por_linha)]
+
+    for linha in linhas:
+        cols = st.columns(len(linha))
+        for ci, cat in enumerate(linha):
+            cfg = CARD_CONFIG.get(cat, {"icon": "📌", "cor": "#6B21A8", "bg": "#F6F5FA", "border": "#DDD8F0"})
+            cards_cat = df_visao[df_visao["Categoria"] == cat]
+
+            with cols[ci]:
+                # Header da coluna
+                st.markdown(f"""
+                <div style="background:linear-gradient(135deg,{cfg['cor']},{cfg['cor']}CC);
+                    border-radius:14px 14px 0 0;padding:14px 16px;margin-bottom:0;
+                    display:flex;align-items:center;gap:10px;">
+                  <div style="font-size:22px;">{cfg['icon']}</div>
+                  <div>
+                    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;">{cat}</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                        letter-spacing:2px;color:rgba(255,255,255,.65);">{len(cards_cat)} ITEM(NS)</div>
+                  </div>
+                </div>
+                <div style="background:{cfg['bg']};border:1px solid {cfg['border']};
+                    border-top:none;border-radius:0 0 14px 14px;
+                    padding:12px;min-height:120px;margin-bottom:20px;">
+                """, unsafe_allow_html=True)
+
+                # Cards dentro da coluna
+                for _, row in cards_cat.iterrows():
+                    titulo    = str(row.get("Título", "")) or str(row.get("Titulo", "")) or "—"
+                    descricao = str(row.get("Descrição", "")) or str(row.get("Descricao", "")) or ""
+                    data      = str(row.get("Data", "")) if pd.notna(row.get("Data")) and str(row.get("Data", "")) not in ["", "nan"] else ""
+                    resp      = str(row.get("Responsável", "")) or str(row.get("Responsavel", "")) or ""
+                    status    = str(row.get("Status", "")) if pd.notna(row.get("Status")) else ""
+
+                    status_cor = {"Ativo": "#2F9E44", "Concluido": "#2F9E44", "Concluído": "#2F9E44",
+                                  "Em andamento": "#7C3AED", "Em Andamento": "#7C3AED",
+                                  "Pausado": "#C92A2A", "Pendente": "#F59E0B"}.get(status, "#9588AA")
+
+                    st.markdown(f"""
+                    <div style="background:#fff;border:1px solid {cfg['border']};
+                        border-left:4px solid {cfg['cor']};
+                        border-radius:10px;padding:14px;margin-bottom:10px;
+                        box-shadow:0 2px 8px rgba(0,0,0,.06);
+                        transition:all .2s;">
+                      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                        <div style="font-weight:700;font-size:14px;color:#1A1225;line-height:1.3;flex:1;">
+                          {titulo}
+                        </div>
+                        {f'<span style="background:{status_cor}18;color:{status_cor};border:1px solid {status_cor}44;padding:2px 8px;border-radius:20px;font-size:9px;font-family:monospace;letter-spacing:.5px;flex-shrink:0;margin-left:8px;">{status}</span>' if status and status != 'nan' else ''}
+                      </div>
+                      {f'<div style="font-size:13px;color:#5B4E72;line-height:1.6;margin-bottom:10px;">{descricao}</div>' if descricao and descricao != 'nan' else ''}
+                      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        {f'<span style="font-size:10px;color:#9588AA;">📅 {data}</span>' if data else ''}
+                        {f'<span style="font-size:10px;color:#9588AA;">👤 {resp}</span>' if resp and resp != 'nan' else ''}
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
