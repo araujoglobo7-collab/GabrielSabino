@@ -1664,9 +1664,11 @@ with tab5:
             if "chat_mapa_history" not in st.session_state:
                 st.session_state.chat_mapa_history = []
 
-                col_mapa, col_info = st.columns([1.6, 1])
+            import json as _json
 
-                with col_mapa:
+            col_mapa, col_info = st.columns([1.6, 1])
+
+            with col_mapa:
                     map_data = []
                     for _, row in resumo_estados.iterrows():
                         uf = row["UF"]
@@ -1743,7 +1745,7 @@ with tab5:
   }});
 
   // Sobrevoo automático em loop contínuo
-  var _flyPts = {json.dumps([{"lat": m["lat"], "lon": m["lon"], "nome": m["nome"]} for m in map_data])};
+  var _flyPts = {_json.dumps([{"lat": m["lat"], "lon": m["lon"], "nome": m["nome"]} for m in map_data])};
   var _fi = 0;
   function _flyLoop() {{
     if(_flyPts.length < 2) return;
@@ -1762,72 +1764,72 @@ with tab5:
 </html>
 """
 
-                    components.html(mapa_html, height=540)
+            components.html(mapa_html, height=540)
 
-                with col_info:
-                    estados_disponiveis = sorted(resumo_estados["UF"].tolist())
-                    estado_sel = st.selectbox(
-                        "🗺️ Selecione o Estado",
-                        options=["Todos"] + estados_disponiveis,
-                        format_func=lambda x: f"{x} — {ESTADOS_COORDS[x][2]}" if x != "Todos" and x in ESTADOS_COORDS else x,
-                        key="estado_sel"
-                    )
-
-                    if estado_sel == "Todos":
-                        df_estado = df_mapa.copy()
-                        titulo_estado = "Todos os Estados"
-                    else:
-                        df_estado = df_mapa[df_mapa["UF"] == estado_sel].copy()
-                        nome_estado = ESTADOS_COORDS.get(estado_sel, ("","",""))[2]
-                        titulo_estado = f"{nome_estado} ({estado_sel})"
-
+            with col_info:
+                estados_disponiveis = sorted(resumo_estados["UF"].tolist())
+                estado_sel = st.selectbox(
+                    "🗺️ Selecione o Estado",
+                    options=["Todos"] + estados_disponiveis,
+                    format_func=lambda x: f"{x} — {ESTADOS_COORDS[x][2]}" if x != "Todos" and x in ESTADOS_COORDS else x,
+                    key="estado_sel"
+                )
+    
+                if estado_sel == "Todos":
+                    df_estado = df_mapa.copy()
+                    titulo_estado = "Todos os Estados"
+                else:
+                    df_estado = df_mapa[df_mapa["UF"] == estado_sel].copy()
+                    nome_estado = ESTADOS_COORDS.get(estado_sel, ("","",""))[2]
+                    titulo_estado = f"{nome_estado} ({estado_sel})"
+    
+                st.markdown(f"""
+                <div style="background:#6B21A8;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;text-align:center;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;opacity:0.8;">PROJETOS</div>
+                  <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;">{len(df_estado)}</div>
+                  <div style="font-size:11px;opacity:0.9;">{titulo_estado}</div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+                st.markdown("""
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">
+                PROJETOS NO ESTADO
+                </div>
+                """, unsafe_allow_html=True)
+    
+                for idx, row in df_estado.sort_values("Prazo").iterrows():
+                    dias = (row["Prazo"] - pd.Timestamp.now()).days
+                    cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
+                    if st.button(
+                        f"{'🔴' if dias < 7 else '🟡' if dias < 30 else '🟢'} {row['Projeto'][:35]}",
+                        key=f"proj_mapa_{idx}",
+                        use_container_width=True
+                    ):
+                        st.session_state.projeto_chat_mapa = row.to_dict()
+                        st.session_state.chat_mapa_history = []
+    
+                if st.session_state.projeto_chat_mapa:
+                    proj = st.session_state.projeto_chat_mapa
+                    dias_p = (pd.Timestamp(proj["Prazo"]) - pd.Timestamp.now()).days
+                    cor_p = "#C92A2A" if dias_p < 7 else "#7C3AED" if dias_p < 30 else "#2F9E44"
+    
                     st.markdown(f"""
-                    <div style="background:#6B21A8;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;text-align:center;">
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;opacity:0.8;">PROJETOS</div>
-                      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;">{len(df_estado)}</div>
-                      <div style="font-size:11px;opacity:0.9;">{titulo_estado}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    st.markdown("""
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#9588AA;margin-bottom:8px;">
-                    PROJETOS NO ESTADO
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    for idx, row in df_estado.sort_values("Prazo").iterrows():
-                        dias = (row["Prazo"] - pd.Timestamp.now()).days
-                        cor = "#C92A2A" if dias < 7 else "#7C3AED" if dias < 30 else "#2F9E44"
-                        if st.button(
-                            f"{'🔴' if dias < 7 else '🟡' if dias < 30 else '🟢'} {row['Projeto'][:35]}",
-                            key=f"proj_mapa_{idx}",
-                            use_container_width=True
-                        ):
-                            st.session_state.projeto_chat_mapa = row.to_dict()
-                            st.session_state.chat_mapa_history = []
-
-                    if st.session_state.projeto_chat_mapa:
-                        proj = st.session_state.projeto_chat_mapa
-                        dias_p = (pd.Timestamp(proj["Prazo"]) - pd.Timestamp.now()).days
-                        cor_p = "#C92A2A" if dias_p < 7 else "#7C3AED" if dias_p < 30 else "#2F9E44"
-
-                        st.markdown(f"""
-                        <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-left:4px solid {cor_p};
-                            border-radius:12px;padding:14px;margin-top:12px;">
-                          <div style="font-weight:700;color:#1A1225;font-size:13px;margin-bottom:8px;">{proj.get('Projeto','')}</div>
-                          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-                            <div style="background:#F6F5FA;border-radius:6px;padding:6px 8px;">
-                              <div style="font-size:8px;color:#9588AA;">STATUS</div>
-                              <div style="font-size:11px;color:#6B21A8;font-weight:600;">{proj.get('Status','')}</div>
-                            </div>
-                            <div style="background:{cor_p}11;border-radius:6px;padding:6px 8px;">
-                              <div style="font-size:8px;color:#9588AA;">PRAZO</div>
-                              <div style="font-size:11px;color:{cor_p};font-weight:700;">{pd.Timestamp(proj['Prazo']).strftime('%d/%m/%Y')} ({dias_p}d)</div>
-                            </div>
-                          </div>
-                          <div style="font-size:11px;color:#5B4E72;line-height:1.5;">
-                            🎯 {proj.get('Foco','')}<br>
-                            📋 {proj.get('Escopo','') or '—'}
+                    <div style="background:#FFFFFF;border:1px solid #DDD8F0;border-left:4px solid {cor_p};
+                        border-radius:12px;padding:14px;margin-top:12px;">
+                      <div style="font-weight:700;color:#1A1225;font-size:13px;margin-bottom:8px;">{proj.get('Projeto','')}</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                        <div style="background:#F6F5FA;border-radius:6px;padding:6px 8px;">
+                          <div style="font-size:8px;color:#9588AA;">STATUS</div>
+                          <div style="font-size:11px;color:#6B21A8;font-weight:600;">{proj.get('Status','')}</div>
+                        </div>
+                        <div style="background:{cor_p}11;border-radius:6px;padding:6px 8px;">
+                          <div style="font-size:8px;color:#9588AA;">PRAZO</div>
+                          <div style="font-size:11px;color:{cor_p};font-weight:700;">{pd.Timestamp(proj['Prazo']).strftime('%d/%m/%Y')} ({dias_p}d)</div>
+                        </div>
+                      </div>
+                      <div style="font-size:11px;color:#5B4E72;line-height:1.5;">
+                                🎯 {proj.get('Foco','')}<br>
+                                📋 {proj.get('Escopo','') or '—'}
                           </div>
                         </div>
                         """, unsafe_allow_html=True)
