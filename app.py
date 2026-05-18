@@ -2171,7 +2171,7 @@ render();
 # ─────────────────────────────────────────────
 with tab8:
 
-    col_sync, col_space = st.columns([1, 4])
+    col_sync, _ = st.columns([1, 5])
     with col_sync:
         if st.button("🔄 Sincronizar", key="sync_visao", use_container_width=True):
             st.cache_data.clear()
@@ -2184,7 +2184,6 @@ with tab8:
         df_visao = pd.DataFrame()
 
     import unicodedata
-
     def rm_acc(s):
         return "".join(c for c in unicodedata.normalize("NFD", str(s))
                        if unicodedata.category(c) != "Mn").strip().lower()
@@ -2193,26 +2192,25 @@ with tab8:
     ORDEM_NORM = {rm_acc(o): o for o in ORDEM}
 
     CARD_CONFIG = {
-        "Missão":       {"icon": "🎯", "cor": "#6B21A8", "grad": "135deg,#6B21A8,#4C1D95", "bg": "#F5F0FF", "tag_bg": "#EDE9FE", "tag_cor": "#6B21A8"},
-        "Visão":        {"icon": "🔭", "cor": "#0C8599", "grad": "135deg,#0C8599,#0A6B7A", "bg": "#E0F7FA", "tag_bg": "#B2EBF2", "tag_cor": "#006064"},
-        "Valores":      {"icon": "💎", "cor": "#2F9E44", "grad": "135deg,#2F9E44,#1B5E20", "bg": "#F1F8E9", "tag_bg": "#DCEDC8", "tag_cor": "#2F9E44"},
-        "Meta Semanal": {"icon": "⚡", "cor": "#C92A2A", "grad": "135deg,#C92A2A,#7F0000", "bg": "#FFF8E1", "tag_bg": "#FFECB3", "tag_cor": "#E65100"},
-        "Meta Mensal":  {"icon": "🚀", "cor": "#7C3AED", "grad": "135deg,#7C3AED,#4C1D95", "bg": "#EDE9FE", "tag_bg": "#DDD6FE", "tag_cor": "#5B21B6"},
+        "Missão":       {"icon":"🎯","cor":"#6B21A8","light":"#F3EEFF","mid":"#C4B5FD","dark":"#4C1D95"},
+        "Visão":        {"icon":"🔭","cor":"#0891B2","light":"#E0F7FA","mid":"#67E8F9","dark":"#0C4A6E"},
+        "Valores":      {"icon":"💎","cor":"#16A34A","light":"#F0FDF4","mid":"#86EFAC","dark":"#14532D"},
+        "Meta Semanal": {"icon":"⚡","cor":"#DC2626","light":"#FFF7ED","mid":"#FCA5A5","dark":"#7F1D1D"},
+        "Meta Mensal":  {"icon":"🚀","cor":"#7C3AED","light":"#EDE9FE","mid":"#C4B5FD","dark":"#3B0764"},
     }
-    DEFAULT_CFG = {"icon": "📌", "cor": "#6B21A8", "grad": "135deg,#6B21A8,#4C1D95", "bg": "#F6F5FA", "tag_bg": "#EFECF8", "tag_cor": "#6B21A8"}
+    DEF = {"icon":"📌","cor":"#6B21A8","light":"#F6F5FA","mid":"#DDD8F0","dark":"#2D1B69"}
 
     if df_visao.empty:
         df_visao = pd.DataFrame([
-            {"Categoria": "Missão",       "Titulo": "Nossa Missão",         "Descricao": "Transformar a gestão de projetos com tecnologia e dados, entregando resultados excepcionais para cada cliente.", "Data": "", "Responsavel": "Gabriel", "Status": "Ativo"},
-            {"Categoria": "Visão",        "Titulo": "Onde queremos chegar", "Descricao": "Ser referência nacional em gestão de projetos de engenharia e tecnologia até 2026.", "Data": "", "Responsavel": "Gabriel", "Status": "Ativo"},
-            {"Categoria": "Valores",      "Titulo": "Excelência",           "Descricao": "Entregamos além do esperado em cada projeto.", "Data": "", "Responsavel": "Time", "Status": "Ativo"},
-            {"Categoria": "Valores",      "Titulo": "Transparência",        "Descricao": "Comunicação clara e honesta com todos os stakeholders.", "Data": "", "Responsavel": "Time", "Status": "Ativo"},
-            {"Categoria": "Valores",      "Titulo": "Inovação",             "Descricao": "Buscamos sempre soluções criativas e tecnológicas.", "Data": "", "Responsavel": "Time", "Status": "Ativo"},
-            {"Categoria": "Meta Semanal", "Titulo": "Fechar 2 propostas",   "Descricao": "Enviar e fechar pelo menos 2 novas propostas comerciais esta semana.", "Data": "31/05/2025", "Responsavel": "Gabriel", "Status": "Em andamento"},
-            {"Categoria": "Meta Mensal",  "Titulo": "10 novos projetos",    "Descricao": "Alcançar 10 novos contratos assinados no mês.", "Data": "31/05/2025", "Responsavel": "Gabriel", "Status": "Em andamento"},
+            {"Categoria":"Missão",      "Titulo":"Nossa Missão",        "Descricao":"Transformar a gestão de projetos com tecnologia e dados, entregando resultados excepcionais.","Data":"","Responsavel":"Gabriel","Status":"Ativo"},
+            {"Categoria":"Visão",       "Titulo":"Onde queremos chegar","Descricao":"Ser referência nacional em gestão de projetos de engenharia até 2026.","Data":"","Responsavel":"Gabriel","Status":"Ativo"},
+            {"Categoria":"Valores",     "Titulo":"Excelência",          "Descricao":"Entregamos além do esperado em cada projeto.","Data":"","Responsavel":"Time","Status":"Ativo"},
+            {"Categoria":"Valores",     "Titulo":"Transparência",       "Descricao":"Comunicação clara e honesta com todos os stakeholders.","Data":"","Responsavel":"Time","Status":"Ativo"},
+            {"Categoria":"Valores",     "Titulo":"Inovação",            "Descricao":"Buscamos sempre soluções criativas e tecnológicas.","Data":"","Responsavel":"Time","Status":"Ativo"},
+            {"Categoria":"Meta Semanal","Titulo":"Fechar 2 propostas",  "Descricao":"Enviar e fechar pelo menos 2 novas propostas comerciais esta semana.","Data":"31/05/2025","Responsavel":"Gabriel","Status":"Em andamento"},
+            {"Categoria":"Meta Mensal", "Titulo":"10 novos projetos",   "Descricao":"Alcançar 10 novos contratos assinados no mês.","Data":"31/05/2025","Responsavel":"Gabriel","Status":"Em andamento"},
         ])
     else:
-        # Normaliza colunas
         cat_col = next((c for c in df_visao.columns if rm_acc(c) == "categoria"), None)
         if cat_col:
             df_visao["Categoria"] = df_visao[cat_col].astype(str).str.strip().apply(
@@ -2222,141 +2220,150 @@ with tab8:
             found = next((c for c in df_visao.columns if rm_acc(c) == alias), None)
             if found and canon not in df_visao.columns:
                 df_visao[canon] = df_visao[found]
-        df_visao = df_visao[df_visao.get("Categoria", pd.Series()).astype(str).str.lower() != "nan"]
+        df_visao = df_visao[df_visao.get("Categoria", pd.Series("")).astype(str).str.lower() != "nan"]
 
-    # ── Header estilo ──
-    st.markdown("""
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;
-        padding:20px 24px;background:#fff;border:1px solid #DDD8F0;
-        border-radius:16px;box-shadow:0 2px 8px rgba(107,33,168,.07);">
-      <div style="width:48px;height:48px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
-          border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;">
-        🎯
-      </div>
-      <div>
-        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#6B21A8;">
-          Visão GS</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
-            letter-spacing:3px;color:#9588AA;">QUADRO ESTRATÉGICO · GS CONSULTING</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ── Renderiza cada categoria ──
-    categorias_presentes = [c for c in ORDEM if c in df_visao.get("Categoria", pd.Series()).values]
+    categorias = [c for c in ORDEM if c in df_visao.get("Categoria", pd.Series()).values]
     for c in df_visao.get("Categoria", pd.Series()).unique():
-        if c not in categorias_presentes and str(c).strip() and str(c) != "nan":
-            categorias_presentes.append(str(c))
+        if c not in categorias and str(c).strip() and str(c) != "nan":
+            categorias.append(str(c))
 
-    for cat in categorias_presentes:
-        cfg = CARD_CONFIG.get(cat, DEFAULT_CFG)
+    def gcol(r, *names):
+        for n in names:
+            v = r.get(n, "")
+            if pd.notna(v) and str(v).strip() not in ["", "nan"]:
+                return str(v).strip()
+        return ""
+
+    # Monta HTML do quadro inteiro como um único components.html
+    STATUS_CORES = {
+        "Ativo":"#16A34A","Concluido":"#16A34A","Concluído":"#16A34A",
+        "Em andamento":"#7C3AED","Em Andamento":"#7C3AED",
+        "Pausado":"#DC2626","Pendente":"#D97706"
+    }
+
+    cols_html = ""
+    for cat in categorias:
+        cfg = CARD_CONFIG.get(cat, DEF)
         cards_cat = df_visao[df_visao["Categoria"] == cat]
 
-        # Título da seção
-        st.markdown(f"""
-        <div style="display:flex;align-items:center;gap:10px;margin:20px 0 12px;">
-          <div style="width:36px;height:36px;
-              background:linear-gradient({cfg["grad"]});
-              border-radius:10px;display:flex;align-items:center;
-              justify-content:center;font-size:18px;
-              box-shadow:0 4px 12px rgba(0,0,0,.15);">
-            {cfg["icon"]}
+        cards_html = ""
+        for _, row in cards_cat.iterrows():
+            titulo    = gcol(row, "Titulo", "Título") or "—"
+            descricao = gcol(row, "Descricao", "Descrição")
+            data      = gcol(row, "Data")
+            resp      = gcol(row, "Responsavel", "Responsável")
+            status    = gcol(row, "Status")
+            scor      = STATUS_CORES.get(status, "#9588AA")
+
+            status_badge = f'<span class="badge" style="background:{scor}18;color:{scor};border:1px solid {scor}44;">{status}</span>' if status else ""
+            footer_parts = []
+            if data:  footer_parts.append(f'<span class="meta">📅 {data}</span>')
+            if resp:  footer_parts.append(f'<span class="meta">👤 {resp}</span>')
+            footer = f'<div class="card-footer">{" ".join(footer_parts)}</div>' if footer_parts else ""
+
+            cards_html += f"""
+            <div class="card" style="border-left:4px solid {cfg["cor"]};">
+              <div class="card-top">
+                <div class="card-title">{titulo}</div>
+                {status_badge}
+              </div>
+              {f'<div class="card-desc">{descricao}</div>' if descricao else ""}
+              {footer}
+            </div>"""
+
+        cols_html += f"""
+        <div class="col">
+          <div class="col-header" style="background:linear-gradient(135deg,{cfg["cor"]},{cfg["dark"]});">
+            <span class="col-icon">{cfg["icon"]}</span>
+            <div>
+              <div class="col-title">{cat}</div>
+              <div class="col-count">{len(cards_cat)} item(ns)</div>
+            </div>
           </div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;
-              font-weight:800;color:{cfg["cor"]};">{cat}</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
-              letter-spacing:2px;color:#9588AA;margin-left:4px;">
-            {len(cards_cat)} item(ns)</div>
-          <div style="flex:1;height:1px;background:linear-gradient(90deg,{cfg["cor"]}44,transparent);
-              margin-left:8px;"></div>
-        </div>
-        """, unsafe_allow_html=True)
+          <div class="col-body" style="background:{cfg["light"]};border:1px solid {cfg["mid"]};border-top:none;">
+            {cards_html if cards_html else '<div class="empty">Sem itens</div>'}
+          </div>
+        </div>"""
 
-        # Cards em linha horizontal — até 3 por linha
-        n_cards = len(cards_cat)
-        n_cols = min(3, n_cards) if n_cards > 0 else 1
-        card_rows = [list(cards_cat.iterrows())[i:i+n_cols]
-                     for i in range(0, n_cards, n_cols)]
+    import json as _json
+    board_html = f"""<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+*{{margin:0;padding:0;box-sizing:border-box;}}
+body{{background:#F6F5FA;font-family:'Inter',sans-serif;padding:16px;}}
 
-        for card_row in card_rows:
-            cols = st.columns(n_cols)
-            for ci, (_, row) in enumerate(card_row):
+.board{{
+  display:flex;gap:14px;
+  overflow-x:auto;
+  padding-bottom:12px;
+  align-items:flex-start;
+}}
+.board::-webkit-scrollbar{{height:5px;}}
+.board::-webkit-scrollbar-track{{background:#E8E4F4;border-radius:4px;}}
+.board::-webkit-scrollbar-thumb{{background:#C4B5FD;border-radius:4px;}}
 
-                def gcol(r, *names):
-                    for n in names:
-                        if n in r.index and pd.notna(r.get(n)) and str(r.get(n,"")).strip() not in ["", "nan"]:
-                            return str(r[n]).strip()
-                    return ""
+.col{{
+  flex:0 0 230px;
+  min-width:230px;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,.1);
+}}
 
-                titulo    = gcol(row, "Titulo", "Título") or "—"
-                descricao = gcol(row, "Descricao", "Descrição")
-                data      = gcol(row, "Data")
-                resp      = gcol(row, "Responsavel", "Responsável")
-                status    = gcol(row, "Status")
+.col-header{{
+  padding:14px 16px;
+  display:flex;align-items:center;gap:10px;
+  border-radius:16px 16px 0 0;
+}}
+.col-icon{{font-size:22px;}}
+.col-title{{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;line-height:1.1;}}
+.col-count{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.65);margin-top:2px;}}
 
-                STATUS_CORES = {
-                    "Ativo": "#2F9E44", "Concluido": "#2F9E44", "Concluído": "#2F9E44",
-                    "Em andamento": "#7C3AED", "Em Andamento": "#7C3AED",
-                    "Pausado": "#C92A2A", "Pendente": "#F59E0B"
-                }
-                scor = STATUS_CORES.get(status, "#9588AA")
+.col-body{{
+  padding:10px;
+  border-radius:0 0 16px 16px;
+  min-height:80px;
+  display:flex;flex-direction:column;gap:8px;
+}}
 
-                with cols[ci]:
-                    # Monta HTML limpo sem f-string aninhado
-                    status_span = ""
-                    if status:
-                        status_span = (
-                            f'<span style="background:{scor}18;color:{scor};' +
-                            f'border:1px solid {scor}44;padding:3px 10px;' +
-                            f'border-radius:20px;font-size:10px;font-family:monospace;' +
-                            f'font-weight:600;">{status}</span>'
-                        )
+/* CARD estilo sticky note */
+.card{{
+  background:#fff;
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06);
+  cursor:default;
+  transition:transform .18s, box-shadow .18s;
+  position:relative;
+}}
+.card:hover{{
+  transform:translateY(-3px) rotate(.3deg);
+  box-shadow:0 8px 24px rgba(0,0,0,.14);
+}}
+/* Dobra no canto superior direito estilo post-it */
+.card::after{{
+  content:'';
+  position:absolute;top:0;right:0;
+  width:0;height:0;
+  border-style:solid;
+  border-width:0 16px 16px 0;
+  border-color:transparent #F6F5FA transparent transparent;
+}}
 
-                    desc_div = ""
-                    if descricao:
-                        desc_div = (
-                            f'<div style="font-size:13px;color:#5B4E72;' +
-                            f'line-height:1.65;margin:10px 0 14px;">{descricao}</div>'
-                        )
+.card-top{{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}}
+.card-title{{font-weight:700;font-size:13px;color:#1A1225;line-height:1.35;flex:1;}}
+.badge{{padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0;}}
+.card-desc{{font-size:12px;color:#5B4E72;line-height:1.6;margin-bottom:10px;}}
+.card-footer{{display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #F0EDF8;padding-top:8px;margin-top:4px;}}
+.meta{{font-size:10px;color:#9588AA;}}
+.empty{{font-size:12px;color:#9588AA;font-style:italic;text-align:center;padding:16px 0;}}
+</style>
+</head><body>
+<div class="board">
+  {cols_html}
+</div>
+</body></html>"""
 
-                    meta_parts = []
-                    if data:
-                        meta_parts.append(
-                            f'<span style="font-size:11px;color:#9588AA;' +
-                            f'display:flex;align-items:center;gap:4px;">📅 {data}</span>'
-                        )
-                    if resp:
-                        meta_parts.append(
-                            f'<span style="font-size:11px;color:#9588AA;' +
-                            f'display:flex;align-items:center;gap:4px;">👤 {resp}</span>'
-                        )
-                    meta_html = "".join(meta_parts)
-
-                    st.markdown(f"""
-                    <div style="
-                        background:#fff;
-                        border:1px solid {cfg["border"] if "border" in cfg else cfg["cor"]+"33"};
-                        border-top:4px solid {cfg["cor"]};
-                        border-radius:14px;
-                        padding:18px;
-                        height:100%;
-                        box-shadow:0 4px 16px rgba(0,0,0,.06);
-                        transition:transform .2s,box-shadow .2s;
-                        margin-bottom:12px;
-                    ">
-                      <div style="display:flex;justify-content:space-between;
-                          align-items:flex-start;margin-bottom:6px;">
-                        <div style="font-family:'Syne',sans-serif;
-                            font-size:15px;font-weight:800;
-                            color:#1A1225;line-height:1.3;flex:1;">
-                          {titulo}
-                        </div>
-                        {status_span}
-                      </div>
-                      {desc_div}
-                      <div style="display:flex;flex-wrap:wrap;gap:10px;
-                          border-top:1px solid #F0EDF8;padding-top:10px;">
-                        {meta_html}
-                      </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+    components.html(board_html, height=620, scrolling=False)
