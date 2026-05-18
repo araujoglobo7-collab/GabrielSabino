@@ -2245,22 +2245,26 @@ with tab8:
                                   "Em andamento": "#7C3AED", "Em Andamento": "#7C3AED",
                                   "Pausado": "#C92A2A", "Pendente": "#F59E0B"}.get(status, "#9588AA")
 
+                    status_html = f'<span style="background:{status_cor}18;color:{status_cor};border:1px solid {status_cor}44;padding:2px 8px;border-radius:20px;font-size:9px;font-family:monospace;letter-spacing:.5px;flex-shrink:0;margin-left:8px;">{status}</span>' if status and status != 'nan' else ''
+                    desc_html   = f'<div style="font-size:13px;color:#5B4E72;line-height:1.6;margin-bottom:10px;">{descricao}</div>' if descricao and descricao != 'nan' else ''
+                    data_html   = f'<span style="font-size:10px;color:#9588AA;">📅 {data}</span>' if data else ''
+                    resp_html   = f'<span style="font-size:10px;color:#9588AA;">👤 {resp}</span>' if resp and resp != 'nan' else ''
+
                     st.markdown(f"""
                     <div style="background:#fff;border:1px solid {cfg['border']};
                         border-left:4px solid {cfg['cor']};
                         border-radius:10px;padding:14px;margin-bottom:10px;
-                        box-shadow:0 2px 8px rgba(0,0,0,.06);
-                        transition:all .2s;">
+                        box-shadow:0 2px 8px rgba(0,0,0,.06);">
                       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
                         <div style="font-weight:700;font-size:14px;color:#1A1225;line-height:1.3;flex:1;">
                           {titulo}
                         </div>
-                        {f'<span style="background:{status_cor}18;color:{status_cor};border:1px solid {status_cor}44;padding:2px 8px;border-radius:20px;font-size:9px;font-family:monospace;letter-spacing:.5px;flex-shrink:0;margin-left:8px;">{status}</span>' if status and status != 'nan' else ''}
+                        {status_html}
                       </div>
-                      {f'<div style="font-size:13px;color:#5B4E72;line-height:1.6;margin-bottom:10px;">{descricao}</div>' if descricao and descricao != 'nan' else ''}
+                      {desc_html}
                       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        {f'<span style="font-size:10px;color:#9588AA;">📅 {data}</span>' if data else ''}
-                        {f'<span style="font-size:10px;color:#9588AA;">👤 {resp}</span>' if resp and resp != 'nan' else ''}
+                        {data_html}
+                        {resp_html}
                       </div>
                     </div>
                     """, unsafe_allow_html=True)
