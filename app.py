@@ -870,7 +870,6 @@ df = st.session_state.df_projetos
 
 @st.cache_data(ttl=300)
 def carregar_visao_gs():
-    """Carrega a aba Visão GS da planilha (gid=1049091112)"""
     try:
         import requests
         from io import StringIO
@@ -878,11 +877,10 @@ def carregar_visao_gs():
         csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1049091112"
         r = requests.get(csv_url, allow_redirects=True, timeout=15)
         r.raise_for_status()
+        # Lê direto como UTF-8 — não aplica fix de latin1
         df_v = pd.read_csv(StringIO(r.text), encoding='utf-8')
-        # Fix encoding
-        for col in df_v.columns:
-            if df_v[col].dtype == object:
-                df_v[col] = df_v[col].apply(lambda x: x.encode('latin1').decode('utf-8') if isinstance(x, str) else x)
+        # Normaliza nomes das colunas — remove acentos para comparação interna
+        df_v.columns = [c.strip() for c in df_v.columns]
         return df_v
     except Exception as e:
         return pd.DataFrame({"_erro": [str(e)]})
@@ -2201,17 +2199,38 @@ with tab8:
             {"Categoria": "Meta Mensal",  "Título": "10 novos projetos",    "Descrição": "Alcançar 10 novos contratos assinados no mês de maio.", "Data": "31/05/2025", "Responsável": "Gabriel", "Status": "Em andamento"},
         ])
     else:
-        # Garante colunas mínimas
-        for col in ["Categoria", "Título", "Descrição", "Data", "Responsável", "Status"]:
-            if col not in df_visao.columns:
-                df_visao[col] = ""
+        # Normaliza coluna Categoria — aceita com/sem acento
+        cat_col = next((c for c in df_visao.columns if c.lower().strip() in ["categoria"]), None)
+        if cat_col and cat_col != "Categoria":
+            df_visao["Categoria"] = df_visao[cat_col]
+        if "Categoria" not in df_visao.columns:
+            df_visao["Categoria"] = ""
+        df_visao["Categoria"] = df_visao["Categoria"].astype(str).str.strip()
 
     # ── Renderiza quadro por categoria ──
     ORDEM = ["Missão", "Visão", "Valores", "Meta Semanal", "Meta Mensal"]
+    # Compara sem acento para ser robusto
+    import unicodedata
+    def rm_accent(s):
+        return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn').lower()
+
+    categorias_raw = df_visao["Categoria"].unique()
+    # Mapeia cada categoria da planilha para o nome canônico
+    cat_map = {}
+    for cr in categorias_raw:
+        for ordem in ORDEM:
+            if rm_accent(str(cr)) == rm_accent(ordem):
+                cat_map[cr] = ordem
+                break
+        else:
+            if str(cr).strip() and str(cr) != "nan":
+                cat_map[cr] = str(cr).strip()
+
+    df_visao["Categoria"] = df_visao["Categoria"].map(lambda x: cat_map.get(x, x))
+
     categorias_presentes = [c for c in ORDEM if c in df_visao["Categoria"].values]
-    # Adiciona categorias da planilha que não estão na ordem padrão
     for c in df_visao["Categoria"].unique():
-        if c not in categorias_presentes and str(c).strip():
+        if c not in categorias_presentes and str(c).strip() and str(c) != "nan":
             categorias_presentes.append(str(c))
 
     # Layout: até 3 colunas por linha
@@ -2245,11 +2264,18 @@ with tab8:
 
                 # Cards dentro da coluna
                 for _, row in cards_cat.iterrows():
-                    titulo    = str(row.get("Título", "")) or str(row.get("Titulo", "")) or "—"
-                    descricao = str(row.get("Descrição", "")) or str(row.get("Descricao", "")) or ""
-                    data      = str(row.get("Data", "")) if pd.notna(row.get("Data")) and str(row.get("Data", "")) not in ["", "nan"] else ""
-                    resp      = str(row.get("Responsável", "")) or str(row.get("Responsavel", "")) or ""
-                    status    = str(row.get("Status", "")) if pd.notna(row.get("Status")) else ""
+                    # Lê colunas aceitando variações com/sem acento
+                    def gcol(r, *names):
+                        for n in names:
+                            if n in r.index and pd.notna(r[n]) and str(r[n]).strip() not in ["", "nan"]:
+                                return str(r[n]).strip()
+                        return ""
+
+                    titulo    = gcol(row, "Título", "Titulo", "título", "titulo") or "—"
+                    descricao = gcol(row, "Descrição", "Descricao", "descrição", "descricao")
+                    data      = gcol(row, "Data", "data")
+                    resp      = gcol(row, "Responsável", "Responsavel", "responsável", "responsavel")
+                    status    = gcol(row, "Status", "status")
 
                     status_cor = {"Ativo": "#2F9E44", "Concluido": "#2F9E44", "Concluído": "#2F9E44",
                                   "Em andamento": "#7C3AED", "Em Andamento": "#7C3AED",
