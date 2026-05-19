@@ -2255,7 +2255,7 @@ with tab8:
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box;}}
-body{background:linear-gradient(135deg,#1A0A2E,#0D0618);font-family:'Inter',sans-serif;padding:16px;margin:0;min-height:100vh;}
+body{{background:linear-gradient(135deg,#1A0A2E,#0D0618);font-family:'Inter',sans-serif;padding:16px;margin:0;min-height:100vh;}}
 
 /* ── BOARD ── */
 .board{{
