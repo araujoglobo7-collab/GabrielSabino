@@ -2213,9 +2213,7 @@ with tab8:
         df_visao = df_visao[df_visao.get("Categoria", pd.Series("")).astype(str).str.lower() != "nan"]
 
     categorias = [c for c in ORDEM if c in df_visao.get("Categoria", pd.Series()).values]
-    for c in df_visao.get("Categoria", pd.Series()).unique():
-        if c not in categorias and str(c).strip() and str(c) != "nan":
-            categorias.append(str(c))
+    # NÃO adiciona categorias fora da ordem — ignora Missão, Visão, Valores etc
 
     def gcol(r, *names):
         for n in names:
@@ -2257,7 +2255,7 @@ with tab8:
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box;}}
-body{{background:linear-gradient(135deg,#1A0A2E,#0D0618,#1A0A2E);font-family:'Inter',sans-serif;padding:16px;min-height:100vh;}}
+body{background:linear-gradient(135deg,#1A0A2E,#0D0618);font-family:'Inter',sans-serif;padding:16px;margin:0;min-height:100vh;}
 
 /* ── BOARD ── */
 .board{{
@@ -2473,4 +2471,19 @@ render();
 </script>
 </body></html>"""
 
-    components.html(BOARD_HTML, height=700, scrolling=False)
+    # Se não tem nenhuma categoria OKR na planilha, avisa para atualizar
+    if not categorias:
+        st.warning("""
+        ⚠️ A planilha ainda tem as categorias antigas (Missão, Visão, Valores).
+        **Atualize a coluna Categoria** para usar: `Objetivos`, `Em Andamento`, `Feito` ou `Bloqueios`
+        """)
+        # Mostra exemplo
+        df_visao = pd.DataFrame([
+            {"Categoria":"Objetivos",   "Titulo":"Bater R$20k MRR",      "Descricao":"Fechar contratos fixos com 5 clientes.","Data":"30/06/2025","Responsavel":"Gabriel","Status":"Em andamento","Progresso":60},
+            {"Categoria":"Em Andamento","Titulo":"Rodar BI MLOG",         "Descricao":"Sistema de indicadores em produção.","Data":"15/06/2025","Responsavel":"Gabriel","Status":"Em andamento","Progresso":80},
+            {"Categoria":"Feito",       "Titulo":"Onboarding AutoTruck",  "Descricao":"Cliente integrado com sucesso.","Data":"01/05/2025","Responsavel":"Gabriel","Status":"Concluído","Progresso":100},
+            {"Categoria":"Bloqueios",   "Titulo":"Aprovação contrato L3", "Descricao":"Aguardando assinatura do cliente.","Data":"10/06/2025","Responsavel":"Gabriel","Status":"Pausado","Progresso":0},
+        ])
+        categorias = [c for c in ORDEM if c in df_visao["Categoria"].values]
+
+    components.html(BOARD_HTML, height=800, scrolling=False)
