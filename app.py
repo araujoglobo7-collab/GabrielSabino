@@ -2156,7 +2156,7 @@ with tab8:
 
     col_sync, _ = st.columns([1, 5])
     with col_sync:
-        if st.button("🔄 Sincronizar", key="sync_visao", use_container_width=True):
+        if st.button("🔄 Sincronizar", key="sync_visao_old", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
 
