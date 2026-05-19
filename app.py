@@ -2289,9 +2289,16 @@ body{{background:linear-gradient(135deg,#F0EBF8,#E8E0F5,#F5F0FF);font-family:'In
 .col-body{{
   padding:10px;
   min-height:100px;
+  max-height:600px;
+  overflow-y:auto;
   display:flex;flex-direction:column;gap:8px;
   transition:background .2s;
+  scrollbar-width:thin;
+  scrollbar-color:#C4B5FD transparent;
 }}
+.col-body::-webkit-scrollbar{{width:4px;}}
+.col-body::-webkit-scrollbar-track{{background:transparent;}}
+.col-body::-webkit-scrollbar-thumb{{background:#C4B5FD;border-radius:4px;}}
 .col-body.drag-over{{background:rgba(107,33,168,.08);}}
 
 /* ── CARD ── */
