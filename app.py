@@ -1,4 +1,4 @@
-import streamlit as st
+   import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import json
@@ -2494,3 +2494,227 @@ render();
         categorias = [c for c in ORDEM if c in df_visao["Categoria"].values]
 
     components.html(BOARD_HTML, height=800, scrolling=False)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;
+        color:#6B21A8;margin-bottom:16px;">⬡ CHAT VISÃO GS — JARVIS ESTRATÉGICO</div>
+    """, unsafe_allow_html=True)
+
+    # ── Inicializa histórico do chat visão ──
+    if "chat_visao_history" not in st.session_state:
+        st.session_state.chat_visao_history = []
+
+    col_chat_v, col_sugest_v = st.columns([2.5, 1])
+
+    SUGESTOES_VISAO = [
+        ("⚡", "Quais objetivos devo correr primeiro?"),
+        ("⚠️", "Quais bloqueios estão travando mais?"),
+        ("🎯", "O que vence essa semana?"),
+        ("📊", "Como está o andamento geral?"),
+        ("🚀", "Onde focar energia hoje?"),
+        ("✅", "O que já foi concluído?"),
+    ]
+
+    pergunta_visao = None
+
+    with col_sugest_v:
+        st.markdown("""
+        <div style="background:#fff;border:1px solid #DDD8F0;border-radius:16px;padding:16px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;
+              padding-bottom:10px;border-bottom:1px solid #EDE9FE;">
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+                border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;">
+              🎯</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;color:#1A1225;">JARVIS Visão</div>
+              <div style="font-size:10px;color:#6B21A8;font-family:'JetBrains Mono',monospace;">● ESTRATÉGICO</div>
+            </div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;
+              color:#9588AA;margin-bottom:10px;">PERGUNTAS PRONTAS</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        for emoji, s in SUGESTOES_VISAO:
+            if st.button(f"{emoji} {s}", key=f"sv_{s[:12]}", use_container_width=True):
+                pergunta_visao = s
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🗑️ Limpar chat", use_container_width=True, key="limpar_chat_visao"):
+            st.session_state.chat_visao_history = []
+            st.rerun()
+
+    with col_chat_v:
+        # Header
+        st.markdown("""
+        <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
+            padding:18px 22px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+          <div style="font-size:32px;">🎯</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">
+              Chat Visão GS</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.7);">
+              JARVIS analisando seus objetivos e metas</div>
+          </div>
+          <div style="margin-left:auto;background:rgba(255,255,255,.15);
+              border-radius:20px;padding:4px 12px;">
+            <span style="font-size:10px;color:#fff;font-family:'JetBrains Mono',monospace;">● ATIVO</span>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Mensagem inicial
+        if not st.session_state.chat_visao_history:
+            st.markdown("""
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+              <div style="width:40px;height:40px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+                  border-radius:50%;display:flex;align-items:center;justify-content:center;
+                  font-size:20px;flex-shrink:0;">🎯</div>
+              <div style="background:#fff;border:1px solid #DDD8F0;border-radius:4px 14px 14px 14px;
+                  padding:14px 18px;max-width:90%;box-shadow:0 2px 8px rgba(107,33,168,.07);">
+                <div style="font-weight:700;color:#6B21A8;margin-bottom:6px;">Visão GS carregada! 🚀</div>
+                <div style="font-size:13px;color:#1A1225;line-height:1.7;">
+                  Tenho acesso aos seus objetivos, metas, bloqueios e andamentos.<br>
+                  Use os botões ao lado ou me pergunte qualquer coisa sobre sua estratégia!
+                </div>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Histórico
+        for msg in st.session_state.chat_visao_history:
+            if msg["role"] == "user":
+                st.markdown(f"""
+                <div style="display:flex;justify-content:flex-end;margin:10px 0;gap:8px;">
+                  <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
+                      border-radius:14px 14px 4px 14px;padding:10px 16px;max-width:75%;
+                      font-size:13px;line-height:1.5;">
+                    {msg['content']}
+                  </div>
+                </div>""", unsafe_allow_html=True)
+            else:
+                content = msg['content'].replace(chr(10), '<br>')
+                st.markdown(f"""
+                <div style="display:flex;gap:10px;margin:10px 0;">
+                  <div style="width:36px;height:36px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+                      border-radius:50%;display:flex;align-items:center;justify-content:center;
+                      font-size:18px;flex-shrink:0;">🎯</div>
+                  <div style="background:#fff;border:1px solid #DDD8F0;border-radius:4px 14px 14px 14px;
+                      padding:14px 18px;max-width:85%;font-size:13px;line-height:1.7;color:#1A1225;
+                      box-shadow:0 2px 8px rgba(107,33,168,.07);">
+                    {content}
+                  </div>
+                </div>""", unsafe_allow_html=True)
+
+        # Input
+        col_inp, col_btn = st.columns([5, 1])
+        with col_inp:
+            user_visao = st.text_input("msg_v", value=pergunta_visao or "",
+                placeholder="Pergunte sobre seus objetivos...",
+                label_visibility="collapsed", key="chat_visao_input")
+        with col_btn:
+            enviar_v = st.button("Enviar", use_container_width=True, key="btn_enviar_visao")
+
+    # ── Processa resposta ──
+    if (enviar_v or pergunta_visao) and (user_visao or pergunta_visao):
+        query = user_visao or pergunta_visao
+        st.session_state.chat_visao_history.append({"role": "user", "content": query})
+        q = query.lower()
+        now_v = pd.Timestamp.now()
+
+        try:
+            df_v = carregar_visao_gs()
+            if "_erro" in df_v.columns or df_v.empty:
+                answer = "⚠️ Sem dados carregados. Sincronize a planilha primeiro!"
+            else:
+                # Normaliza
+                import unicodedata as _ud
+                def _rma(s):
+                    return "".join(c for c in _ud.normalize("NFD",str(s)) if _ud.category(c)!="Mn").strip().lower()
+                ORDEM_N = {_rma(o):o for o in ["Objetivos","Em Andamento","Feito","Bloqueios"]}
+                cat_col = next((c for c in df_v.columns if _rma(c)=="categoria"), None)
+                if cat_col:
+                    df_v["Categoria"] = df_v[cat_col].astype(str).str.strip().apply(lambda x: ORDEM_N.get(_rma(x),x))
+                for alias, canon in [("titulo","Titulo"),("descricao","Descricao"),
+                                     ("responsavel","Responsavel"),("data","Data"),
+                                     ("prazo","Prazo"),("status","Status"),("progresso","Progresso")]:
+                    found = next((c for c in df_v.columns if _rma(c)==alias), None)
+                    if found and canon not in df_v.columns:
+                        df_v[canon] = df_v[found]
+
+                def gcol_v(r, *ns):
+                    for n in ns:
+                        v = r.get(n,"")
+                        if pd.notna(v) and str(v).strip() not in ["","nan"]: return str(v).strip()
+                    return ""
+
+                obj  = df_v[df_v.get("Categoria",pd.Series())=="Objetivos"]
+                and_ = df_v[df_v.get("Categoria",pd.Series())=="Em Andamento"]
+                feito= df_v[df_v.get("Categoria",pd.Series())=="Feito"]
+                bloc = df_v[df_v.get("Categoria",pd.Series())=="Bloqueios"]
+                total= len(df_v)
+
+                if any(w in q for w in ["primeiro","prioridade","correr","focar","urgente"]):
+                    lines = ""
+                    for _, r in obj.iterrows():
+                        t = gcol_v(r,"Titulo"); d = gcol_v(r,"Data","Prazo"); resp = gcol_v(r,"Responsavel")
+                        lines += f"\n⚡ **{t}**" + (f" — até {d}" if d else "") + (f" ({resp})" if resp else "")
+                    answer = f"**⚡ Objetivos para correr primeiro:**\n{lines}\n\n💡 Foque nos que têm prazo mais próximo!"
+
+                elif any(w in q for w in ["bloqueio","travando","parado","impedimento"]):
+                    if bloc.empty:
+                        answer = "✅ Nenhum bloqueio registrado no momento!"
+                    else:
+                        lines = ""
+                        for _, r in bloc.iterrows():
+                            t = gcol_v(r,"Titulo"); d = gcol_v(r,"Descricao")
+                            lines += f"\n⚠️ **{t}**" + (f"\n   _{d[:80]}_" if d else "")
+                        answer = f"**⚠️ Bloqueios ativos:**\n{lines}\n\n🔧 Resolva esses primeiro para destravar o progresso!"
+
+                elif any(w in q for w in ["semana","vence","prazo","quando","data"]):
+                    lines = ""
+                    for _, r in df_v[df_v.get("Categoria",pd.Series())!="Feito"].iterrows():
+                        d = gcol_v(r,"Prazo","Data"); t = gcol_v(r,"Titulo")
+                        if d: lines += f"\n📅 **{t}** — {d}"
+                    answer = f"**📅 Prazos registrados:**\n{lines if lines else chr(10)+'Nenhum prazo cadastrado ainda.'}"
+
+                elif any(w in q for w in ["geral","andamento","situação","situacao","como","status"]):
+                    answer = f"""**📊 Situação Geral da Visão GS:**
+
+🎯 **Objetivos:** {len(obj)} item(ns)
+📊 **Em Andamento:** {len(and_)} item(ns)
+✅ **Feito:** {len(feito)} item(ns)
+⚠️ **Bloqueios:** {len(bloc)} item(ns)
+
+{"🔴 **Atenção!** Há "+str(len(bloc))+" bloqueio(s) ativos." if not bloc.empty else "🟢 Sem bloqueios registrados."}
+{"🟡 **"+str(len(obj))+" objetivo(s) aguardando execução.**" if not obj.empty else ""}"""
+
+                elif any(w in q for w in ["energia","hoje","agora","foco"]):
+                    top = and_.head(3)
+                    if top.empty: top = obj.head(3)
+                    lines = ""
+                    for _, r in top.iterrows():
+                        t = gcol_v(r,"Titulo"); resp = gcol_v(r,"Responsavel")
+                        lines += f"\n🔥 **{t}**" + (f" — {resp}" if resp else "")
+                    answer = f"**🚀 Foque sua energia hoje em:**\n{lines}"
+
+                elif any(w in q for w in ["concluído","concluido","feito","entregue","done"]):
+                    if feito.empty:
+                        answer = "Nenhum item concluído ainda — bora entregar! 💪"
+                    else:
+                        lines = "\n".join([f"✅ **{gcol_v(r,'Titulo')}**" for _,r in feito.iterrows()])
+                        answer = f"**✅ Já entregue:**\n{lines}\n\n🎉 Bom trabalho!"
+
+                else:
+                    answer = f"""**🎯 Visão GS — Resumo Rápido:**
+
+🎯 Objetivos: **{len(obj)}** | 📊 Em Andamento: **{len(and_)}** | ✅ Feito: **{len(feito)}** | ⚠️ Bloqueios: **{len(bloc)}**
+
+Use os botões ao lado para análises específicas!"""
+
+        except Exception as e:
+            answer = f"Erro: {str(e)}"
+
+        st.session_state.chat_visao_history.append({"role": "assistant", "content": answer})
+        st.rerun()
