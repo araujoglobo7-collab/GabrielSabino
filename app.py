@@ -2166,32 +2166,55 @@ with tab8:
         st.error(f"Erro: {df_visao['_erro'].iloc[0]}")
         df_visao = pd.DataFrame()
 
-    import unicodedata
+# ─────────────────────────────────────────────
+# TAB 8 — VISÃO GS
+# ─────────────────────────────────────────────
+with tab8:
+
+    col_sync, _ = st.columns([1, 5])
+    with col_sync:
+        if st.button("🔄 Sincronizar", key="sync_visao", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+
+    df_visao = carregar_visao_gs()
+
+    if "_erro" in df_visao.columns:
+        st.error(f"Erro: {df_visao['_erro'].iloc[0]}")
+        df_visao = pd.DataFrame()
+
+    import unicodedata, json as _jv
     def rm_acc(s):
         return "".join(c for c in unicodedata.normalize("NFD", str(s))
                        if unicodedata.category(c) != "Mn").strip().lower()
 
-    ORDEM = ["Missão", "Visão", "Valores", "Meta Semanal", "Meta Mensal"]
+    ORDEM = ["Objetivos", "Em Andamento", "Feito", "Bloqueios"]
     ORDEM_NORM = {rm_acc(o): o for o in ORDEM}
 
-    CARD_CONFIG = {
-        "Missão":       {"icon":"🎯","cor":"#6B21A8","light":"#F3EEFF","mid":"#C4B5FD","dark":"#4C1D95"},
-        "Visão":        {"icon":"🔭","cor":"#0891B2","light":"#E0F7FA","mid":"#67E8F9","dark":"#0C4A6E"},
-        "Valores":      {"icon":"💎","cor":"#16A34A","light":"#F0FDF4","mid":"#86EFAC","dark":"#14532D"},
-        "Meta Semanal": {"icon":"⚡","cor":"#DC2626","light":"#FFF7ED","mid":"#FCA5A5","dark":"#7F1D1D"},
-        "Meta Mensal":  {"icon":"🚀","cor":"#7C3AED","light":"#EDE9FE","mid":"#C4B5FD","dark":"#3B0764"},
+    COLS_CFG = {
+        "Objetivos":    {"icon":"🎯","cor":"#6B21A8","grad":"135deg,#6B21A8,#4C1D95","light":"#F5F0FF","mid":"#C4B5FD"},
+        "Em Andamento": {"icon":"📊","cor":"#0891B2","grad":"135deg,#0891B2,#0C4A6E","light":"#E0F9FF","mid":"#67E8F9"},
+        "Feito":        {"icon":"✅","cor":"#16A34A","grad":"135deg,#16A34A,#14532D","light":"#F0FDF4","mid":"#86EFAC"},
+        "Bloqueios":    {"icon":"⚠️","cor":"#DC2626","grad":"135deg,#DC2626,#7F1D1D","light":"#FFF7ED","mid":"#FCA5A5"},
     }
-    DEF = {"icon":"📌","cor":"#6B21A8","light":"#F6F5FA","mid":"#DDD8F0","dark":"#2D1B69"}
+    DEF_CFG = {"icon":"📌","cor":"#6B21A8","grad":"135deg,#6B21A8,#4C1D95","light":"#F6F5FA","mid":"#DDD8F0"}
+
+    STATUS_CORES_V = {
+        "Em andamento":"#7C3AED","Em Andamento":"#7C3AED",
+        "Concluído":"#16A34A","Concluido":"#16A34A","Feito":"#16A34A",
+        "Pausado":"#DC2626","Bloqueado":"#DC2626",
+        "Ativo":"#0891B2",
+    }
 
     if df_visao.empty:
         df_visao = pd.DataFrame([
-            {"Categoria":"Missão",      "Titulo":"Nossa Missão",        "Descricao":"Transformar a gestão de projetos com tecnologia e dados, entregando resultados excepcionais.","Data":"","Responsavel":"Gabriel","Status":"Ativo"},
-            {"Categoria":"Visão",       "Titulo":"Onde queremos chegar","Descricao":"Ser referência nacional em gestão de projetos de engenharia até 2026.","Data":"","Responsavel":"Gabriel","Status":"Ativo"},
-            {"Categoria":"Valores",     "Titulo":"Excelência",          "Descricao":"Entregamos além do esperado em cada projeto.","Data":"","Responsavel":"Time","Status":"Ativo"},
-            {"Categoria":"Valores",     "Titulo":"Transparência",       "Descricao":"Comunicação clara e honesta com todos os stakeholders.","Data":"","Responsavel":"Time","Status":"Ativo"},
-            {"Categoria":"Valores",     "Titulo":"Inovação",            "Descricao":"Buscamos sempre soluções criativas e tecnológicas.","Data":"","Responsavel":"Time","Status":"Ativo"},
-            {"Categoria":"Meta Semanal","Titulo":"Fechar 2 propostas",  "Descricao":"Enviar e fechar pelo menos 2 novas propostas comerciais esta semana.","Data":"31/05/2025","Responsavel":"Gabriel","Status":"Em andamento"},
-            {"Categoria":"Meta Mensal", "Titulo":"10 novos projetos",   "Descricao":"Alcançar 10 novos contratos assinados no mês.","Data":"31/05/2025","Responsavel":"Gabriel","Status":"Em andamento"},
+            {"Categoria":"Objetivos",   "Titulo":"Bater R$20k MRR",        "Descricao":"Fechar contratos fixos com 5 clientes transportadoras.","Data":"30/06/2025","Responsavel":"Gabriel","Status":"Em andamento","Progresso":60},
+            {"Categoria":"Objetivos",   "Titulo":"Expandir para 5 estados", "Descricao":"Ter clientes ativos em CE, PE, PB, RN e BA.","Data":"31/12/2025","Responsavel":"Gabriel","Status":"Em andamento","Progresso":40},
+            {"Categoria":"Em Andamento","Titulo":"Rodar BI MLOG",           "Descricao":"Sistema de indicadores rodando em produção na MLOG.","Data":"15/06/2025","Responsavel":"Gabriel","Status":"Em andamento","Progresso":80},
+            {"Categoria":"Em Andamento","Titulo":"Protótipo humanoide",      "Descricao":"Reunião com engenheiros eletrônicos e robótica.","Data":"30/09/2025","Responsavel":"Gabriel","Status":"Em andamento","Progresso":25},
+            {"Categoria":"Feito",       "Titulo":"Onboarding AutoTruck",     "Descricao":"Cliente integrado com sistema de indicadores.","Data":"01/05/2025","Responsavel":"Gabriel","Status":"Concluído","Progresso":100},
+            {"Categoria":"Feito",       "Titulo":"Sistema MLOG v1",          "Descricao":"Primeira versão do sistema em produção.","Data":"01/04/2025","Responsavel":"Gabriel","Status":"Concluído","Progresso":100},
+            {"Categoria":"Bloqueios",   "Titulo":"Aprovação contrato L3",    "Descricao":"Aguardando assinatura do cliente para iniciar.","Data":"10/06/2025","Responsavel":"Gabriel","Status":"Pausado","Progresso":0},
         ])
     else:
         cat_col = next((c for c in df_visao.columns if rm_acc(c) == "categoria"), None)
@@ -2199,7 +2222,8 @@ with tab8:
             df_visao["Categoria"] = df_visao[cat_col].astype(str).str.strip().apply(
                 lambda x: ORDEM_NORM.get(rm_acc(x), x))
         for alias, canon in [("titulo","Titulo"),("descricao","Descricao"),
-                              ("responsavel","Responsavel"),("data","Data"),("status","Status")]:
+                              ("responsavel","Responsavel"),("data","Data"),
+                              ("status","Status"),("progresso","Progresso")]:
             found = next((c for c in df_visao.columns if rm_acc(c) == alias), None)
             if found and canon not in df_visao.columns:
                 df_visao[canon] = df_visao[found]
@@ -2217,136 +2241,253 @@ with tab8:
                 return str(v).strip()
         return ""
 
-    # Monta HTML do quadro inteiro como um único components.html
-    STATUS_CORES = {
-        "Ativo":"#16A34A","Concluido":"#16A34A","Concluído":"#16A34A",
-        "Em andamento":"#7C3AED","Em Andamento":"#7C3AED",
-        "Pausado":"#DC2626","Pendente":"#D97706"
-    }
-
-    cols_html = ""
+    # Monta dados para o board HTML
+    board_data = {}
     for cat in categorias:
-        cfg = CARD_CONFIG.get(cat, DEF)
-        cards_cat = df_visao[df_visao["Categoria"] == cat]
-
-        cards_html = ""
-        for _, row in cards_cat.iterrows():
+        cfg = COLS_CFG.get(cat, DEF_CFG)
+        cards = []
+        for _, row in df_visao[df_visao["Categoria"] == cat].iterrows():
             titulo    = gcol(row, "Titulo", "Título") or "—"
             descricao = gcol(row, "Descricao", "Descrição")
             data      = gcol(row, "Data")
             resp      = gcol(row, "Responsavel", "Responsável")
             status    = gcol(row, "Status")
-            scor      = STATUS_CORES.get(status, "#9588AA")
+            try:
+                prog = int(float(gcol(row, "Progresso") or 0))
+            except:
+                prog = 0
+            prog = max(0, min(100, prog))
+            scor = STATUS_CORES_V.get(status, "#9588AA")
+            prog_cor = "#16A34A" if prog == 100 else "#7C3AED" if prog >= 50 else "#F59E0B" if prog > 0 else "#DC2626"
+            cards.append({
+                "titulo": titulo, "descricao": descricao,
+                "data": data, "resp": resp, "status": status,
+                "prog": prog, "scor": scor, "prog_cor": prog_cor
+            })
+        board_data[cat] = {"cfg": cfg, "cards": cards}
 
-            status_badge = f'<span class="badge" style="background:{scor}18;color:{scor};border:1px solid {scor}44;">{status}</span>' if status else ""
-            footer_parts = []
-            if data:  footer_parts.append(f'<span class="meta">📅 {data}</span>')
-            if resp:  footer_parts.append(f'<span class="meta">👤 {resp}</span>')
-            footer = f'<div class="card-footer">{" ".join(footer_parts)}</div>' if footer_parts else ""
+    board_json = _jv.dumps(board_data, ensure_ascii=False)
 
-            cards_html += f"""
-            <div class="card" style="border-left:4px solid {cfg["cor"]};">
-              <div class="card-top">
-                <div class="card-title">{titulo}</div>
-                {status_badge}
-              </div>
-              {f'<div class="card-desc">{descricao}</div>' if descricao else ""}
-              {footer}
-            </div>"""
-
-        cols_html += f"""
-        <div class="col">
-          <div class="col-header" style="background:linear-gradient(135deg,{cfg["cor"]},{cfg["dark"]});">
-            <span class="col-icon">{cfg["icon"]}</span>
-            <div>
-              <div class="col-title">{cat}</div>
-              <div class="col-count">{len(cards_cat)} item(ns)</div>
-            </div>
-          </div>
-          <div class="col-body" style="background:{cfg["light"]};border:1px solid {cfg["mid"]};border-top:none;">
-            {cards_html if cards_html else '<div class="empty">Sem itens</div>'}
-          </div>
-        </div>"""
-
-    import json as _json
-    board_html = f"""<!DOCTYPE html>
+    BOARD_HTML = f"""<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box;}}
-body{{background:#F6F5FA;font-family:'Inter',sans-serif;padding:16px;}}
+body{{background:#F0EDF8;font-family:'Inter',sans-serif;padding:16px;min-height:100vh;}}
 
+/* ── BOARD ── */
 .board{{
   display:flex;gap:14px;
-  overflow-x:auto;
-  padding-bottom:12px;
   align-items:flex-start;
+  overflow-x:auto;
+  padding-bottom:16px;
 }}
 .board::-webkit-scrollbar{{height:5px;}}
-.board::-webkit-scrollbar-track{{background:#E8E4F4;border-radius:4px;}}
-.board::-webkit-scrollbar-thumb{{background:#C4B5FD;border-radius:4px;}}
+.board::-webkit-scrollbar-track{{background:#E0D9F0;border-radius:4px;}}
+.board::-webkit-scrollbar-thumb{{background:#A78BFA;border-radius:4px;}}
 
+/* ── COLUNA ── */
 .col{{
-  flex:0 0 230px;
-  min-width:230px;
+  flex:0 0 260px;min-width:260px;
   border-radius:16px;
+  background:rgba(255,255,255,.5);
+  border:1px solid rgba(255,255,255,.8);
+  backdrop-filter:blur(8px);
+  box-shadow:0 4px 20px rgba(107,33,168,.1);
   overflow:hidden;
-  box-shadow:0 4px 20px rgba(0,0,0,.1);
 }}
-
 .col-header{{
   padding:14px 16px;
   display:flex;align-items:center;gap:10px;
-  border-radius:16px 16px 0 0;
 }}
 .col-icon{{font-size:22px;}}
-.col-title{{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;line-height:1.1;}}
-.col-count{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.65);margin-top:2px;}}
-
+.col-title{{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;}}
+.col-count{{font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:2px;color:rgba(255,255,255,.65);margin-top:1px;}}
 .col-body{{
   padding:10px;
-  border-radius:0 0 16px 16px;
-  min-height:80px;
+  min-height:100px;
   display:flex;flex-direction:column;gap:8px;
+  transition:background .2s;
 }}
+.col-body.drag-over{{background:rgba(107,33,168,.08);}}
 
-/* CARD estilo sticky note */
+/* ── CARD ── */
 .card{{
   background:#fff;
   border-radius:12px;
   padding:14px;
-  box-shadow:0 2px 10px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06);
-  cursor:default;
-  transition:transform .18s, box-shadow .18s;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  cursor:grab;
   position:relative;
+  transition:transform .18s, box-shadow .18s, opacity .18s;
+  border-left:4px solid var(--card-cor, #6B21A8);
+  user-select:none;
 }}
 .card:hover{{
-  transform:translateY(-3px) rotate(.3deg);
-  box-shadow:0 8px 24px rgba(0,0,0,.14);
+  transform:translateY(-3px) rotate(.4deg);
+  box-shadow:0 10px 28px rgba(0,0,0,.15);
 }}
-/* Dobra no canto superior direito estilo post-it */
+.card.dragging{{
+  opacity:.45;
+  transform:rotate(3deg) scale(1.02);
+  box-shadow:0 16px 40px rgba(0,0,0,.25);
+  cursor:grabbing;
+}}
+/* Dobra post-it */
 .card::after{{
-  content:'';
-  position:absolute;top:0;right:0;
-  width:0;height:0;
-  border-style:solid;
-  border-width:0 16px 16px 0;
-  border-color:transparent #F6F5FA transparent transparent;
+  content:'';position:absolute;top:0;right:0;
+  width:0;height:0;border-style:solid;
+  border-width:0 14px 14px 0;
+  border-color:transparent #F0EDF8 transparent transparent;
 }}
-
 .card-top{{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}}
 .card-title{{font-weight:700;font-size:13px;color:#1A1225;line-height:1.35;flex:1;}}
-.badge{{padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0;}}
+.badge{{padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;
+  font-family:'JetBrains Mono',monospace;flex-shrink:0;white-space:nowrap;}}
 .card-desc{{font-size:12px;color:#5B4E72;line-height:1.6;margin-bottom:10px;}}
-.card-footer{{display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #F0EDF8;padding-top:8px;margin-top:4px;}}
+
+/* Barra de progresso */
+.prog-wrap{{margin-bottom:10px;}}
+.prog-label{{display:flex;justify-content:space-between;
+  font-size:10px;font-family:'JetBrains Mono',monospace;
+  color:#9588AA;margin-bottom:4px;}}
+.prog-bar-bg{{background:#F0EDF8;border-radius:99px;height:6px;overflow:hidden;}}
+.prog-bar{{height:100%;border-radius:99px;transition:width .4s ease;}}
+
+.card-footer{{display:flex;flex-wrap:wrap;gap:8px;
+  border-top:1px solid #F5F0FF;padding-top:8px;}}
 .meta{{font-size:10px;color:#9588AA;}}
-.empty{{font-size:12px;color:#9588AA;font-style:italic;text-align:center;padding:16px 0;}}
+
+/* Drop placeholder */
+.drop-ghost{{
+  border:2px dashed #A78BFA;
+  border-radius:12px;background:rgba(167,139,250,.08);
+  min-height:60px;
+  animation:ghostP .8s ease-in-out infinite alternate;
+}}
+@keyframes ghostP{{from{{opacity:.4;}}to{{opacity:.9;}}}}
 </style>
 </head><body>
-<div class="board">
-  {cols_html}
-</div>
+
+<div class="board" id="board"></div>
+
+<script>
+const DATA = {board_json};
+
+// Render inicial
+function render(){{
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  Object.entries(DATA).forEach(([cat, info])=>{{
+    const cfg = info.cfg;
+    const col = document.createElement('div');
+    col.className = 'col';
+    col.dataset.cat = cat;
+
+    col.innerHTML = `
+      <div class="col-header" style="background:linear-gradient(${{cfg.grad}});">
+        <span class="col-icon">${{cfg.icon}}</span>
+        <div>
+          <div class="col-title">${{cat}}</div>
+          <div class="col-count">${{info.cards.length}} item(ns)</div>
+        </div>
+      </div>
+      <div class="col-body" id="body-${{cat.replace(/ /g,'_')}}" data-cat="${{cat}}"></div>
+    `;
+    board.appendChild(col);
+
+    const body = document.getElementById('body-'+cat.replace(/ /g,'_'));
+    info.cards.forEach((c,i)=>{{
+      body.appendChild(makeCard(c, cat, i));
+    }});
+
+    // Drop zone
+    body.addEventListener('dragover', e=>{{
+      e.preventDefault();
+      body.classList.add('drag-over');
+      const ghost = body.querySelector('.drop-ghost');
+      if(!ghost){{
+        const g=document.createElement('div');
+        g.className='drop-ghost';
+        body.appendChild(g);
+      }}
+    }});
+    body.addEventListener('dragleave', ()=>{{
+      body.classList.remove('drag-over');
+      body.querySelectorAll('.drop-ghost').forEach(g=>g.remove());
+    }});
+    body.addEventListener('drop', e=>{{
+      e.preventDefault();
+      body.classList.remove('drag-over');
+      body.querySelectorAll('.drop-ghost').forEach(g=>g.remove());
+      const srcCat   = e.dataTransfer.getData('srcCat');
+      const srcIdx   = parseInt(e.dataTransfer.getData('srcIdx'));
+      const tgtCat   = cat;
+      if(srcCat === tgtCat && srcIdx === -1) return;
+      // Move card
+      const card = DATA[srcCat].cards.splice(srcIdx, 1)[0];
+      DATA[tgtCat].cards.push(card);
+      // Atualiza contadores
+      DATA[srcCat];
+      render();
+    }});
+  }});
+}}
+
+function makeCard(c, cat, idx){{
+  const cfg = DATA[cat].cfg;
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.draggable = true;
+  el.style.setProperty('--card-cor', cfg.cor);
+  el.dataset.idx = idx;
+
+  const statusBadge = c.status
+    ? `<span class="badge" style="background:${{c.scor}}18;color:${{c.scor}};border:1px solid ${{c.scor}}44;">${{c.status}}</span>`
+    : '';
+
+  const progHtml = (c.prog !== undefined && c.prog !== null)
+    ? `<div class="prog-wrap">
+         <div class="prog-label"><span>Progresso</span><span style="color:${{c.prog_cor}};font-weight:700;">${{c.prog}}%</span></div>
+         <div class="prog-bar-bg">
+           <div class="prog-bar" style="width:${{c.prog}}%;background:${{c.prog_cor}};"></div>
+         </div>
+       </div>`
+    : '';
+
+  const footerParts = [];
+  if(c.data) footerParts.push(`<span class="meta">📅 ${{c.data}}</span>`);
+  if(c.resp) footerParts.push(`<span class="meta">👤 ${{c.resp}}</span>`);
+  const footer = footerParts.length
+    ? `<div class="card-footer">${{footerParts.join('')}}</div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="card-top">
+      <div class="card-title">${{c.titulo}}</div>
+      ${{statusBadge}}
+    </div>
+    ${{c.descricao ? `<div class="card-desc">${{c.descricao}}</div>` : ''}}
+    ${{progHtml}}
+    ${{footer}}
+  `;
+
+  // Drag events
+  el.addEventListener('dragstart', e=>{{
+    el.classList.add('dragging');
+    e.dataTransfer.setData('srcCat', cat);
+    e.dataTransfer.setData('srcIdx', idx);
+    e.dataTransfer.effectAllowed = 'move';
+  }});
+  el.addEventListener('dragend', ()=>el.classList.remove('dragging'));
+
+  return el;
+}}
+
+render();
+</script>
 </body></html>"""
 
-    components.html(board_html, height=620, scrolling=False)
+    components.html(BOARD_HTML, height=700, scrolling=False)
