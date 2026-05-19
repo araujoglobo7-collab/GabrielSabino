@@ -2493,19 +2493,17 @@ render();
         ])
         categorias = [c for c in ORDEM if c in df_visao["Categoria"].values]
 
+    # Chat como HTML estático dentro do board — tudo fixo
     components.html(BOARD_HTML, height=800, scrolling=False)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    # Chat abaixo — fixo com altura definida, sem scroll da página
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;
-        color:#6B21A8;margin-bottom:16px;">⬡ CHAT VISÃO GS — JARVIS ESTRATÉGICO</div>
+    <style>
+    .chat-visao-wrap { height: 480px; display: flex; gap: 16px; }
+    </style>
     """, unsafe_allow_html=True)
 
-    # ── Inicializa histórico do chat visão ──
-    if "chat_visao_history" not in st.session_state:
-        st.session_state.chat_visao_history = []
-
-    col_chat_v, col_sugest_v = st.columns([2.5, 1])
+    col_sugest_v, col_chat_v = st.columns([1, 2.5])
 
     SUGESTOES_VISAO = [
         ("⚡", "Quais objetivos devo correr primeiro?"),
@@ -2515,6 +2513,10 @@ render();
         ("🚀", "Onde focar energia hoje?"),
         ("✅", "O que já foi concluído?"),
     ]
+
+    # ── Inicializa histórico do chat visão ──
+    if "chat_visao_history" not in st.session_state:
+        st.session_state.chat_visao_history = []
 
     pergunta_visao = None
 
@@ -2546,96 +2548,83 @@ render();
             st.rerun()
 
     with col_chat_v:
-        # Header
         st.markdown("""
-        <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
-            padding:18px 22px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
-          <div style="font-size:32px;">🎯</div>
+        <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:14px;
+            padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:26px;">🎯</div>
           <div>
-            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">
-              Chat Visão GS</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.7);">
-              JARVIS analisando seus objetivos e metas</div>
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;">Chat Visão GS</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.65);">JARVIS analisando seus objetivos</div>
           </div>
-          <div style="margin-left:auto;background:rgba(255,255,255,.15);
-              border-radius:20px;padding:4px 12px;">
-            <span style="font-size:10px;color:#fff;font-family:'JetBrains Mono',monospace;">● ATIVO</span>
+          <div style="margin-left:auto;background:rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;">
+            <span style="font-size:9px;color:#fff;font-family:'JetBrains Mono',monospace;">● ATIVO</span>
           </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Mensagem inicial
+        # Mensagens em container fixo — não desce a página
+        msgs_html = ""
         if not st.session_state.chat_visao_history:
-            st.markdown("""
-            <div style="display:flex;gap:10px;margin-bottom:14px;">
-              <div style="width:40px;height:40px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
-                  border-radius:50%;display:flex;align-items:center;justify-content:center;
-                  font-size:20px;flex-shrink:0;">🎯</div>
-              <div style="background:#fff;border:1px solid #DDD8F0;border-radius:4px 14px 14px 14px;
-                  padding:14px 18px;max-width:90%;box-shadow:0 2px 8px rgba(107,33,168,.07);">
-                <div style="font-weight:700;color:#6B21A8;margin-bottom:6px;">Visão GS carregada! 🚀</div>
-                <div style="font-size:13px;color:#1A1225;line-height:1.7;">
-                  Tenho acesso aos seus objetivos, metas, bloqueios e andamentos.<br>
-                  Use os botões ao lado ou me pergunte qualquer coisa sobre sua estratégia!
-                </div>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
+            msgs_html = """<div style="display:flex;gap:8px;">
+              <div style="width:30px;height:30px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+                  border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🎯</div>
+              <div style="background:#fff;border:1px solid #EDE9FE;border-radius:4px 12px 12px 12px;
+                  padding:10px 14px;font-size:12px;color:#1A1225;line-height:1.6;">
+                <b style="color:#6B21A8;">Visão GS carregada! 🚀</b><br>
+                Use os botões ao lado para analisar seus objetivos e metas.
+              </div></div>"""
+        else:
+            for msg in st.session_state.chat_visao_history:
+                if msg["role"] == "user":
+                    msgs_html += f'''<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+                      <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
+                          border-radius:12px 12px 4px 12px;padding:9px 13px;max-width:78%;
+                          font-size:12px;line-height:1.5;">{msg["content"]}</div></div>'''
+                else:
+                    c = msg["content"].replace("\n","<br>")
+                    msgs_html += f'''<div style="display:flex;gap:8px;margin-bottom:8px;">
+                      <div style="width:28px;height:28px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
+                          border-radius:50%;display:flex;align-items:center;justify-content:center;
+                          font-size:13px;flex-shrink:0;">🎯</div>
+                      <div style="background:#fff;border:1px solid #EDE9FE;border-radius:4px 12px 12px 12px;
+                          padding:10px 14px;max-width:85%;font-size:12px;color:#1A1225;line-height:1.6;">{c}</div>
+                    </div>'''
 
-        # Histórico
-        for msg in st.session_state.chat_visao_history:
-            if msg["role"] == "user":
-                st.markdown(f"""
-                <div style="display:flex;justify-content:flex-end;margin:10px 0;gap:8px;">
-                  <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
-                      border-radius:14px 14px 4px 14px;padding:10px 16px;max-width:75%;
-                      font-size:13px;line-height:1.5;">
-                    {msg['content']}
-                  </div>
-                </div>""", unsafe_allow_html=True)
-            else:
-                content = msg['content'].replace(chr(10), '<br>')
-                st.markdown(f"""
-                <div style="display:flex;gap:10px;margin:10px 0;">
-                  <div style="width:36px;height:36px;background:linear-gradient(135deg,#6B21A8,#4C1D95);
-                      border-radius:50%;display:flex;align-items:center;justify-content:center;
-                      font-size:18px;flex-shrink:0;">🎯</div>
-                  <div style="background:#fff;border:1px solid #DDD8F0;border-radius:4px 14px 14px 14px;
-                      padding:14px 18px;max-width:85%;font-size:13px;line-height:1.7;color:#1A1225;
-                      box-shadow:0 2px 8px rgba(107,33,168,.07);">
-                    {content}
-                  </div>
-                </div>""", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="height:280px;overflow-y:auto;padding:12px;
+            background:#FAFAFF;border:1px solid #EDE9FE;border-radius:12px;margin-bottom:10px;
+            scrollbar-width:thin;scrollbar-color:#C4B5FD transparent;">
+          {msgs_html}
+        </div>""", unsafe_allow_html=True)
 
-        # Input
         col_inp, col_btn = st.columns([5, 1])
         with col_inp:
             user_visao = st.text_input("msg_v", value=pergunta_visao or "",
                 placeholder="Pergunte sobre seus objetivos...",
                 label_visibility="collapsed", key="chat_visao_input")
         with col_btn:
-            enviar_v = st.button("Enviar", use_container_width=True, key="btn_enviar_visao")
+            enviar_v = st.button("→", use_container_width=True, key="btn_enviar_visao")
 
-    # ── Processa resposta ──
+    # ── Processa resposta com dados reais da planilha ──
     if (enviar_v or pergunta_visao) and (user_visao or pergunta_visao):
         query = user_visao or pergunta_visao
         st.session_state.chat_visao_history.append({"role": "user", "content": query})
         q = query.lower()
-        now_v = pd.Timestamp.now()
 
         try:
             df_v = carregar_visao_gs()
             if "_erro" in df_v.columns or df_v.empty:
                 answer = "⚠️ Sem dados carregados. Sincronize a planilha primeiro!"
             else:
-                # Normaliza
                 import unicodedata as _ud
                 def _rma(s):
-                    return "".join(c for c in _ud.normalize("NFD",str(s)) if _ud.category(c)!="Mn").strip().lower()
+                    return "".join(c for c in _ud.normalize("NFD",str(s))
+                                   if _ud.category(c)!="Mn").strip().lower()
                 ORDEM_N = {_rma(o):o for o in ["Objetivos","Em Andamento","Feito","Bloqueios"]}
                 cat_col = next((c for c in df_v.columns if _rma(c)=="categoria"), None)
                 if cat_col:
-                    df_v["Categoria"] = df_v[cat_col].astype(str).str.strip().apply(lambda x: ORDEM_N.get(_rma(x),x))
+                    df_v["Categoria"] = df_v[cat_col].astype(str).str.strip().apply(
+                        lambda x: ORDEM_N.get(_rma(x), x))
                 for alias, canon in [("titulo","Titulo"),("descricao","Descricao"),
                                      ("responsavel","Responsavel"),("data","Data"),
                                      ("prazo","Prazo"),("status","Status"),("progresso","Progresso")]:
@@ -2643,75 +2632,154 @@ render();
                     if found and canon not in df_v.columns:
                         df_v[canon] = df_v[found]
 
-                def gcol_v(r, *ns):
+                def gcv(r, *ns):
                     for n in ns:
-                        v = r.get(n,"")
-                        if pd.notna(v) and str(v).strip() not in ["","nan"]: return str(v).strip()
+                        v = r.get(n, "")
+                        if pd.notna(v) and str(v).strip() not in ["","nan"]:
+                            return str(v).strip()
                     return ""
 
-                obj  = df_v[df_v.get("Categoria",pd.Series())=="Objetivos"]
-                and_ = df_v[df_v.get("Categoria",pd.Series())=="Em Andamento"]
-                feito= df_v[df_v.get("Categoria",pd.Series())=="Feito"]
-                bloc = df_v[df_v.get("Categoria",pd.Series())=="Bloqueios"]
-                total= len(df_v)
+                obj   = df_v[df_v.get("Categoria", pd.Series()) == "Objetivos"]
+                and_  = df_v[df_v.get("Categoria", pd.Series()) == "Em Andamento"]
+                feito = df_v[df_v.get("Categoria", pd.Series()) == "Feito"]
+                bloc  = df_v[df_v.get("Categoria", pd.Series()) == "Bloqueios"]
 
-                if any(w in q for w in ["primeiro","prioridade","correr","focar","urgente"]):
-                    lines = ""
-                    for _, r in obj.iterrows():
-                        t = gcol_v(r,"Titulo"); d = gcol_v(r,"Data","Prazo"); resp = gcol_v(r,"Responsavel")
-                        lines += f"\n⚡ **{t}**" + (f" — até {d}" if d else "") + (f" ({resp})" if resp else "")
-                    answer = f"**⚡ Objetivos para correr primeiro:**\n{lines}\n\n💡 Foque nos que têm prazo mais próximo!"
+                def prog_medio(df_sub):
+                    try:
+                        return int(pd.to_numeric(
+                            df_sub.get("Progresso", pd.Series()), errors="coerce"
+                        ).fillna(0).mean())
+                    except:
+                        return 0
 
-                elif any(w in q for w in ["bloqueio","travando","parado","impedimento"]):
+                # ── PRIORIDADE / FOCO ──
+                if any(w in q for w in ["primeiro","prioridade","correr","urgente","focar","foco","energia","hoje","agora"]):
+                    df_prio = pd.concat([obj, and_]).copy()
+                    try:
+                        df_prio["_p"] = pd.to_numeric(
+                            df_prio.get("Progresso", pd.Series()), errors="coerce").fillna(0)
+                        df_prio = df_prio.sort_values("_p")
+                    except: pass
+                    linhas = ""
+                    for _, r in df_prio.iterrows():
+                        t     = gcv(r, "Titulo")
+                        prazo = gcv(r, "Prazo", "Data")
+                        resp  = gcv(r, "Responsavel")
+                        prog  = gcv(r, "Progresso") or "0"
+                        cat   = gcv(r, "Categoria")
+                        e     = "🎯" if cat == "Objetivos" else "📊"
+                        linhas += f"\n{e} **{t}** — {prog}%"
+                        if prazo: linhas += f" | prazo: **{prazo}**"
+                        if resp:  linhas += f" | 👤 {resp}"
+                    answer = f"**⚡ Do menos avançado ao mais urgente:**\n{linhas}\n\n💡 Comece pelos com menor % e prazo mais próximo!"
+
+                # ── BLOQUEIOS ──
+                elif any(w in q for w in ["bloqueio","travando","parado","impedimento","trava","bloquei"]):
                     if bloc.empty:
-                        answer = "✅ Nenhum bloqueio registrado no momento!"
+                        answer = "✅ Nenhum bloqueio registrado. Tudo fluindo!"
                     else:
-                        lines = ""
+                        linhas = ""
                         for _, r in bloc.iterrows():
-                            t = gcol_v(r,"Titulo"); d = gcol_v(r,"Descricao")
-                            lines += f"\n⚠️ **{t}**" + (f"\n   _{d[:80]}_" if d else "")
-                        answer = f"**⚠️ Bloqueios ativos:**\n{lines}\n\n🔧 Resolva esses primeiro para destravar o progresso!"
+                            t     = gcv(r, "Titulo")
+                            desc  = gcv(r, "Descricao")
+                            resp  = gcv(r, "Responsavel")
+                            prazo = gcv(r, "Prazo", "Data")
+                            linhas += f"\n⚠️ **{t}**"
+                            if prazo: linhas += f" — previsão: **{prazo}**"
+                            if resp:  linhas += f" | 👤 {resp}"
+                            if desc:  linhas += f"\n   _{desc[:130]}{'...' if len(desc)>130 else ''}_"
+                        answer = (f"**⚠️ {len(bloc)} bloqueio(s) ativo(s):**\n{linhas}\n\n🔧 Resolva esses para destravar o andamento!")
 
-                elif any(w in q for w in ["semana","vence","prazo","quando","data"]):
-                    lines = ""
-                    for _, r in df_v[df_v.get("Categoria",pd.Series())!="Feito"].iterrows():
-                        d = gcol_v(r,"Prazo","Data"); t = gcol_v(r,"Titulo")
-                        if d: lines += f"\n📅 **{t}** — {d}"
-                    answer = f"**📅 Prazos registrados:**\n{lines if lines else chr(10)+'Nenhum prazo cadastrado ainda.'}"
+                # ── PRAZOS ──
+                elif any(w in q for w in ["semana","vence","prazo","quando","data","mês","mes","venc"]):
+                    linhas = ""
+                    df_prazos = df_v[df_v.get("Categoria", pd.Series()) != "Feito"]
+                    for _, r in df_prazos.iterrows():
+                        t     = gcv(r, "Titulo")
+                        prazo = gcv(r, "Prazo", "Data")
+                        resp  = gcv(r, "Responsavel")
+                        cat   = gcv(r, "Categoria")
+                        if not prazo: continue
+                        e = {"Objetivos":"🎯","Em Andamento":"📊","Bloqueios":"⚠️"}.get(cat,"📌")
+                        linhas += f"\n{e} **{t}** — **{prazo}** | 👤 {resp}"
+                    answer = (f"**📅 Prazos cadastrados:**\n{linhas}"
+                              if linhas else
+                              "Nenhum prazo cadastrado ainda. Adicione a coluna **Prazo** na planilha!")
 
-                elif any(w in q for w in ["geral","andamento","situação","situacao","como","status"]):
-                    answer = f"""**📊 Situação Geral da Visão GS:**
+                # ── SITUAÇÃO GERAL ──
+                elif any(w in q for w in ["geral","andamento","situação","situacao","como","status","resumo","visão","visao"]):
+                    obj_list   = " / ".join([gcv(r,"Titulo") for _,r in obj.iterrows()]) or "—"
+                    and_list   = " / ".join([gcv(r,"Titulo") for _,r in and_.iterrows()]) or "—"
+                    feito_list = " / ".join([gcv(r,"Titulo") for _,r in feito.iterrows()]) or "—"
+                    bloc_list  = " / ".join([gcv(r,"Titulo") for _,r in bloc.iterrows()]) or "—"
+                    pm = prog_medio(df_v)
+                    answer = f"""**📊 Situação Geral — Visão GS:**
 
-🎯 **Objetivos:** {len(obj)} item(ns)
-📊 **Em Andamento:** {len(and_)} item(ns)
-✅ **Feito:** {len(feito)} item(ns)
-⚠️ **Bloqueios:** {len(bloc)} item(ns)
+🎯 **Objetivos ({len(obj)}):** {obj_list}
 
-{"🔴 **Atenção!** Há "+str(len(bloc))+" bloqueio(s) ativos." if not bloc.empty else "🟢 Sem bloqueios registrados."}
-{"🟡 **"+str(len(obj))+" objetivo(s) aguardando execução.**" if not obj.empty else ""}"""
+📊 **Em Andamento ({len(and_)}):** {and_list}
 
-                elif any(w in q for w in ["energia","hoje","agora","foco"]):
-                    top = and_.head(3)
-                    if top.empty: top = obj.head(3)
-                    lines = ""
-                    for _, r in top.iterrows():
-                        t = gcol_v(r,"Titulo"); resp = gcol_v(r,"Responsavel")
-                        lines += f"\n🔥 **{t}**" + (f" — {resp}" if resp else "")
-                    answer = f"**🚀 Foque sua energia hoje em:**\n{lines}"
+✅ **Feito ({len(feito)}):** {feito_list}
 
-                elif any(w in q for w in ["concluído","concluido","feito","entregue","done"]):
+⚠️ **Bloqueios ({len(bloc)}):** {bloc_list}
+
+📈 **Progresso médio geral: {pm}%**
+{"🔴 Atenção: "+str(len(bloc))+" bloqueio(s) ativos!" if not bloc.empty else "🟢 Sem bloqueios críticos."}"""
+
+                # ── CONCLUÍDOS ──
+                elif any(w in q for w in ["concluído","concluido","feito","entregue","done","pronto","finaliz"]):
                     if feito.empty:
                         answer = "Nenhum item concluído ainda — bora entregar! 💪"
                     else:
-                        lines = "\n".join([f"✅ **{gcol_v(r,'Titulo')}**" for _,r in feito.iterrows()])
-                        answer = f"**✅ Já entregue:**\n{lines}\n\n🎉 Bom trabalho!"
+                        linhas = ""
+                        for _, r in feito.iterrows():
+                            t    = gcv(r, "Titulo")
+                            resp = gcv(r, "Responsavel")
+                            desc = gcv(r, "Descricao")
+                            linhas += f"\n✅ **{t}** | 👤 {resp}"
+                            if desc: linhas += f"\n   _{desc[:100]}{'...' if len(desc)>100 else ''}_"
+                        answer = f"**✅ Itens concluídos:**\n{linhas}\n\n🎉 Bom trabalho!"
 
+                # ── RESPONSÁVEIS ──
+                elif any(w in q for w in ["responsavel","responsável","quem","dono","owner"]):
+                    resp_col = df_v.get("Responsavel", pd.Series())
+                    linhas = ""
+                    for resp_nome in resp_col.dropna().unique():
+                        if str(resp_nome).strip() in ["","nan"]: continue
+                        itens = df_v[resp_col == resp_nome]
+                        names = " / ".join([gcv(r,"Titulo") for _,r in itens.iterrows()])
+                        linhas += f"\n👤 **{resp_nome}** ({len(itens)} item(ns)):\n   {names}"
+                    answer = f"**👥 Responsáveis e seus itens:**\n{linhas}"
+
+                # ── PROGRESSO ──
+                elif any(w in q for w in ["progresso","avançado","percentual","percent","porcent"]):
+                    df_prog = df_v.copy()
+                    try:
+                        df_prog["_p"] = pd.to_numeric(
+                            df_prog.get("Progresso", pd.Series()), errors="coerce").fillna(0)
+                        df_prog = df_prog.sort_values("_p", ascending=False)
+                    except: pass
+                    linhas = ""
+                    for _, r in df_prog.iterrows():
+                        t    = gcv(r, "Titulo")
+                        prog = gcv(r, "Progresso") or "0"
+                        cat  = gcv(r, "Categoria")
+                        e    = {"Objetivos":"🎯","Em Andamento":"📊","Feito":"✅","Bloqueios":"⚠️"}.get(cat,"📌")
+                        linhas += f"\n{e} **{t}**: **{prog}%**"
+                    answer = f"**📈 Progresso de todos os itens:**\n{linhas}"
+
+                # ── RESPOSTA GENÉRICA ──
                 else:
+                    pm = prog_medio(df_v)
+                    top3 = " / ".join([gcv(r,"Titulo") for _,r in pd.concat([obj,and_]).head(3).iterrows()])
                     answer = f"""**🎯 Visão GS — Resumo Rápido:**
 
+📊 **{len(df_v)} itens** no total | Progresso médio: **{pm}%**
 🎯 Objetivos: **{len(obj)}** | 📊 Em Andamento: **{len(and_)}** | ✅ Feito: **{len(feito)}** | ⚠️ Bloqueios: **{len(bloc)}**
 
-Use os botões ao lado para análises específicas!"""
+🔝 Em foco: _{top3}_
+
+Use os botões ao lado para análises específicas! 👆"""
 
         except Exception as e:
             answer = f"Erro: {str(e)}"
