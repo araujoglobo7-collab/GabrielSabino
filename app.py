@@ -2156,23 +2156,6 @@ with tab8:
 
     col_sync, _ = st.columns([1, 5])
     with col_sync:
-        if st.button("🔄 Sincronizar", key="sync_visao_old", use_container_width=True):
-            st.cache_data.clear()
-            st.rerun()
-
-    df_visao = carregar_visao_gs()
-
-    if "_erro" in df_visao.columns:
-        st.error(f"Erro: {df_visao['_erro'].iloc[0]}")
-        df_visao = pd.DataFrame()
-
-# ─────────────────────────────────────────────
-# TAB 8 — VISÃO GS
-# ─────────────────────────────────────────────
-with tab8:
-
-    col_sync, _ = st.columns([1, 5])
-    with col_sync:
         if st.button("🔄 Sincronizar", key="sync_visao", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
@@ -2192,7 +2175,7 @@ with tab8:
     ORDEM_NORM = {rm_acc(o): o for o in ORDEM}
 
     COLS_CFG = {
-        "Objetivos":    {"icon":"🎯","cor":"#6B21A8","grad":"135deg,#6B21A8,#4C1D95","light":"#F5F0FF","mid":"#C4B5FD"},
+        "Objetivos":    {"icon":"🎯","cor":"#7C3AED","grad":"135deg,#7C3AED,#4C1D95","light":"#F5F0FF","mid":"#C4B5FD"},
         "Em Andamento": {"icon":"📊","cor":"#0891B2","grad":"135deg,#0891B2,#0C4A6E","light":"#E0F9FF","mid":"#67E8F9"},
         "Feito":        {"icon":"✅","cor":"#16A34A","grad":"135deg,#16A34A,#14532D","light":"#F0FDF4","mid":"#86EFAC"},
         "Bloqueios":    {"icon":"⚠️","cor":"#DC2626","grad":"135deg,#DC2626,#7F1D1D","light":"#FFF7ED","mid":"#FCA5A5"},
@@ -2274,7 +2257,7 @@ with tab8:
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 *{{margin:0;padding:0;box-sizing:border-box;}}
-body{{background:#F0EDF8;font-family:'Inter',sans-serif;padding:16px;min-height:100vh;}}
+body{{background:linear-gradient(135deg,#1A0A2E,#0D0618,#1A0A2E);font-family:'Inter',sans-serif;padding:16px;min-height:100vh;}}
 
 /* ── BOARD ── */
 .board{{
@@ -2291,8 +2274,8 @@ body{{background:#F0EDF8;font-family:'Inter',sans-serif;padding:16px;min-height:
 .col{{
   flex:0 0 260px;min-width:260px;
   border-radius:16px;
-  background:rgba(255,255,255,.5);
-  border:1px solid rgba(255,255,255,.8);
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
   backdrop-filter:blur(8px);
   box-shadow:0 4px 20px rgba(107,33,168,.1);
   overflow:hidden;
@@ -2315,10 +2298,10 @@ body{{background:#F0EDF8;font-family:'Inter',sans-serif;padding:16px;min-height:
 
 /* ── CARD ── */
 .card{{
-  background:#fff;
-  border-radius:12px;
-  padding:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  background:linear-gradient(145deg,#ffffff,#f8f5ff);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 4px 16px rgba(0,0,0,.15);
   cursor:grab;
   position:relative;
   transition:transform .18s, box-shadow .18s, opacity .18s;
@@ -2353,7 +2336,7 @@ body{{background:#F0EDF8;font-family:'Inter',sans-serif;padding:16px;min-height:
 .prog-label{{display:flex;justify-content:space-between;
   font-size:10px;font-family:'JetBrains Mono',monospace;
   color:#9588AA;margin-bottom:4px;}}
-.prog-bar-bg{{background:#F0EDF8;border-radius:99px;height:6px;overflow:hidden;}}
+.prog-bar-bg{{background:#EDE9FE;border-radius:99px;height:7px;overflow:hidden;}}
 .prog-bar{{height:100%;border-radius:99px;transition:width .4s ease;}}
 
 .card-footer{{display:flex;flex-wrap:wrap;gap:8px;
