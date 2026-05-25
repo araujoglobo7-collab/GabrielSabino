@@ -533,17 +533,11 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "df_projetos" not in st.session_state:
     st.session_state.df_projetos = None
-if "is_convidado" not in st.session_state:
-    st.session_state.is_convidado = False
-if "nome_convidado" not in st.session_state:
-    st.session_state.nome_convidado = ""
-if "login_step" not in st.session_state:
-    st.session_state.login_step = "senha"
 if "pw_erro" not in st.session_state:
     st.session_state.pw_erro = False
 
 # ============================================================
-# LOGIN
+# LOGIN — acesso único gb99
 # ============================================================
 if not st.session_state.logado:
 
@@ -745,8 +739,7 @@ const p=Array.from({length:28},()=>({
         components.html(jarvis_html, height=560, scrolling=False)
 
     with col_form:
-        if st.session_state.login_step == "senha":
-            components.html(f"""<!DOCTYPE html><html><head>
+        components.html(f"""<!DOCTYPE html><html><head>
 <style>
 *{{margin:0;padding:0;box-sizing:border-box;}}
 html,body{{width:100%;height:100%;background:#060912;display:flex;
@@ -765,56 +758,25 @@ html,body{{width:100%;height:100%;background:#060912;display:flex;
 <div class="con">Consulting</div>
 </body></html>""", height=200, scrolling=False)
 
-            senha = st.text_input("pw", type="password",
-                placeholder="••••••••", label_visibility="collapsed", key="inp_senha")
-            entrar = st.button("Entrar →", use_container_width=True, key="btn_entrar")
+        senha = st.text_input("pw", type="password",
+            placeholder="••••••••", label_visibility="collapsed", key="inp_senha")
+        entrar = st.button("Entrar →", use_container_width=True, key="btn_entrar")
 
-            if entrar and senha:
-                if senha == "gr1723":
-                    st.session_state.logado = True
-                    st.session_state.is_convidado = False
-                    st.session_state.nome_convidado = "Gabriel"
-                    st.session_state.pw_erro = False
-                    st.rerun()
-                elif senha == "gsr17":
-                    st.session_state.login_step = "nome_conv"
-                    st.session_state.pw_erro = False
-                    st.rerun()
-                elif senha:
-                    st.session_state.pw_erro = True
-                    st.rerun()
-
-            if st.session_state.pw_erro:
-                st.markdown("""
-                <div style="background:rgba(201,42,42,.08);border:1px solid rgba(201,42,42,.2);
-                    border-radius:10px;padding:10px 14px;color:#F87171;font-size:13px;margin-top:4px;">
-                  ❌ Senha incorreta.
-                </div>""", unsafe_allow_html=True)
-
-        else:
-            components.html("""<!DOCTYPE html><html><head>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;background:#060912;display:flex;
-  flex-direction:column;justify-content:center;padding:0 28px 0 8px;}
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@800&family=JetBrains+Mono:wght@400&display=swap');
-.badge{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#7C3AED;margin-bottom:12px;}
-.t{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#fff;line-height:1.1;}
-</style></head><body>
-<div class="badge">⬡ ACESSO CONVIDADO</div>
-<div class="t">Qual é o<br>seu nome?</div>
-</body></html>""", height=160, scrolling=False)
-
-            nome = st.text_input("nm", placeholder="Seu nome",
-                label_visibility="collapsed", key="inp_nome")
-            entrar2 = st.button("Entrar →", use_container_width=True, key="btn_entrar2")
-
-            if entrar2 and nome:
+        if entrar and senha:
+            if senha == "gb99":
                 st.session_state.logado = True
-                st.session_state.is_convidado = True
-                st.session_state.nome_convidado = nome
-                st.session_state.login_step = "senha"
+                st.session_state.pw_erro = False
                 st.rerun()
+            else:
+                st.session_state.pw_erro = True
+                st.rerun()
+
+        if st.session_state.pw_erro:
+            st.markdown("""
+            <div style="background:rgba(201,42,42,.08);border:1px solid rgba(201,42,42,.2);
+                border-radius:10px;padding:10px 14px;color:#F87171;font-size:13px;margin-top:4px;">
+              ❌ Senha incorreta.
+            </div>""", unsafe_allow_html=True)
 
     st.stop()
 
@@ -950,8 +912,7 @@ with st.sidebar:
         st.success("Sincronizado!")
         st.rerun()
 
-    if not st.session_state.is_convidado:
-        st.link_button("Editar Planilha", URL_DB, use_container_width=True)
+    st.link_button("Editar Planilha", URL_DB, use_container_width=True)
 
     st.divider()
 
@@ -986,8 +947,6 @@ with st.sidebar:
 
     if st.button("Sair", use_container_width=True):
         st.session_state.logado = False
-        st.session_state.is_convidado = False
-        st.session_state.nome_convidado = ""
         st.session_state.df_projetos = None
         st.rerun()
 
@@ -995,8 +954,8 @@ with st.sidebar:
 # HEADER
 # ============================================================
 now = datetime.now()
-usuario_nome = st.session_state.nome_convidado.upper() if st.session_state.is_convidado else "GABRIEL SABINO"
-usuario_cor  = "#7C3AED" if st.session_state.is_convidado else "#6B21A8"
+usuario_nome = "GABRIEL SABINO"
+usuario_cor  = "#6B21A8"
 
 # Botão flutuante para reabrir menu quando oculto
 if not st.session_state.sidebar_visivel:
@@ -1009,7 +968,7 @@ if not st.session_state.sidebar_visivel:
         st.markdown(f"""
 <div style="display:flex;justify-content:space-between;align-items:center;
     padding:16px 24px;border:1px solid #E2E4EA;border-radius:14px;
-    background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:{"8px" if st.session_state.is_convidado else "24px"};">
+    background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:24px;">
   <div>
     <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
     <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:{usuario_cor};">{usuario_nome}</div>
@@ -1025,7 +984,7 @@ else:
     st.markdown(f"""
 <div style="display:flex;justify-content:space-between;align-items:center;
     padding:16px 24px;border:1px solid #E2E4EA;border-radius:14px;
-    background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:{"8px" if st.session_state.is_convidado else "24px"};">
+    background:#FFFFFF;backdrop-filter:blur(10px);margin-bottom:24px;">
   <div>
     <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:4px;color:#6B21A8;margin-bottom:4px;">&#9679; HUB OPERACIONAL</div>
     <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:{usuario_cor};">{usuario_nome}</div>
@@ -1038,21 +997,6 @@ else:
 </div>
 """, unsafe_allow_html=True)
 
-# Banner convidado
-if st.session_state.is_convidado:
-    st.markdown("""
-    <div style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.25);
-        border-radius:10px;padding:10px 18px;margin-bottom:18px;
-        display:flex;align-items:center;gap:10px;">
-      <span style="font-size:18px;">🔒</span>
-      <div>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C3AED;font-weight:700;">
-          ACESSO CONVIDADO</span>
-        <span style="font-size:12px;color:#5B4E72;margin-left:10px;">
-          Rosto não reconhecido. Acesso em modo leitura.</span>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
 
 # ============================================================
 # TABS
