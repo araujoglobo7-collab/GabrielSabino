@@ -541,7 +541,9 @@ if "pw_erro" not in st.session_state:
 # ============================================================
 if not st.session_state.logado:
 
-    hora_atual = datetime.now().hour
+    from datetime import timezone, timedelta as _tdbr
+    _brt = timezone(_tdbr(hours=-3))
+    hora_atual = datetime.now(_brt).hour
     if hora_atual < 12:
         saudacao = "Bom dia"
     elif hora_atual < 18:
@@ -1798,7 +1800,9 @@ with tab7:
         </div>
         """, unsafe_allow_html=True)
 
-        now_p = datetime.now()
+        from datetime import timezone, timedelta as _td
+        _tz_br = timezone(_td(hours=-3))
+        now_p = datetime.now(_tz_br)
         data_hoje = now_p.strftime("%d/%m/%Y")
         hora_agora = now_p.strftime("%H:%M")
 
@@ -2565,7 +2569,9 @@ with tab9:
     df_sem = carregar_semana()
 
     # Semana atual: seg a sex
-    hoje_s = datetime.now().date()
+    from datetime import timezone, timedelta as _td2
+    _tz_br2 = timezone(_td2(hours=-3))
+    hoje_s = datetime.now(_tz_br2).date()
     seg = hoje_s - timedelta(days=hoje_s.weekday())
     dias = [seg + timedelta(days=i) for i in range(5)]
     dias_nome = ["SEG", "TER", "QUA", "QUI", "SEX"]
