@@ -1844,9 +1844,11 @@ with tab7:
             color:#6B21A8;margin-bottom:12px;">⬡ HISTÓRICO DE PONTOS</div>
         """, unsafe_allow_html=True)
 
-        if st.button("🔄 Sincronizar", key="sync_ponto", use_container_width=False):
-            st.cache_data.clear()
-            st.rerun()
+        col_s1, col_s2 = st.columns([1,1])
+        with col_s1:
+            if st.button("🔄 Sincronizar", key="sync_ponto", use_container_width=True):
+                st.cache_data.clear()
+                st.rerun()
 
         df_ponto = carregar_ponto()
 
@@ -1860,47 +1862,133 @@ with tab7:
             </div>
             """, unsafe_allow_html=True)
         else:
-            # Mostra últimos registros
-            df_show = df_ponto.tail(10).iloc[::-1]
-            for _, row in df_show.iterrows():
-                data_r  = str(row.get("Data","")).strip()
-                entrada = str(row.get("Hora Entrada","")).strip()
-                saida   = str(row.get("Hora Saída", row.get("Hora Saida",""))).strip()
-                local_r = str(row.get("Local","")).strip()
-                ativ_r  = str(row.get("Atividade","")).strip()
-                total_r = str(row.get("Total Horas","")).strip()
-                if data_r in ["","nan"]: continue
-                st.markdown(f"""
-                <div style="background:#fff;border:1px solid #EDE9FE;border-left:4px solid #6B21A8;
-                    border-radius:10px;padding:12px 14px;margin-bottom:8px;">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <div style="font-weight:700;font-size:13px;color:#1A1225;">📅 {data_r}</div>
-                    {"<div style='background:#EDE9FE;color:#6B21A8;border-radius:20px;padding:2px 10px;font-size:10px;font-family:monospace;font-weight:700;'>"+total_r+"</div>" if total_r and total_r != "nan" else ""}
-                  </div>
-                  <div style="font-size:12px;color:#5B4E72;margin-bottom:4px;">
-                    {"🟢 "+entrada if entrada and entrada!="nan" else ""} {"→ 🔴 "+saida if saida and saida!="nan" else ""}
-                  </div>
-                  {"<div style='font-size:11px;color:#9588AA;'>📍 "+local_r+"</div>" if local_r and local_r!="nan" else ""}
-                  {"<div style='font-size:11px;color:#9588AA;margin-top:2px;'>💼 "+ativ_r[:60]+("..." if len(ativ_r)>60 else "")+"</div>" if ativ_r and ativ_r!="nan" else ""}
-                </div>
-                """, unsafe_allow_html=True)
+            # ── Filtros de data ──
+            from datetime import timezone, timedelta as _tdf
+            _brtf = timezone(_tdf(hours=-3))
+            _hoje = datetime.now(_brtf).date()
+            _seg  = _hoje - __import__('datetime').timedelta(days=_hoje.weekday())
+            _sex  = _seg + __import__('datetime').timedelta(days=4)
 
-            # Resumo de horas
+            filtro_op = st.selectbox("📅 Filtrar por", 
+                ["Tudo", "Hoje", "Esta semana", "Este mês", "Período personalizado"],
+                key="filtro_ponto", label_visibility="collapsed")
+
+            # Converte coluna Data para datetime
+            def _parse_dt(s):
+                for fmt in ["%d/%m/%Y","%Y-%m-%d","%d/%m/%y"]:
+                    try:
+                        return __import__('datetime').datetime.strptime(str(s).strip(), fmt).date()
+                    except: pass
+                return None
+
+            df_ponto["_data_dt"] = df_ponto.get("Data", pd.Series()).apply(_parse_dt)
+
+            if filtro_op == "Hoje":
+                df_fil = df_ponto[df_ponto["_data_dt"] == _hoje]
+            elif filtro_op == "Esta semana":
+                df_fil = df_ponto[(df_ponto["_data_dt"] >= _seg) & (df_ponto["_data_dt"] <= _sex)]
+            elif filtro_op == "Este mês":
+                df_fil = df_ponto[(df_ponto["_data_dt"].apply(
+                    lambda x: x.month == _hoje.month and x.year == _hoje.year if x else False))]
+            elif filtro_op == "Período personalizado":
+                cf1, cf2 = st.columns(2)
+                with cf1:
+                    d_ini = st.date_input("De", value=_seg, key="ponto_d_ini")
+                with cf2:
+                    d_fim = st.date_input("Até", value=_hoje, key="ponto_d_fim")
+                df_fil = df_ponto[(df_ponto["_data_dt"] >= d_ini) & (df_ponto["_data_dt"] <= d_fim)]
+            else:
+                df_fil = df_ponto.copy()
+
+            # ── Fechamento de semana ──
+            df_semana_p = df_ponto[(df_ponto["_data_dt"] >= _seg) & (df_ponto["_data_dt"] <= _sex)]
             try:
-                total_col = df_ponto.get("Total Horas", pd.Series())
-                total_num = pd.to_numeric(
-                    total_col.astype(str).str.extract(r"([\d.]+)")[0], errors="coerce"
+                total_col_s = df_semana_p.get("Total Horas", pd.Series())
+                horas_sem = pd.to_numeric(
+                    total_col_s.astype(str).str.extract(r"([\d.]+)")[0], errors="coerce"
                 ).fillna(0).sum()
+                dias_trab = df_semana_p["_data_dt"].dropna().nunique()
+
+                meta_semanal = 40.0
+                pct = min(horas_sem / meta_semanal * 100, 100)
+                cor_meta = "#16A34A" if pct >= 100 else "#7C3AED" if pct >= 60 else "#F59E0B"
+
                 st.markdown(f"""
                 <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
-                    border-radius:10px;padding:12px 16px;margin-top:8px;text-align:center;">
+                    border-radius:14px;padding:16px;margin-bottom:14px;">
                   <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
-                      letter-spacing:2px;opacity:.7;">TOTAL DE HORAS REGISTRADAS</div>
-                  <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;">
-                    {total_num:.1f}h</div>
+                      letter-spacing:2px;opacity:.65;margin-bottom:8px;">
+                    ⬡ FECHAMENTO DA SEMANA · {_seg.strftime('%d/%m')} – {_sex.strftime('%d/%m/%Y')}</div>
+                  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;">
+                    <div>
+                      <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;">
+                        {horas_sem:.1f}h</div>
+                      <div style="font-size:11px;opacity:.7;">{dias_trab} dia(s) trabalhado(s)</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div style="font-size:11px;opacity:.7;">Meta semanal</div>
+                      <div style="font-size:18px;font-weight:700;">{meta_semanal:.0f}h</div>
+                    </div>
+                  </div>
+                  <div style="background:rgba(255,255,255,.15);border-radius:99px;height:8px;">
+                    <div style="background:{'#10B981' if pct>=100 else '#A855F7'};
+                        width:{pct:.0f}%;height:8px;border-radius:99px;
+                        transition:width .4s;"></div>
+                  </div>
+                  <div style="font-size:11px;margin-top:6px;opacity:.8;">{pct:.0f}% da meta semanal</div>
                 </div>
                 """, unsafe_allow_html=True)
             except: pass
+
+            # ── Lista de registros filtrados ──
+            df_show = df_fil.sort_values("_data_dt", ascending=False).head(15)
+            if df_show.empty:
+                st.markdown("<div style='color:#9588AA;font-size:13px;text-align:center;padding:16px;'>Nenhum registro neste período.</div>", unsafe_allow_html=True)
+            else:
+                for _, row in df_show.iterrows():
+                    data_r  = str(row.get("Data","")).strip()
+                    entrada = str(row.get("Hora Entrada","")).strip()
+                    saida   = str(row.get("Hora Saída", row.get("Hora Saida",""))).strip()
+                    local_r = str(row.get("Local","")).strip()
+                    ativ_r  = str(row.get("Atividade","")).strip()
+                    total_r = str(row.get("Total Horas","")).strip()
+                    if data_r in ["","nan"]: continue
+                    total_badge = f"<div style='background:#EDE9FE;color:#6B21A8;border-radius:20px;padding:2px 10px;font-size:10px;font-family:monospace;font-weight:700;'>{total_r}</div>" if total_r and total_r != "nan" else ""
+                    local_div  = f"<div style='font-size:11px;color:#9588AA;'>📍 {local_r}</div>" if local_r and local_r!="nan" else ""
+                    ativ_div   = f"<div style='font-size:11px;color:#9588AA;margin-top:2px;'>💼 {ativ_r[:60]}{'...' if len(ativ_r)>60 else ''}</div>" if ativ_r and ativ_r!="nan" else ""
+                    st.markdown(f"""
+                    <div style="background:#fff;border:1px solid #EDE9FE;border-left:4px solid #6B21A8;
+                        border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                        <div style="font-weight:700;font-size:13px;color:#1A1225;">📅 {data_r}</div>
+                        {total_badge}
+                      </div>
+                      <div style="font-size:12px;color:#5B4E72;margin-bottom:4px;">
+                        {"🟢 "+entrada if entrada and entrada!="nan" else ""} {"→ 🔴 "+saida if saida and saida!="nan" else ""}
+                      </div>
+                      {local_div}{ativ_div}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            # Total do período filtrado
+            try:
+                t_col = df_fil.get("Total Horas", pd.Series())
+                t_num = pd.to_numeric(
+                    t_col.astype(str).str.extract(r"([\d.]+)")[0], errors="coerce"
+                ).fillna(0).sum()
+                if t_num > 0:
+                    st.markdown(f"""
+                    <div style="background:#F5F0FF;border:1px solid #C4B5FD;
+                        border-radius:10px;padding:10px 16px;margin-top:4px;
+                        display:flex;justify-content:space-between;align-items:center;">
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                          letter-spacing:2px;color:#6B21A8;">TOTAL DO PERÍODO</div>
+                      <div style="font-family:'Syne',sans-serif;font-size:22px;
+                          font-weight:800;color:#6B21A8;">{t_num:.1f}h</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            except: pass
+
 
 # TAB 8 — VISÃO GS
 # ─────────────────────────────────────────────
