@@ -2797,7 +2797,7 @@ with tab9:
                   background:{grad};-webkit-background-clip:text;-webkit-text-fill-color:transparent;
                   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{proj}</div>
               <div style="font-size:11px;color:#5B4E72;line-height:1.4;margin-bottom:6px;">
-                {desc[:65]}{"..." if len(desc)>65 else ""}</div>
+                {desc}</div>
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-size:9px;color:#9588AA;">👤 {resp[:20]}</span>
                 <span style="background:{scor}18;color:{scor};border:1px solid {scor}44;
