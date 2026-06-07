@@ -1769,7 +1769,11 @@ with tab7:
             url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1678109373"
             r = requests.get(url, timeout=15)
             r.raise_for_status()
-            df_p = pd.read_csv(StringIO(r.text))
+            try:
+                texto_p = r.content.decode('utf-8')
+            except:
+                texto_p = r.content.decode('latin1')
+            df_p = pd.read_csv(StringIO(texto_p))
             df_p.columns = [c.strip() for c in df_p.columns]
             return df_p
         except:
@@ -2645,7 +2649,11 @@ with tab9:
             url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=532878350"
             r = requests.get(url, timeout=15)
             r.raise_for_status()
-            df_s = pd.read_csv(StringIO(r.text))
+            try:
+                texto = r.content.decode('utf-8')
+            except:
+                texto = r.content.decode('latin1')
+            df_s = pd.read_csv(StringIO(texto))
             df_s.columns = [c.strip() for c in df_s.columns]
             return df_s
         except:
