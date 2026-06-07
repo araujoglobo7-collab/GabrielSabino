@@ -1001,15 +1001,16 @@ else:
 # ============================================================
 # TABS
 # ============================================================
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
     "🤖 CHAT IA",
     "⚡ VISAO GERAL",
     "📋 KANBAN",
     "🗂️ DADOS",
     "🗺️ MAPEAMENTO GS",
     "✍️ NOTAS",
-    "📅 CALENDARIO",
-    "🎯 VISÃO GS"
+    "⏱️ PONTO",
+    "🎯 VISÃO GS",
+    "📅 SEMANA"
 ])
 
 # ─────────────────────────────────────────────
@@ -1749,306 +1750,154 @@ with tab6:
 
 # ─────────────────────────────────────────────
 # ─────────────────────────────────────────────
-# TAB 7 — CALENDÁRIO
+# ─────────────────────────────────────────────
+# TAB 7 — PONTO
 # ─────────────────────────────────────────────
 with tab7:
-    if df.empty:
-        st.warning("Sem dados carregados.")
-    else:
-        fc1, fc2, fc3 = st.columns(3)
-        with fc1:
-            filtro_nome_cal = st.text_input("🔍 Buscar", placeholder="Nome do projeto...", key="cal_nome")
-        with fc2:
-            filtro_status_cal = st.multiselect("Status", STATUS_OPCOES, default=[], key="cal_status", placeholder="Todos")
-        with fc3:
-            filtro_mes_cal = st.selectbox("Mês", ["Todos","Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"], key="cal_mes")
+    import json as _jp
 
-        df_cal = df.copy()
-        if filtro_nome_cal:
-            df_cal = df_cal[df_cal["Projeto"].str.contains(filtro_nome_cal, case=False, na=False)]
-        if filtro_status_cal:
-            df_cal = df_cal[df_cal["Status"].isin(filtro_status_cal)]
-        if filtro_mes_cal != "Todos":
-            mes_num = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-                       "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].index(filtro_mes_cal) + 1
-            df_cal = df_cal[df_cal["Data Inicial"].dt.month == mes_num]
+    @st.cache_data(ttl=60)
+    def carregar_ponto():
+        try:
+            import requests
+            from io import StringIO
+            sheet_id = "1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg"
+            url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1678109373"
+            r = requests.get(url, timeout=15)
+            r.raise_for_status()
+            df_p = pd.read_csv(StringIO(r.text))
+            df_p.columns = [c.strip() for c in df_p.columns]
+            return df_p
+        except:
+            return pd.DataFrame()
 
-        import json as _json
-        eventos = []
-        for _, row in df_cal.iterrows():
-            cor = STATUS_COLORS.get(row.get("Status",""), "#6B21A8")
-            eventos.append({
-                "nome": str(row["Projeto"])[:45],
-                "inicio": row["Data Inicial"].strftime("%Y-%m-%d"),
-                "fim": row["Prazo"].strftime("%Y-%m-%d"),
-                "status": str(row.get("Status","")),
-                "foco": str(row.get("Foco",""))[:40] if pd.notna(row.get("Foco")) else "",
-                "cor": cor,
-                "dias": int((row["Prazo"] - pd.Timestamp.now()).days)
-            })
+    # ── Header ──
+    st.markdown("""
+    <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
+        padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-size:36px;">⏱️</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">
+            Registro de Ponto</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.65);">Gabriel Sabino · GS Consulting</div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        eventos_json = _json.dumps(eventos, ensure_ascii=False)
-        status_colors_json = _json.dumps(STATUS_COLORS)
+    # ── Form de ponto ──
+    col_form_p, col_hist_p = st.columns([1, 1.4])
 
-        CAL_HTML = f"""<!DOCTYPE html>
-<html><head>
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
-*{{margin:0;padding:0;box-sizing:border-box;}}
-body{{background:#F6F5FA;font-family:'Inter',sans-serif;color:#1A1225;padding:0 0 20px;}}
+    with col_form_p:
+        st.markdown("""
+        <div style="background:#fff;border:1px solid #DDD8F0;border-radius:16px;
+            padding:20px;box-shadow:0 2px 12px rgba(107,33,168,.07);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;
+              color:#6B21A8;margin-bottom:16px;">⬡ BATER PONTO AGORA</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-/* Nav */
-.nav{{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 20px;background:#fff;
-  border:1px solid #DDD8F0;border-radius:14px;
-  margin-bottom:14px;
-  box-shadow:0 1px 6px rgba(107,33,168,.07);
-}}
-.nav-title{{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#6B21A8;}}
-.nav-sub{{font-size:11px;color:#9588AA;font-family:'JetBrains Mono',monospace;letter-spacing:1px;}}
-.nav-right{{display:flex;gap:8px;align-items:center;}}
-.nbtn{{
-  width:36px;height:36px;border-radius:50%;
-  border:1px solid #DDD8F0;background:#fff;
-  cursor:pointer;font-size:18px;color:#6B21A8;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .18s;
-}}
-.nbtn:hover{{background:#6B21A8;color:#fff;border-color:#6B21A8;}}
-.ntod{{
-  padding:7px 16px;border-radius:8px;
-  border:1px solid #6B21A8;background:transparent;
-  color:#6B21A8;font-size:12px;font-weight:600;
-  cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;
-}}
-.ntod:hover{{background:#6B21A8;color:#fff;}}
+        now_p = datetime.now()
+        data_hoje = now_p.strftime("%d/%m/%Y")
+        hora_agora = now_p.strftime("%H:%M")
 
-/* Grade */
-.grid{{
-  display:grid;grid-template-columns:repeat(7,1fr);
-  gap:1px;background:#E8E4F4;
-  border-radius:14px;overflow:hidden;
-  border:1px solid #DDD8F0;
-  box-shadow:0 2px 12px rgba(107,33,168,.08);
-}}
-.dh{{
-  background:#EFECF8;padding:10px 4px;text-align:center;
-  font-family:'JetBrains Mono',monospace;font-size:10px;
-  font-weight:600;letter-spacing:1.5px;color:#6B21A8;
-}}
-.dc{{
-  background:#fff;min-height:96px;padding:5px 4px;
-  transition:background .12s;position:relative;
-  overflow:hidden;
-}}
-.dc.om{{background:#FAFAFA;}}
-.dc.tod .dn{{
-  background:#6B21A8;color:#fff;border-radius:50%;
-  width:24px;height:24px;display:flex;align-items:center;
-  justify-content:center;font-weight:700;
-}}
-.dn{{font-size:12px;font-weight:600;color:#1A1225;display:inline-flex;
-    width:24px;height:24px;align-items:center;justify-content:center;
-    margin-bottom:3px;}}
-.dc.om .dn{{color:#C4BCDF;}}
+        st.markdown(f"""
+        <div style="background:linear-gradient(135deg,#F5F0FF,#EDE9FE);border:1px solid #C4B5FD;
+            border-radius:12px;padding:16px;margin-bottom:16px;text-align:center;">
+          <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;
+              background:linear-gradient(135deg,#6B21A8,#A855F7);
+              -webkit-background-clip:text;-webkit-text-fill-color:transparent;">{hora_agora}</div>
+          <div style="font-size:12px;color:#9588AA;margin-top:4px;">{data_hoje}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-/* Evento — só nome, sem poluição */
-.ev{{
-  border-radius:4px;padding:2px 6px 2px 8px;
-  font-size:11px;font-weight:600;
-  margin-bottom:2px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  cursor:pointer;transition:opacity .15s, filter .15s;
-  line-height:1.5;
-  position:relative;
-}}
-.ev:hover{{opacity:.85;filter:brightness(1.05);}}
-.ev.is-start{{border-left:3px solid rgba(0,0,0,.2)!important;}}
-.more{{font-size:10px;color:#9588AA;font-weight:500;padding:1px 4px;cursor:pointer;}}
-.more:hover{{color:#6B21A8;}}
+        tipo_ponto = st.selectbox("Tipo", ["🟢 Entrada", "🔴 Saída"], label_visibility="collapsed", key="tipo_ponto")
+        local_p = st.text_input("Local", placeholder="Ex: Escritório Dunas, Home Office, Campo...", key="local_ponto")
+        atividade_p = st.text_area("O que estou fazendo", placeholder="Ex: Reunião com cliente MLOG, desenvolvimento sistema...", height=100, key="ativ_ponto")
 
-/* Tooltip card — cinza limpo */
-#tt{{
-  position:fixed;
-  background:#1C1828;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:14px;
-  padding:16px 18px;
-  width:248px;
-  box-shadow:0 12px 40px rgba(0,0,0,.4);
-  z-index:9999;
-  display:none;
-  pointer-events:none;
-}}
-#tt.show{{display:block;animation:ttIn .15s ease;}}
-@keyframes ttIn{{from{{opacity:0;transform:translateY(6px);}}to{{opacity:1;transform:translateY(0);}}}}
-.tt-nome{{font-weight:700;font-size:14px;color:#fff;margin-bottom:10px;line-height:1.4;}}
-.tt-badge{{
-  display:inline-flex;align-items:center;padding:3px 10px;
-  border-radius:20px;font-size:10px;font-weight:700;
-  font-family:'JetBrains Mono',monospace;letter-spacing:.5px;
-  margin-bottom:10px;
-}}
-.tt-row{{
-  display:flex;align-items:flex-start;gap:8px;
-  font-size:12px;color:rgba(255,255,255,.6);
-  margin-bottom:6px;line-height:1.4;
-}}
-.tt-row .lbl{{color:rgba(255,255,255,.35);font-size:10px;
-  font-family:'JetBrains Mono',monospace;letter-spacing:.5px;
-  min-width:40px;margin-top:1px;}}
-.tt-row .val{{color:rgba(255,255,255,.85);font-size:12px;}}
-.tt-dias{{
-  margin-top:8px;padding:8px 10px;border-radius:8px;
-  background:rgba(255,255,255,.05);
-  font-size:12px;font-weight:600;text-align:center;
-}}
+        if st.button("⏱️ Registrar Ponto", use_container_width=True, key="btn_ponto"):
+            if local_p and atividade_p:
+                st.success(f"✅ Ponto registrado! {tipo_ponto} às {hora_agora}")
+                st.markdown(f"""
+                <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:10px;
+                    padding:14px;margin-top:8px;">
+                  <div style="font-weight:700;color:#16A34A;margin-bottom:4px;">{tipo_ponto} — {hora_agora}</div>
+                  <div style="font-size:12px;color:#5B4E72;">📍 {local_p}</div>
+                  <div style="font-size:12px;color:#5B4E72;margin-top:4px;">💼 {atividade_p}</div>
+                  <div style="font-size:10px;color:#9588AA;margin-top:8px;font-family:monospace;">
+                    Cole no Google Sheets → aba Ponto:<br>
+                    <b>{data_hoje} | {hora_agora} | {local_p} | {atividade_p}</b>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.error("Preencha Local e Atividade!")
 
-/* Legenda */
-.leg{{
-  display:flex;flex-wrap:wrap;gap:8px;
-  margin-top:14px;padding:12px 16px;
-  background:#fff;border:1px solid #DDD8F0;border-radius:10px;
-}}
-.li{{display:flex;align-items:center;gap:6px;font-size:11px;color:#5B4E72;}}
-.ld{{width:10px;height:10px;border-radius:3px;flex-shrink:0;}}
+    with col_hist_p:
+        st.markdown("""
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:3px;
+            color:#6B21A8;margin-bottom:12px;">⬡ HISTÓRICO DE PONTOS</div>
+        """, unsafe_allow_html=True)
 
-@media(max-width:600px){{
-  .dc{{min-height:64px;padding:3px 2px;}}
-  .dn{{font-size:10px;width:20px;height:20px;}}
-  .ev{{font-size:9px;padding:1px 4px;}}
-  .nav-title{{font-size:18px;}}
-  #tt{{width:200px;font-size:11px;}}
-}}
-</style></head><body>
+        if st.button("🔄 Sincronizar", key="sync_ponto", use_container_width=False):
+            st.cache_data.clear()
+            st.rerun()
 
-<div class="nav">
-  <div>
-    <div class="nav-title" id="nav-title"></div>
-    <div class="nav-sub" id="nav-sub"></div>
-  </div>
-  <div class="nav-right">
-    <button class="ntod" onclick="goToday()">Hoje</button>
-    <button class="nbtn" onclick="chM(-1)">&#8249;</button>
-    <button class="nbtn" onclick="chM(1)">&#8250;</button>
-  </div>
-</div>
+        df_ponto = carregar_ponto()
 
-<div class="grid" id="grid"></div>
-<div class="leg" id="leg"></div>
-<div id="tt"></div>
+        if df_ponto.empty:
+            st.markdown("""
+            <div style="background:#F6F5FA;border:1px dashed #C4B5FD;border-radius:12px;
+                padding:24px;text-align:center;color:#9588AA;font-size:13px;">
+              Nenhum ponto registrado ainda.<br>
+              <span style="font-size:11px;">Crie a aba <b>Ponto</b> no Google Sheets com colunas:<br>
+              Data | Hora Entrada | Hora Saída | Local | Atividade | Total Horas</span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # Mostra últimos registros
+            df_show = df_ponto.tail(10).iloc[::-1]
+            for _, row in df_show.iterrows():
+                data_r  = str(row.get("Data","")).strip()
+                entrada = str(row.get("Hora Entrada","")).strip()
+                saida   = str(row.get("Hora Saída", row.get("Hora Saida",""))).strip()
+                local_r = str(row.get("Local","")).strip()
+                ativ_r  = str(row.get("Atividade","")).strip()
+                total_r = str(row.get("Total Horas","")).strip()
+                if data_r in ["","nan"]: continue
+                st.markdown(f"""
+                <div style="background:#fff;border:1px solid #EDE9FE;border-left:4px solid #6B21A8;
+                    border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <div style="font-weight:700;font-size:13px;color:#1A1225;">📅 {data_r}</div>
+                    {"<div style='background:#EDE9FE;color:#6B21A8;border-radius:20px;padding:2px 10px;font-size:10px;font-family:monospace;font-weight:700;'>"+total_r+"</div>" if total_r and total_r != "nan" else ""}
+                  </div>
+                  <div style="font-size:12px;color:#5B4E72;margin-bottom:4px;">
+                    {"🟢 "+entrada if entrada and entrada!="nan" else ""} {"→ 🔴 "+saida if saida and saida!="nan" else ""}
+                  </div>
+                  {"<div style='font-size:11px;color:#9588AA;'>📍 "+local_r+"</div>" if local_r and local_r!="nan" else ""}
+                  {"<div style='font-size:11px;color:#9588AA;margin-top:2px;'>💼 "+ativ_r[:60]+("..." if len(ativ_r)>60 else "")+"</div>" if ativ_r and ativ_r!="nan" else ""}
+                </div>
+                """, unsafe_allow_html=True)
 
-<script>
-const EVS={eventos_json};
-const SC={status_colors_json};
-const DS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const MS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-          'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            # Resumo de horas
+            try:
+                total_col = df_ponto.get("Total Horas", pd.Series())
+                total_num = pd.to_numeric(
+                    total_col.astype(str).str.extract(r"([\d.]+)")[0], errors="coerce"
+                ).fillna(0).sum()
+                st.markdown(f"""
+                <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);color:#fff;
+                    border-radius:10px;padding:12px 16px;margin-top:8px;text-align:center;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                      letter-spacing:2px;opacity:.7;">TOTAL DE HORAS REGISTRADAS</div>
+                  <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;">
+                    {total_num:.1f}h</div>
+                </div>
+                """, unsafe_allow_html=True)
+            except: pass
 
-const hoje=new Date();
-let Y=hoje.getFullYear(), M=hoje.getMonth();
-
-function pd(s){{return new Date(s+'T00:00:00');}}
-function sd(a,b){{return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}}
-
-function evDay(y,m,d){{
-  const dt=new Date(y,m,d);
-  return EVS.filter(e=>{{const i=pd(e.inicio),f=pd(e.fim);return dt>=i&&dt<=f;}});
-}}
-
-function render(){{
-  const g=document.getElementById('grid');
-  g.innerHTML='';
-  DS.forEach(d=>{{const h=document.createElement('div');h.className='dh';h.textContent=d;g.appendChild(h);}});
-  document.getElementById('nav-title').textContent=MS[M]+' '+Y;
-  const cnt=evDay(Y,M,1).length + evDay(Y,M,15).length;
-  document.getElementById('nav-sub').textContent=EVS.length+' projetos no portfólio';
-
-  const fd=new Date(Y,M,1).getDay();
-  const dim=new Date(Y,M+1,0).getDate();
-  const dip=new Date(Y,M,0).getDate();
-  const tot=Math.ceil((fd+dim)/7)*7;
-
-  for(let i=0;i<tot;i++){{
-    const cell=document.createElement('div');
-    cell.className='dc';
-    let day,mo=M,yr=Y,om=false;
-    if(i<fd){{day=dip-fd+i+1;mo=M-1;yr=Y;if(mo<0){{mo=11;yr--;}}om=true;}}
-    else if(i>=fd+dim){{day=i-fd-dim+1;mo=M+1;yr=Y;if(mo>11){{mo=0;yr++;}}om=true;}}
-    else{{day=i-fd+1;}}
-    if(om)cell.classList.add('om');
-    const isT=!om&&sd(new Date(yr,mo,day),hoje);
-    if(isT)cell.classList.add('tod');
-    const dn=document.createElement('div');dn.className='dn';dn.textContent=day;cell.appendChild(dn);
-    if(!om){{
-      const evs=evDay(yr,mo,day);
-      if(evs.length)cell.style.background='#FDFCFF';
-      evs.slice(0,3).forEach(e=>{{
-        const div=document.createElement('div');
-        div.className='ev'+(sd(pd(e.inicio),new Date(yr,mo,day))?' is-start':'');
-        div.style.background=e.cor+'20';
-        div.style.color=e.cor;
-        div.style.borderLeft=sd(pd(e.inicio),new Date(yr,mo,day))?'3px solid '+e.cor:'3px solid transparent';
-        div.textContent=e.nome;
-        div.onmouseenter=function(ev){{showTT(e,ev);}};
-        div.onmouseleave=hideTT;
-        cell.appendChild(div);
-      }});
-      if(evs.length>3){{const m=document.createElement('div');m.className='more';m.textContent='+' +(evs.length-3)+' mais';cell.appendChild(m);}}
-    }}
-    g.appendChild(cell);
-  }}
-  renderLeg();
-}}
-
-function renderLeg(){{
-  const l=document.getElementById('leg');l.innerHTML='';
-  const seen={{}};
-  EVS.forEach(e=>{{if(!seen[e.status]){{seen[e.status]=1;
-    const item=document.createElement('div');item.className='li';
-    item.innerHTML=`<div class="ld" style="background:${{e.cor}}"></div><span>${{e.status}}</span>`;
-    l.appendChild(item);}}}});
-}}
-
-function showTT(e,ev){{
-  const tt=document.getElementById('tt');
-  const d=e.dias;
-  const dc=d<0?'#F87171':d<7?'#F59E0B':'#10B981';
-  const dtxt=d<0?Math.abs(d)+' dias em atraso':d===0?'Vence hoje':d+' dias restantes';
-  tt.innerHTML=`
-    <div class="tt-nome">${{e.nome}}</div>
-    <span class="tt-badge" style="background:${{e.cor}}22;color:${{e.cor}};border:1px solid ${{e.cor}}44">${{e.status}}</span>
-    <div class="tt-row"><span class="lbl">INÍCIO</span><span class="val">${{fmtD(e.inicio)}}</span></div>
-    <div class="tt-row"><span class="lbl">PRAZO</span><span class="val">${{fmtD(e.fim)}}</span></div>
-    ${{e.foco?`<div class="tt-row"><span class="lbl">FOCO</span><span class="val">${{e.foco}}</span></div>`:''}}
-    <div class="tt-dias" style="color:${{dc}}">${{dtxt}}</div>
-  `;
-  tt.classList.add('show');
-  positionTT(ev);
-}}
-
-function positionTT(ev){{
-  const tt=document.getElementById('tt');
-  const x=Math.min(ev.clientX+14, window.innerWidth-262);
-  const y=Math.min(ev.clientY+14, window.innerHeight-240);
-  tt.style.left=x+'px'; tt.style.top=y+'px';
-}}
-
-function hideTT(){{document.getElementById('tt').classList.remove('show');}}
-function fmtD(s){{const[y,m,d]=s.split('-');return d+'/'+m+'/'+y;}}
-function chM(dir){{M+=dir;if(M>11){{M=0;Y++;}}if(M<0){{M=11;Y--;}}render();}}
-function goToday(){{Y=hoje.getFullYear();M=hoje.getMonth();render();}}
-
-render();
-</script></body></html>"""
-
-        components.html(CAL_HTML, height=840, scrolling=True)
-
-# ─────────────────────────────────────────────
-# ─────────────────────────────────────────────
 # TAB 8 — VISÃO GS
 # ─────────────────────────────────────────────
 with tab8:
@@ -2685,3 +2534,189 @@ Use os botões ao lado para análises específicas! 👆"""
 
         st.session_state.chat_visao_history.append({"role": "assistant", "content": answer})
         st.rerun()
+
+# ─────────────────────────────────────────────
+# TAB 9 — SEMANA
+# ─────────────────────────────────────────────
+with tab9:
+
+    @st.cache_data(ttl=300)
+    def carregar_semana():
+        try:
+            import requests
+            from io import StringIO
+            sheet_id = "1SRUQwYW4acuehJ9St0bo2A2AFGW2UDKROzWQ1Y1mBJg"
+            url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=532878350"
+            r = requests.get(url, timeout=15)
+            r.raise_for_status()
+            df_s = pd.read_csv(StringIO(r.text))
+            df_s.columns = [c.strip() for c in df_s.columns]
+            return df_s
+        except:
+            return pd.DataFrame()
+
+    import json as _js
+    from datetime import timedelta
+
+    if st.button("🔄 Sincronizar", key="sync_semana", use_container_width=False):
+        st.cache_data.clear()
+        st.rerun()
+
+    df_sem = carregar_semana()
+
+    # Semana atual: seg a sex
+    hoje_s = datetime.now().date()
+    seg = hoje_s - timedelta(days=hoje_s.weekday())
+    dias = [seg + timedelta(days=i) for i in range(5)]
+    dias_nome = ["SEG", "TER", "QUA", "QUI", "SEX"]
+    dias_fmt  = [d.strftime("%d/%m") for d in dias]
+
+    # Cores por projeto
+    CORES_PROJ = [
+        ("linear-gradient(135deg,#6B21A8,#4C1D95)", "#F5F0FF", "#C4B5FD"),
+        ("linear-gradient(135deg,#0891B2,#0C4A6E)", "#E0F9FF", "#67E8F9"),
+        ("linear-gradient(135deg,#16A34A,#14532D)", "#F0FDF4", "#86EFAC"),
+        ("linear-gradient(135deg,#DC2626,#7F1D1D)", "#FFF7ED", "#FCA5A5"),
+        ("linear-gradient(135deg,#D97706,#78350F)", "#FFFBEB", "#FCD34D"),
+        ("linear-gradient(135deg,#7C3AED,#3B0764)", "#EDE9FE", "#C4B5FD"),
+    ]
+
+    # Exemplo se vazio
+    if df_sem.empty:
+        df_sem = pd.DataFrame([
+            {"Projeto":"TSP SEARA",      "Descricao":"Reunião alinhamento cliente","Data Inicio":"08/06/2026","Data Fim":"08/06/2026","Responsavel":"Gabriel Sabino","Status":"Planejado"},
+            {"Projeto":"Sistema Dunas",  "Descricao":"Ajuste indicadores e testes","Data Inicio":"09/06/2026","Data Fim":"11/06/2026","Responsavel":"Gabriel Sabino","Status":"Em andamento"},
+            {"Projeto":"IA Dunas Fleets","Descricao":"Desenvolvimento protótipo v1","Data Inicio":"09/06/2026","Data Fim":"13/06/2026","Responsavel":"Gabriel Sabino","Status":"Em andamento"},
+            {"Projeto":"Instagram",      "Descricao":"Estrutura estratégica conteúdo","Data Inicio":"12/06/2026","Data Fim":"13/06/2026","Responsavel":"Gabriel e Michael","Status":"Planejado"},
+        ])
+
+    # Normaliza colunas
+    import unicodedata as _ud2
+    def _n(s):
+        return "".join(c for c in _ud2.normalize("NFD",str(s)) if _ud2.category(c)!="Mn").strip().lower()
+    for alias, canon in [("projeto","Projeto"),("descricao","Descricao"),
+                          ("data inicio","Data Inicio"),("data fim","Data Fim"),
+                          ("responsavel","Responsavel"),("status","Status")]:
+        found = next((c for c in df_sem.columns if _n(c)==alias), None)
+        if found and canon not in df_sem.columns:
+            df_sem[canon] = df_sem[found]
+
+    # Mapeia cor por projeto
+    projs_uniq = df_sem["Projeto"].unique() if "Projeto" in df_sem.columns else []
+    proj_cor   = {p: CORES_PROJ[i % len(CORES_PROJ)] for i, p in enumerate(projs_uniq)}
+
+    def parse_date(s):
+        for fmt in ["%d/%m/%Y","%Y-%m-%d","%d/%m/%y"]:
+            try:
+                from datetime import datetime as _dt
+                return _dt.strptime(str(s).strip(), fmt).date()
+            except: pass
+        return None
+
+    # ── Header semana ──
+    st.markdown(f"""
+    <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
+        padding:18px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">
+          Semana {seg.strftime('%d/%m')} — {dias[-1].strftime('%d/%m/%Y')}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.65);">
+          Gabriel Sabino · {len(df_sem)} atividade(s) planejada(s)</div>
+      </div>
+      <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:8px 16px;text-align:center;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,.6);">HOJE</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">
+          {hoje_s.strftime('%a %d').upper()}</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Grade semanal HTML ──
+    # Monta células por dia
+    grade_cols = ""
+    for di, (dia, nome_dia, fmt_dia) in enumerate(zip(dias, dias_nome, dias_fmt)):
+        is_hoje = (dia == hoje_s)
+        header_style = (
+            "background:linear-gradient(135deg,#10B981,#065F46)" if is_hoje
+            else "background:linear-gradient(135deg,#6B21A8,#4C1D95)"
+        )
+        cards_dia = ""
+        for _, row in df_sem.iterrows():
+            proj    = str(row.get("Projeto","")).strip()
+            desc    = str(row.get("Descricao","")).strip()
+            ini     = parse_date(row.get("Data Inicio",""))
+            fim     = parse_date(row.get("Data Fim",""))
+            resp    = str(row.get("Responsavel","")).strip()
+            status  = str(row.get("Status","")).strip()
+            if not ini or not fim: continue
+            if not (ini <= dia <= fim): continue
+
+            grad, bg, bord = proj_cor.get(proj, CORES_PROJ[0])
+            status_cor = {"Em andamento":"#7C3AED","Planejado":"#0891B2","Concluído":"#16A34A","Concluido":"#16A34A"}.get(status,"#9588AA")
+            desc_short = desc[:55]+("..." if len(desc)>55 else "")
+
+            cards_dia += f"""
+            <div style="background:{bg};border:1px solid {bord};border-top:3px solid;
+                border-image:{grad} 1;border-radius:10px;padding:10px;margin-bottom:8px;
+                box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:default;"
+                title="{proj}: {desc}">
+              <div style="font-weight:800;font-size:12px;
+                  background:{grad};-webkit-background-clip:text;
+                  -webkit-text-fill-color:transparent;margin-bottom:4px;
+                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{proj}</div>
+              <div style="font-size:11px;color:#5B4E72;line-height:1.4;margin-bottom:6px;">{desc_short}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:9px;color:#9588AA;">👤 {resp[:18]}</span>
+                <span style="background:{status_cor}18;color:{status_cor};border:1px solid {status_cor}44;
+                    padding:1px 7px;border-radius:20px;font-size:9px;font-family:monospace;">{status}</span>
+              </div>
+            </div>"""
+
+        if not cards_dia:
+            cards_dia = '<div style="color:#C4BCDF;font-size:11px;font-style:italic;padding:12px 0;text-align:center;">— livre —</div>'
+
+        hoje_badge = '<div style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:9px;font-family:monospace;color:#fff;display:inline-block;margin-left:6px;">HOJE</div>' if is_hoje else ""
+
+        grade_cols += f"""
+        <div style="flex:1;min-width:160px;border-radius:14px;overflow:hidden;
+            box-shadow:0 4px 16px rgba(107,33,168,.1);
+            {"border:2px solid #10B981;" if is_hoje else "border:1px solid #DDD8F0;"}">
+          <div style="{header_style};padding:12px 14px;">
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;">
+              {nome_dia} {hoje_badge}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                color:rgba(255,255,255,.65);">{fmt_dia}</div>
+          </div>
+          <div style="background:#fff;padding:10px;min-height:120px;">
+            {cards_dia}
+          </div>
+        </div>"""
+
+    cockpit_html = f"""<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+*{{margin:0;padding:0;box-sizing:border-box;}}
+body{{background:#F0EBF8;font-family:'Inter',sans-serif;padding:0;}}
+.grade{{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;}}
+.grade::-webkit-scrollbar{{height:4px;}}
+.grade::-webkit-scrollbar-thumb{{background:#C4B5FD;border-radius:4px;}}
+</style></head><body>
+<div class="grade">
+{grade_cols}
+</div>
+</body></html>"""
+
+    components.html(cockpit_html, height=600, scrolling=False)
+
+    # Legenda de projetos
+    st.markdown("<div style='margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;'>", unsafe_allow_html=True)
+    leg_html = "<div style='display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;'>"
+    for proj, (grad, bg, bord) in proj_cor.items():
+        leg_html += f"""<div style="background:{bg};border:1px solid {bord};border-radius:20px;
+            padding:4px 12px;font-size:11px;font-weight:600;
+            background-clip:text;-webkit-text-fill-color:transparent;
+            background-image:{grad};">{proj}</div>"""
+    leg_html += "</div>"
+    st.markdown(leg_html, unsafe_allow_html=True)
