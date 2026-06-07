@@ -955,7 +955,9 @@ with st.sidebar:
 # ============================================================
 # HEADER
 # ============================================================
-now = datetime.now()
+from datetime import timezone as _tz, timedelta as _tdbrt
+_brt_now = datetime.now(_tz(_tdbrt(hours=-3)))
+now = _brt_now
 usuario_nome = "GABRIEL SABINO"
 usuario_cor  = "#6B21A8"
 
@@ -2628,6 +2630,7 @@ Use os botões ao lado para análises específicas! 👆"""
         st.rerun()
 
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
 # TAB 9 — SEMANA
 # ─────────────────────────────────────────────
 with tab9:
@@ -2648,22 +2651,47 @@ with tab9:
             return pd.DataFrame()
 
     import json as _js
-    from datetime import timedelta
+    from datetime import timezone as _tz9, timedelta as _td9
+    _brt9 = _tz9(_td9(hours=-3))
 
-    if st.button("🔄 Sincronizar", key="sync_semana", use_container_width=False):
-        st.cache_data.clear()
-        st.rerun()
+    col_sync_s, col_nav1, col_nav2, col_nav3 = st.columns([1.5, 0.5, 1.2, 0.5])
+
+    if "semana_offset" not in st.session_state:
+        st.session_state.semana_offset = 0
+
+    with col_sync_s:
+        if st.button("🔄 Sincronizar", key="sync_semana", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+    with col_nav1:
+        if st.button("◀", key="sem_prev", use_container_width=True):
+            st.session_state.semana_offset -= 1
+            st.rerun()
+    with col_nav2:
+        if st.button("Semana atual", key="sem_hoje", use_container_width=True):
+            st.session_state.semana_offset = 0
+            st.rerun()
+    with col_nav3:
+        if st.button("▶", key="sem_next", use_container_width=True):
+            st.session_state.semana_offset += 1
+            st.rerun()
 
     df_sem = carregar_semana()
 
-    # Semana atual: seg a sex
-    from datetime import timezone, timedelta as _td2
-    _tz_br2 = timezone(_td2(hours=-3))
-    hoje_s = datetime.now(_tz_br2).date()
-    seg = hoje_s - timedelta(days=hoje_s.weekday())
-    dias = [seg + timedelta(days=i) for i in range(5)]
+    # Semana baseada no offset — próxima semana se domingo
+    hoje_s = datetime.now(_brt9).date()
+    offset = st.session_state.semana_offset
+
+    # Se hoje é domingo (weekday=6), avança para próxima semana por padrão
+    base = hoje_s
+    if base.weekday() == 6 and offset == 0:
+        offset = 1
+
+    seg = hoje_s - __import__("datetime").timedelta(days=hoje_s.weekday()) + __import__("datetime").timedelta(weeks=offset)
+    dias = [seg + __import__("datetime").timedelta(days=i) for i in range(5)]
     dias_nome = ["SEG", "TER", "QUA", "QUI", "SEX"]
     dias_fmt  = [d.strftime("%d/%m") for d in dias]
+    sex = dias[-1]
 
     # Cores por projeto
     CORES_PROJ = [
@@ -2678,55 +2706,49 @@ with tab9:
     # Exemplo se vazio
     if df_sem.empty:
         df_sem = pd.DataFrame([
-            {"Projeto":"TSP SEARA",      "Descricao":"Reunião alinhamento cliente","Data Inicio":"08/06/2026","Data Fim":"08/06/2026","Responsavel":"Gabriel Sabino","Status":"Planejado"},
-            {"Projeto":"Sistema Dunas",  "Descricao":"Ajuste indicadores e testes","Data Inicio":"09/06/2026","Data Fim":"11/06/2026","Responsavel":"Gabriel Sabino","Status":"Em andamento"},
-            {"Projeto":"IA Dunas Fleets","Descricao":"Desenvolvimento protótipo v1","Data Inicio":"09/06/2026","Data Fim":"13/06/2026","Responsavel":"Gabriel Sabino","Status":"Em andamento"},
-            {"Projeto":"Instagram",      "Descricao":"Estrutura estratégica conteúdo","Data Inicio":"12/06/2026","Data Fim":"13/06/2026","Responsavel":"Gabriel e Michael","Status":"Planejado"},
+            {"Projeto":"TSP SEARA",      "Descricao":"Reunião alinhamento cliente","Dias":"SEG,TER","Responsavel":"Gabriel Sabino","Status":"Planejado"},
+            {"Projeto":"Sistema Dunas",  "Descricao":"Ajuste indicadores e testes","Dias":"TER,QUA,QUI","Responsavel":"Gabriel Sabino","Status":"Em andamento"},
+            {"Projeto":"IA Dunas",       "Descricao":"Desenvolvimento protótipo v1","Dias":"QUA,SEX","Responsavel":"Gabriel Sabino","Status":"Em andamento"},
+            {"Projeto":"Instagram",      "Descricao":"Estrutura estratégica conteúdo","Dias":"SEX","Responsavel":"Gabriel e Michael","Status":"Planejado"},
         ])
 
     # Normaliza colunas
     import unicodedata as _ud2
-    def _n(s):
+    def _n2(s):
         return "".join(c for c in _ud2.normalize("NFD",str(s)) if _ud2.category(c)!="Mn").strip().lower()
     for alias, canon in [("projeto","Projeto"),("descricao","Descricao"),
-                          ("data inicio","Data Inicio"),("data fim","Data Fim"),
-                          ("responsavel","Responsavel"),("status","Status")]:
-        found = next((c for c in df_sem.columns if _n(c)==alias), None)
+                          ("dias","Dias"),("responsavel","Responsavel"),("status","Status")]:
+        found = next((c for c in df_sem.columns if _n2(c)==alias), None)
         if found and canon not in df_sem.columns:
             df_sem[canon] = df_sem[found]
 
     # Mapeia cor por projeto
-    projs_uniq = df_sem["Projeto"].unique() if "Projeto" in df_sem.columns else []
+    projs_uniq = list(df_sem["Projeto"].unique()) if "Projeto" in df_sem.columns else []
     proj_cor   = {p: CORES_PROJ[i % len(CORES_PROJ)] for i, p in enumerate(projs_uniq)}
 
-    def parse_date(s):
-        for fmt in ["%d/%m/%Y","%Y-%m-%d","%d/%m/%y"]:
-            try:
-                from datetime import datetime as _dt
-                return _dt.strptime(str(s).strip(), fmt).date()
-            except: pass
-        return None
-
-    # ── Header semana ──
+    # ── Header ──
     st.markdown(f"""
     <div style="background:linear-gradient(135deg,#6B21A8,#4C1D95);border-radius:16px;
-        padding:18px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+        padding:18px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;">
-          Semana {seg.strftime('%d/%m')} — {dias[-1].strftime('%d/%m/%Y')}</div>
+          Semana {seg.strftime('%d/%m')} — {sex.strftime('%d/%m/%Y')}</div>
         <div style="font-size:12px;color:rgba(255,255,255,.65);">
           Gabriel Sabino · {len(df_sem)} atividade(s) planejada(s)</div>
       </div>
       <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:8px 16px;text-align:center;">
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,.6);">HOJE</div>
         <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">
-          {hoje_s.strftime('%a %d').upper()}</div>
+          {hoje_s.strftime('%a %d/%m').upper()}</div>
       </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Grade semanal HTML ──
-    # Monta células por dia
+    # ── Grade ──
+    # Mapeamento nome do dia para índice
+    DIA_IDX = {"SEG":0,"TER":1,"QUA":2,"QUI":3,"SEX":4,
+               "SEGUNDA":0,"TERCA":1,"TERÇA":1,"QUARTA":2,"QUINTA":3,"SEXTA":4}
+
     grade_cols = ""
     for di, (dia, nome_dia, fmt_dia) in enumerate(zip(dias, dias_nome, dias_fmt)):
         is_hoje = (dia == hoje_s)
@@ -2734,45 +2756,50 @@ with tab9:
             "background:linear-gradient(135deg,#10B981,#065F46)" if is_hoje
             else "background:linear-gradient(135deg,#6B21A8,#4C1D95)"
         )
+        hoje_badge = '<div style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:9px;font-family:monospace;color:#fff;display:inline-block;margin-left:6px;">HOJE</div>' if is_hoje else ""
+
         cards_dia = ""
         for _, row in df_sem.iterrows():
-            proj    = str(row.get("Projeto","")).strip()
-            desc    = str(row.get("Descricao","")).strip()
-            ini     = parse_date(row.get("Data Inicio",""))
-            fim     = parse_date(row.get("Data Fim",""))
-            resp    = str(row.get("Responsavel","")).strip()
-            status  = str(row.get("Status","")).strip()
-            if not ini or not fim: continue
-            if not (ini <= dia <= fim): continue
+            proj   = str(row.get("Projeto","")).strip()
+            desc   = str(row.get("Descricao","")).strip()
+            dias_r = str(row.get("Dias","")).upper().strip()
+            resp   = str(row.get("Responsavel","")).strip()
+            status = str(row.get("Status","")).strip()
+
+            # Verifica se este dia está nos dias do projeto
+            dias_lista = [d.strip() for d in dias_r.replace(";",",").split(",")]
+            aparece = any(DIA_IDX.get(d, -1) == di for d in dias_lista)
+            if not aparece: continue
 
             grad, bg, bord = proj_cor.get(proj, CORES_PROJ[0])
-            status_cor = {"Em andamento":"#7C3AED","Planejado":"#0891B2","Concluído":"#16A34A","Concluido":"#16A34A"}.get(status,"#9588AA")
-            desc_short = desc[:55]+("..." if len(desc)>55 else "")
+            status_cor = {"Em andamento":"#7C3AED","Planejado":"#0891B2",
+                          "Concluído":"#16A34A","Concluido":"#16A34A","Pausado":"#DC2626"}.get(status,"#9588AA")
+            desc_short = desc[:60]+("..." if len(desc)>60 else "")
 
             cards_dia += f"""
-            <div style="background:{bg};border:1px solid {bord};border-top:3px solid;
-                border-image:{grad} 1;border-radius:10px;padding:10px;margin-bottom:8px;
-                box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:default;"
-                title="{proj}: {desc}">
-              <div style="font-weight:800;font-size:12px;
+            <div style="background:{bg};border:1px solid {bord};
+                border-top:3px solid transparent;
+                border-image:none;border-top-color:{bord};
+                border-radius:10px;padding:10px;margin-bottom:8px;
+                box-shadow:0 2px 8px rgba(0,0,0,.07);">
+              <div style="font-weight:800;font-size:12px;margin-bottom:3px;
                   background:{grad};-webkit-background-clip:text;
-                  -webkit-text-fill-color:transparent;margin-bottom:4px;
+                  -webkit-text-fill-color:transparent;
                   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{proj}</div>
               <div style="font-size:11px;color:#5B4E72;line-height:1.4;margin-bottom:6px;">{desc_short}</div>
               <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:9px;color:#9588AA;">👤 {resp[:18]}</span>
-                <span style="background:{status_cor}18;color:{status_cor};border:1px solid {status_cor}44;
-                    padding:1px 7px;border-radius:20px;font-size:9px;font-family:monospace;">{status}</span>
+                <span style="font-size:9px;color:#9588AA;">👤 {resp[:20]}</span>
+                <span style="background:{status_cor}18;color:{status_cor};
+                    border:1px solid {status_cor}44;padding:1px 7px;
+                    border-radius:20px;font-size:9px;font-family:monospace;">{status}</span>
               </div>
             </div>"""
 
         if not cards_dia:
             cards_dia = '<div style="color:#C4BCDF;font-size:11px;font-style:italic;padding:12px 0;text-align:center;">— livre —</div>'
 
-        hoje_badge = '<div style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:9px;font-family:monospace;color:#fff;display:inline-block;margin-left:6px;">HOJE</div>' if is_hoje else ""
-
         grade_cols += f"""
-        <div style="flex:1;min-width:160px;border-radius:14px;overflow:hidden;
+        <div style="flex:1;min-width:170px;border-radius:14px;overflow:hidden;
             box-shadow:0 4px 16px rgba(107,33,168,.1);
             {"border:2px solid #10B981;" if is_hoje else "border:1px solid #DDD8F0;"}">
           <div style="{header_style};padding:12px 14px;">
@@ -2781,7 +2808,7 @@ with tab9:
             <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
                 color:rgba(255,255,255,.65);">{fmt_dia}</div>
           </div>
-          <div style="background:#fff;padding:10px;min-height:120px;">
+          <div style="background:#fff;padding:10px;min-height:100px;">
             {cards_dia}
           </div>
         </div>"""
@@ -2797,20 +2824,16 @@ body{{background:#F0EBF8;font-family:'Inter',sans-serif;padding:0;}}
 .grade::-webkit-scrollbar{{height:4px;}}
 .grade::-webkit-scrollbar-thumb{{background:#C4B5FD;border-radius:4px;}}
 </style></head><body>
-<div class="grade">
-{grade_cols}
-</div>
+<div class="grade">{grade_cols}</div>
 </body></html>"""
 
-    components.html(cockpit_html, height=600, scrolling=False)
+    components.html(cockpit_html, height=580, scrolling=False)
 
-    # Legenda de projetos
-    st.markdown("<div style='margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;'>", unsafe_allow_html=True)
-    leg_html = "<div style='display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;'>"
-    for proj, (grad, bg, bord) in proj_cor.items():
-        leg_html += f"""<div style="background:{bg};border:1px solid {bord};border-radius:20px;
-            padding:4px 12px;font-size:11px;font-weight:600;
-            background-clip:text;-webkit-text-fill-color:transparent;
-            background-image:{grad};">{proj}</div>"""
-    leg_html += "</div>"
-    st.markdown(leg_html, unsafe_allow_html=True)
+    # Legenda
+    if projs_uniq:
+        leg_html = "<div style='display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;'>"
+        for proj in projs_uniq:
+            grad, bg, bord = proj_cor.get(proj, CORES_PROJ[0])
+            leg_html += f'<div style="background:{bg};border:1px solid {bord};border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;background-clip:text;-webkit-text-fill-color:transparent;background-image:{grad};">{proj}</div>'
+        leg_html += "</div>"
+        st.markdown(leg_html, unsafe_allow_html=True)
